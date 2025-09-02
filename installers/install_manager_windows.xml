@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Product Id="*" Name="DocpManager" Language="1033" Version="1.0.0.0" Manufacturer="Docp" UpgradeCode="DDE34CE7-CD50-40DF-B644-92460A0EE958">
+        <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x64"/>
+
+        <MajorUpgrade DowngradeErrorMessage="New recent version the [ProductName] already installed" />
+        <MediaTemplate EmbedCab="yes" />
+
+        
+
+        <Feature Id="ProductFeature" Title="DocpManager Feature" Level="1">
+            <Component Id="ScriptDirectory" Directory="ProgramFiles64Folder" Win64="yes" Guid="10A52F68-E51F-499C-A771-EC96C646F23B" KeyPath="yes">
+                <CreateFolder Directory="INSTALLFOLDER"  />
+                <CreateFolder Directory="bindir"  />
+                <CreateFolder Directory="logsdir"  />
+                <CreateFolder Directory="statedir"  />
+                <RemoveFolder Id="RemoveINSTALLFOLDER" Directory="INSTALLFOLDER" On="uninstall" />
+                <RemoveFolder Id="RemoveLogsDir" Directory="logsdir" On="uninstall" />
+                <RemoveFolder Id="RemoveStateDir" Directory="statedir" On="uninstall" />
+            </Component>
+
+            <Component Id="ConfigComponent" Directory="INSTALLFOLDER" Win64="yes" Guid="07718FDD-B06C-47E8-8D17-ABCCFF7D01D7">
+                        <File Id="ConfigExeFile" Name="config_manager.exe" Source="config_manager.exe" KeyPath="yes" />
+            </Component>
+            <ComponentGroupRef Id="ManagerComponents" />
+            <ComponentRef Id="DatadogFolderComponent" />
+        </Feature>
+
+        <ComponentGroup Id="ManagerComponents">
+            <Component Id="ManagerBinary" Directory="bindir" Win64="yes" Guid="EF3FEC1A-FDCD-4B8B-AFBF-2AD58A3AC042">
+                <File Id="ManagerExe" Name="manager.exe" Source="manager.exe" KeyPath="yes" />
+                <ServiceInstall Id="ServiceInstall"
+                                Name="DocpManager"
+                                DisplayName="DocpManager Service"
+                                Description="Service to manage DocpAgent"
+                                Start="auto"
+                                Type="ownProcess"
+                                ErrorControl="normal" />
+                <ServiceControl Id="ServiceControl" Start="install" Stop="uninstall" Remove="uninstall" Name="DocpManager" Wait="yes"/>
+            </Component>
+            <Component Id="AgentFileComponent" Directory="bindir" Win64="yes" Guid="35B5E1B5-7137-44F7-ABCD-000000000002">
+                <RemoveFile Id="RemoveAgentBin" Name="agent.exe" On="uninstall" />
+            </Component>
+            <Component Id="LogFilesComponent" Directory="logsdir" Win64="yes" Guid="30F5E1B5-7137-43F7-ABCD-000000000002">
+                <RemoveFile Id="RemoveManagerLog" Name="manager.log" On="uninstall" />
+                <RemoveFile Id="RemoveAgentLog" Name="agent.log" On="uninstall" />
+            </Component>
+
+            <Component Id="StateFilesComponent" Directory="statedir" Win64="yes" Guid="11B2F0A1-8A2A-4EF3-8888-000000000003">
+                <RemoveFile Id="RemoveReceived" Name="received" On="uninstall" />
+                <RemoveFile Id="RemoveCurrent" Name="current" On="uninstall" />
+            </Component>
+            <Component Id="ConfigFilesComponent" Directory="INSTALLFOLDER" Win64="yes" Guid="12B2F0A1-9A2A-4EF3-8888-000000000003">
+                <RemoveFile Id="RemoveConfig" Name="config.yml" On="uninstall" />
+                <RemoveFile Id="RemoveEnvironments" Name="environments" On="uninstall" />
+            </Component>
+
+        </ComponentGroup>
+
+        <Component Id="DatadogFolderComponent" Directory="DatadogFolder" Win64="yes" Guid="D1E1C5B0-1A01-4F77-9F52-000000000007">
+            <RemoveFolder Id="RemoveDatadogFolder" Directory="DatadogFolder" On="uninstall" />
+            <RegistryValue Root="HKCU" Key="Software\[Manufacturer]\[ProductName]" Name="RemoveDatadogMarker" Type="integer" Value="1" KeyPath="yes"/>
+        </Component>
+
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="WindowsFolder">
+                <Directory Id="System64Folder" Name="System32" />
+            </Directory>
+            <Directory Id="ProgramFiles64Folder">
+                <Directory Id="INSTALLFOLDER" Name="DocpAgent">
+                    <Directory Id="bindir" Name="bin" />
+                    <Directory Id="logsdir" Name="logs" />
+                    <Directory Id="statedir" Name="state">
+                        <Directory Id="DatadogFolder" Name="Datadog" />
+                    </Directory>
+                </Directory>
+            </Directory>
+        </Directory>
+        
+        <Binary Id="ManagerExe" SourceFile="manager.exe" />
+
+        <Property Id="API_KEY" Admin="yes" />
+        <Property Id="TAGS" Admin="yes"/>
+        <Property Id="VERSION" Value="latest" />
+        <Property Id="NO_GROUP_ASSOCIATION" Value="true" />
+
+        <Binary Id="ConfigExe" SourceFile="config_manager.exe" />
+        <CustomAction Id="ExecuteConfig"
+                      BinaryKey="ConfigExe"
+                      ExeCommand="-API_KEY=[API_KEY] -TAGS=[TAGS] -VERSION=[VERSION] -NO_GROUP_ASSOCIATION=[NO_GROUP_ASSOCIATION]"  
+                      Execute="deferred"
+                      Impersonate="no" />
+        <InstallExecuteSequence>
+            <Custom Action="ExecuteConfig" After="InstallFiles">NOT Installed</Custom>
+        </InstallExecuteSequence>
+    </Product>
+</Wix>

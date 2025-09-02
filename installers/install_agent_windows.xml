@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+    <Product Id="*" Name="DocpAgent" Language="1033" Version="1.0.0.0" Manufacturer="Docp" UpgradeCode="66DE5BE7-2A7D-4B3B-92A5-E53510508057">
+        <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x64"/>
+
+        <MajorUpgrade DowngradeErrorMessage="New recent version the [ProductName] already installed" />
+        <MediaTemplate EmbedCab="yes" />
+
+        
+
+        <Feature Id="ProductFeature" Title="DocpAgent Feature" Level="1">
+            <Component Id="ConfigComponent" Directory="INSTALLFOLDER" Win64="yes" Guid="07718FDD-B06C-47E8-8D17-ABCCFF7D01D7">
+                        <File Id="ConfigExeFile" Name="config_agent.exe" Source="config_agent.exe" KeyPath="yes" />
+            </Component>
+            <ComponentGroupRef Id="AgentsComponents" />
+        </Feature>
+
+        <ComponentGroup Id="AgentsComponents">
+            <Component Id="AgentBinary" Directory="bindir" Win64="yes" Guid="EF3FEC1A-FDCD-4B8B-AFBF-2AD58A3AC042">
+                <File Id="AgentExe" Name="agent.exe" Source="agent.exe" KeyPath="yes" />
+                <ServiceInstall Id="ServiceInstall"
+                                Name="DocpAgent"
+                                DisplayName="DocpAgent Service"
+                                Description="Service to agent DocpAgent"
+                                Start="auto"
+                                Type="ownProcess"
+                                ErrorControl="normal" />
+                <ServiceControl Id="ServiceControl" Start="install" Stop="both" Remove="uninstall" Name="DocpAgent" Wait="yes"/>
+            </Component>
+        </ComponentGroup>
+
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="WindowsFolder">
+                <Directory Id="System64Folder" Name="System32" />
+            </Directory>
+            <Directory Id="ProgramFiles64Folder">
+                <Directory Id="INSTALLFOLDER" Name="DocpAgent">
+                    <Directory Id="bindir" Name="bin" />
+                </Directory>
+            </Directory>
+        </Directory>
+        
+        <Binary Id="AgentExe" SourceFile="agent.exe" />
+
+        <Binary Id="ConfigExe" SourceFile="config_agent.exe" />
+
+        <CustomAction Id="ExecuteConfig"
+                      BinaryKey="ConfigExe"
+                      ExeCommand=""  
+                      Execute="deferred"
+                      Impersonate="no" />
+        <InstallExecuteSequence>
+            <Custom Action="ExecuteConfig" After="InstallFiles">NOT Installed</Custom>
+        </InstallExecuteSequence>
+    </Product>
+</Wix>
