@@ -17,5 +17,6 @@ type IDatadogOperation interface {
 	UpdateConfigFileDatadog(filePath string) error
 	UpdateRepository() error
 	GetVersion() (string, error)
+	GetLatestVersion() (string, error)
 	DPKGConfigure() error
 }
