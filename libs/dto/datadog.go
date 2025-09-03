@@ -20,3 +20,8 @@ type DatadogInstallDTO struct {
 	Component string           `json:"component"`
 	EnvVars   []DatadogEnvVars `json:"env_vars,omitempty"`
 }
+
+// DatadogUpdateVersionDTO is struct for payload the update version datadog
+type DatadogUpdateVersionDTO struct {
+	Version string `json:"version"`
+}
