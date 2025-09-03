@@ -14,16 +14,16 @@ import (
 func TestNewDatadogAdapter(t *testing.T) {
 	bdd.Feature(t, "TestNewDatadogAdapter", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
 		Scenario("Deve criar DatadogAdapter sem erro", func(s *bdd.Scenario) {
-			var datadogLinux *adapters.DatadogAdapter
+			var datadogAdapter *adapters.DatadogAdapter
 			var logger interfaces.ILogger
 			s.When("logger é criado", func() {
 				logger = utils.NewDocpLoggerText(os.Stdout)
 			})
 			s.When("NewDatadogAdapter é chamado", func() {
-				datadogLinux = adapters.NewDatadogAdapter(logger)
+				datadogAdapter = adapters.NewDatadogAdapter(logger)
 			})
 			s.Then("DatadogAdapter não deve ser nil", func(t *testing.T) {
-				bdd.AssertIsNotNil(t, datadogLinux, "DatadogAdapter deve ser diferente de nil")
+				bdd.AssertIsNotNil(t, datadogAdapter, "DatadogAdapter deve ser diferente de nil")
 			})
 		})
 	})
@@ -32,19 +32,17 @@ func TestNewDatadogAdapter(t *testing.T) {
 func TestDatadogAdapterSetup(t *testing.T) {
 	bdd.Feature(t, "TestDatadogAdapterSetup", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
 		Scenario("Setup não deve retornar erro", func(s *bdd.Scenario) {
-			var datadogLinux *adapters.DatadogAdapter
+			var datadogAdapter *adapters.DatadogAdapter
 			var logger interfaces.ILogger
 			var err error
 			s.When("logger é criado", func() {
 				logger = utils.NewDocpLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido", func() {
-				datadogLinux = adapters.NewDatadogAdapter(logger)
+				datadogAdapter = adapters.NewDatadogAdapter(logger)
 			})
 			s.When("Setup é chamado", func() {
-				if datadogLinux != nil {
-					err = datadogLinux.Setup()
-				}
+				err = datadogAdapter.Setup()
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
@@ -56,7 +54,7 @@ func TestDatadogAdapterSetup(t *testing.T) {
 func TestDatadogAdapterIsActive(t *testing.T) {
 	bdd.Feature(t, "TestDatadogAdapterIsActive", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
 		Scenario("IsActive não deve retornar erro", func(s *bdd.Scenario) {
-			var datadogLinux *adapters.DatadogAdapter
+			var datadogAdapter *adapters.DatadogAdapter
 			var isActive bool
 			var logger interfaces.ILogger
 			var err error
@@ -64,11 +62,12 @@ func TestDatadogAdapterIsActive(t *testing.T) {
 				logger = utils.NewDocpLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
-				datadogLinux = adapters.NewDatadogAdapter(logger)
-				err = datadogLinux.Setup()
+				datadogAdapter = adapters.NewDatadogAdapter(logger)
+				err = datadogAdapter.Setup()
+				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
 			})
 			s.When("IsActive é chamado", func() {
-				isActive, err = datadogLinux.IsActive()
+				isActive, err = datadogAdapter.IsActive()
 			})
 			s.Then("não deve retornar erro e deve retornar isActive", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "IsActive não deve retornar erro")
@@ -81,19 +80,20 @@ func TestDatadogAdapterIsActive(t *testing.T) {
 func TestDatadogAdapterInstallAgent(t *testing.T) {
 	bdd.Feature(t, "TestDatadogAdapterInstallAgent", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
 		Scenario("InstallAgent não deve retornar erro", func(s *bdd.Scenario) {
-			var datadogLinux *adapters.DatadogAdapter
+			var datadogAdapter *adapters.DatadogAdapter
 			var logger interfaces.ILogger
 			var err error
 			s.When("logger é criado", func() {
 				logger = utils.NewDocpLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
-				datadogLinux = adapters.NewDatadogAdapter(logger)
-				err = datadogLinux.Setup()
+				datadogAdapter = adapters.NewDatadogAdapter(logger)
+				err = datadogAdapter.Setup()
+				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
 			})
 			s.When("InstallAgent é chamado", func() {
 				if err == nil {
-					err = datadogLinux.InstallAgent("datadoghq.com", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+					err = datadogAdapter.InstallAgent("datadoghq.com", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
 				}
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
@@ -106,19 +106,20 @@ func TestDatadogAdapterInstallAgent(t *testing.T) {
 func TestDatadogAdapterUninstallAgent(t *testing.T) {
 	bdd.Feature(t, "TestDatadogAdapterUninstallAgent", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
 		Scenario("UninstallAgent não deve retornar erro", func(s *bdd.Scenario) {
-			var datadogLinux *adapters.DatadogAdapter
+			var datadogAdapter *adapters.DatadogAdapter
 			var logger interfaces.ILogger
 			var err error
 			s.When("logger é criado", func() {
 				logger = utils.NewDocpLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
-				datadogLinux = adapters.NewDatadogAdapter(logger)
-				err = datadogLinux.Setup()
+				datadogAdapter = adapters.NewDatadogAdapter(logger)
+				err = datadogAdapter.Setup()
+				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
 			})
 			s.When("UninstallAgent é chamado", func() {
 				if err == nil {
-					err = datadogLinux.UninstallAgent()
+					err = datadogAdapter.UninstallAgent()
 				}
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
@@ -131,7 +132,7 @@ func TestDatadogAdapterUninstallAgent(t *testing.T) {
 func TestDatadogAdapterDiscoverDatadogConfigPath(t *testing.T) {
 	bdd.Feature(t, "TestDatadogAdapterDiscoverDatadogConfigPath", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
 		Scenario("DiscoverDatadogConfigPath não deve retornar erro", func(s *bdd.Scenario) {
-			var datadogLinux *adapters.DatadogAdapter
+			var datadogAdapter *adapters.DatadogAdapter
 			var logger interfaces.ILogger
 			var filePath string
 			var err error
@@ -139,11 +140,12 @@ func TestDatadogAdapterDiscoverDatadogConfigPath(t *testing.T) {
 				logger = utils.NewDocpLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
-				datadogLinux = adapters.NewDatadogAdapter(logger)
-				err = datadogLinux.Setup()
+				datadogAdapter = adapters.NewDatadogAdapter(logger)
+				err = datadogAdapter.Setup()
+				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
 			})
 			s.When("DiscoverDatadogConfigPath é chamado", func() {
-				filePath, err = datadogLinux.DiscoverDatadogConfigPath()
+				filePath, err = datadogAdapter.DiscoverDatadogConfigPath()
 			})
 			s.Then("não deve retornar erro e deve retornar filePath", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "DiscoverDatadogConfigPath não deve retornar erro")
@@ -156,7 +158,7 @@ func TestDatadogAdapterDiscoverDatadogConfigPath(t *testing.T) {
 func TestDatadogAdapterDecodeBase64(t *testing.T) {
 	bdd.Feature(t, "TestDatadogAdapterDecodeBase64", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
 		Scenario("DecodeBase64 não deve retornar erro", func(s *bdd.Scenario) {
-			var datadogLinux *adapters.DatadogAdapter
+			var datadogAdapter *adapters.DatadogAdapter
 			var logger interfaces.ILogger
 			var decoded []byte
 			var err error
@@ -164,11 +166,12 @@ func TestDatadogAdapterDecodeBase64(t *testing.T) {
 				logger = utils.NewDocpLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
-				datadogLinux = adapters.NewDatadogAdapter(logger)
-				err = datadogLinux.Setup()
+				datadogAdapter = adapters.NewDatadogAdapter(logger)
+				err = datadogAdapter.Setup()
+				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
 			})
 			s.When("DecodeBase64 é chamado", func() {
-				decoded, err = datadogLinux.DecodeBase64("dGVzdGU=")
+				decoded, err = datadogAdapter.DecodeBase64("dGVzdGU=")
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "DecodeBase64 não deve retornar erro")
@@ -182,25 +185,53 @@ func TestDatadogAdapterUpdateConfigFileDatadog(t *testing.T) {
 
 	bdd.Feature(t, "TestDatadogAdapterUpdateConfigFileDatadog", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
 		Scenario("UpdateConfigFileDatadog não deve retornar erro", func(s *bdd.Scenario) {
-			var datadogLinux *adapters.DatadogAdapter
+			var datadogAdapter *adapters.DatadogAdapter
 			var logger interfaces.ILogger
 			var err error
 			s.When("logger é criado", func() {
 				logger = utils.NewDocpLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
-				datadogLinux = adapters.NewDatadogAdapter(logger)
-				err = datadogLinux.Setup()
+				datadogAdapter = adapters.NewDatadogAdapter(logger)
+				err = datadogAdapter.Setup()
+				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
 
 			})
 			s.When("UpdateConfigFileDatadog é chamado", func() {
 				filePath := "/etc/datadog-agent/conf.d/journald.d/conf.yaml"
 
-				err = datadogLinux.UpdateConfigFileDatadog(filePath)
+				err = datadogAdapter.UpdateConfigFileDatadog(filePath)
 
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "UpdateConfigFileDatadog não deve retornar erro")
+			})
+		})
+	})
+}
+
+func TestDatadogAdapterUpdateRepository(t *testing.T) {
+
+	bdd.Feature(t, "TestDatadogAdapterUpdateRepository", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
+		Scenario("UpdateRepository não deve retornar erro", func(s *bdd.Scenario) {
+			var datadogAdapter *adapters.DatadogAdapter
+			var logger interfaces.ILogger
+			var err error
+			s.When("logger é criado", func() {
+				logger = utils.NewDocpLoggerText(os.Stdout)
+			})
+			s.Given("DatadogAdapter válido e setup executado", func() {
+				datadogAdapter = adapters.NewDatadogAdapter(logger)
+				err = datadogAdapter.Setup()
+				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
+
+			})
+			s.When("UpdateRepository é chamado", func() {
+				err = datadogAdapter.UpdateRepository()
+
+			})
+			s.Then("não deve retornar erro", func(t *testing.T) {
+				bdd.AssertNoError(t, err, "UpdateRepository não deve retornar erro")
 			})
 		})
 	})
