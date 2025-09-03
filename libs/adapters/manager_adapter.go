@@ -810,6 +810,52 @@ func (l *ManagerAdapter) DocpAgentApiUpdateConfigurationsDatadog(content []byte)
 	return respBytes, nil
 }
 
+// DocpAgentApiUpdateVersionDatadog execute call to api docp for update datadog version
+func (l *ManagerAdapter) DocpAgentApiUpdateVersionDatadog(version string) ([]byte, error) {
+	l.logger.Debug("execute send request for update version in datadog agent", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateVersionDatadog", "version", version)
+	updateVersion := dto.DatadogUpdateVersionDTO{Version: version}
+	bodyUpdateVersion, err := l.marshaller(updateVersion)
+	if err != nil {
+		return nil, err
+	}
+	transaction := utils.NewTransactionStatus()
+	ctxTransaction := context.WithValue(context.Background(), dto.ContextTransactionStatus, transaction)
+
+	go l.NotifyStatus("update_vendor_version_received", pkg.TransactionEventOpen, "update vendor version received", ctxTransaction)
+	time.Sleep(l.delay)
+
+	urlDocpUpdateVersion := fmt.Sprintf("http://127.0.0.1:%s/datadog/update/version", l.docpApiPort)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlDocpUpdateVersion, bytes.NewBuffer(bodyUpdateVersion))
+	if err != nil {
+		go l.NotifyStatus("update_vendor_version_error", pkg.TransactionEventClose, "failed update vendor version", ctxTransaction)
+		l.logger.Error("error in create request", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateVersionDatadog", "error", err.Error())
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	res, err := l.client.Do(req)
+	if err != nil {
+		go l.NotifyStatus("update_vendor_version_error", pkg.TransactionEventClose, "failed update vendor version", ctxTransaction)
+		l.logger.Error("error in execute request", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateVersionDatadog", "error", err.Error())
+		return nil, err
+	}
+
+	go l.NotifyStatus("update_vendor_version_processing", pkg.TransactionEventUpdate, "update vendor version processing", ctxTransaction)
+	time.Sleep(l.delay)
+
+	defer res.Body.Close()
+	respBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		go l.NotifyStatus("update_vendor_version_error", pkg.TransactionEventClose, "failed update vendor version", ctxTransaction)
+		l.logger.Error("error in read body response", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateVersionDatadog", "error", err.Error())
+		return nil, err
+	}
+
+	go l.NotifyStatus("update_vendor_version_complete", pkg.TransactionEventClose, "update vendor version completed", ctxTransaction)
+	return respBytes, nil
+}
+
 // GetStateReceived return state received from state check service
 func (l *ManagerAdapter) GetStateReceived() ([]byte, error) {
 	l.logger.Debug("get state received", "trace", "docp-agent-os-instance.manager_adapter.GetStateReceived")
