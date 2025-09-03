@@ -188,6 +188,16 @@ func (d *DatadogAdapter) GetVersion() (string, error) {
 	return version, nil
 }
 
+// GetLatestVersion return latest version datadog
+func (d *DatadogAdapter) GetLatestVersion() (string, error) {
+	d.logger.Debug("get latest version", "trace", "docp-agent-os-instance.datadog_linux_adapter.GetLatestVersion")
+	version, err := d.datadogOperation.GetLatestVersion()
+	if err != nil {
+		return "", err
+	}
+	return version, nil
+}
+
 // DPKGConfigure execute configure dpkg
 func (d *DatadogAdapter) DPKGConfigure() error {
 	d.logger.Debug("dpkg configure", "trace", "docp-agent-os-instance.datadog_linux_adapter.DPKGConfigure")
