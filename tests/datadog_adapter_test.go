@@ -264,3 +264,31 @@ func TestDatadogAdapterGetVersion(t *testing.T) {
 		})
 	})
 }
+
+func TestDatadogAdapterGetLatestVersion(t *testing.T) {
+	bdd.Feature(t, "TestDatadogAdapterGetLatestVersion", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
+		Scenario("GetLatestVersion não deve retornar erro", func(s *bdd.Scenario) {
+			var datadogAdapter *adapters.DatadogAdapter
+			var logger interfaces.ILogger
+			var version string
+			var err error
+			s.When("logger é criado", func() {
+				logger = utils.NewDocpLoggerText(os.Stdout)
+			})
+			s.Given("DatadogAdapter válido e setup executado", func() {
+				datadogAdapter = adapters.NewDatadogAdapter(logger)
+				err = datadogAdapter.Setup()
+				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
+
+			})
+			s.When("GetLatestVersion é chamado", func() {
+				version, err = datadogAdapter.GetLatestVersion()
+
+			})
+			s.Then("não deve retornar erro", func(t *testing.T) {
+				bdd.AssertNoError(t, err, "GetLatestVersion não deve retornar erro")
+			})
+			bdd.Printf("Ultima Versão do Datadog: %s\n", version)
+		})
+	})
+}
