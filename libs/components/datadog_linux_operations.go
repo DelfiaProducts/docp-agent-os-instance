@@ -251,6 +251,15 @@ func (d *DatadogLinuxOperation) GetVersion() (string, error) {
 	return d.parseDatadogAgentVersion(output, "Installed:")
 }
 
+// GetLatestVersion return the latest version of the datadog agent
+func (d *DatadogLinuxOperation) GetLatestVersion() (string, error) {
+	output, err := d.program.ExecuteWithOutput("apt-cache", []string{}, "policy", "datadog-agent")
+	if err != nil {
+		return "", err
+	}
+	return d.parseDatadogAgentVersion(output, "Candidate:")
+}
+
 // DPKGConfigure execute configure dpkg
 func (d *DatadogLinuxOperation) DPKGConfigure() error {
 	if err := d.program.Execute("sudo", []string{}, "dpkg", "--configure", "-a"); err != nil {
