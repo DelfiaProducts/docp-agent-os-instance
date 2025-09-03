@@ -15,5 +15,6 @@ type IDatadogOperation interface {
 	DatadogAddPermitionUser() error
 	BackupConfigFileDatadog(filePath string, content []byte) error
 	UpdateConfigFileDatadog(filePath string) error
+	UpdateRepository() error
 	DPKGConfigure() error
 }
