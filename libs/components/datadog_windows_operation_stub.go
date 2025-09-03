@@ -88,6 +88,11 @@ func (d *DatadogWindowsOperation) GetVersion() (string, error) {
 	return "", nil
 }
 
+// GetLatestVersion return the latest version of the datadog agent
+func (d *DatadogWindowsOperation) GetLatestVersion() (string, error) {
+	return "", nil
+}
+
 // DPKGConfigure execute configure dpkg
 func (d *DatadogWindowsOperation) DPKGConfigure() error {
 	// TODO: not implemented windows
