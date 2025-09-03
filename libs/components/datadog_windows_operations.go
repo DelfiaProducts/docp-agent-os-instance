@@ -217,6 +217,11 @@ func (d *DatadogWindowsOperation) UpdateConfigFileDatadog(filePath string) error
 	return nil
 }
 
+// UpdateRepository execute update repository local
+func (d *DatadogWindowsOperation) UpdateRepository() error {
+	return nil
+}
+
 // DPKGConfigure execute configure dpkg
 func (d *DatadogWindowsOperation) DPKGConfigure() error {
 	// TODO: not implemented windows
