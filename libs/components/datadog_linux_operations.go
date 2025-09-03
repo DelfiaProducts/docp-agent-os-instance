@@ -216,6 +216,14 @@ func (d *DatadogLinuxOperation) UpdateConfigFileDatadog(filePath string) error {
 	return nil
 }
 
+// UpdateRepository execute update repository local
+func (d *DatadogLinuxOperation) UpdateRepository() error {
+	if err := d.program.Execute("sudo", []string{}, "bash", "-c", "apt-get update"); err != nil {
+		return err
+	}
+	return nil
+}
+
 // DPKGConfigure execute configure dpkg
 func (d *DatadogLinuxOperation) DPKGConfigure() error {
 	if err := d.program.Execute("sudo", []string{}, "dpkg", "--configure", "-a"); err != nil {
