@@ -169,6 +169,15 @@ func (d *DatadogAdapter) UpdateConfigFileDatadog(filePath string) error {
 	return nil
 }
 
+// UpdateRepository execute update repository local
+func (d *DatadogAdapter) UpdateRepository() error {
+	d.logger.Debug("update repository", "trace", "docp-agent-os-instance.datadog_linux_adapter.UpdateRepository")
+	if err := d.datadogOperation.UpdateRepository(); err != nil {
+		return err
+	}
+	return nil
+}
+
 // DPKGConfigure execute configure dpkg
 func (d *DatadogAdapter) DPKGConfigure() error {
 	d.logger.Debug("dpkg configure", "trace", "docp-agent-os-instance.datadog_linux_adapter.DPKGConfigure")
