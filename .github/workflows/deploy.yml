@@ -5,6 +5,9 @@ on:
     tags:
       - '*'
 
+permissions:
+  contents: write
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -52,112 +55,20 @@ jobs:
           GOOS=darwin GOARCH=amd64 go build -o docp-manager-macos-amd64 main.go
       
       - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
+          files: |
+            cmd/agent/docp-agent-windows-amd64.exe
+            cmd/agent/docp-agent-linux-amd64
+            cmd/agent/docp-agent-linux-arm64
+            cmd/agent/docp-agent-macos-amd64
+            cmd/agent/docp-agent-macos-arm64
+            cmd/manager/docp-manager-windows-amd64.exe
+            cmd/manager/docp-manager-linux-amd64
+            cmd/manager/docp-manager-linux-arm64
+            cmd/manager/docp-manager-macos-amd64
+            cmd/manager/docp-manager-macos-arm64
           tag_name: ${{ github.ref_name }}
-          release_name: Release ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
-
-      - name: Upload Agent Windows AMD64 Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: cmd/agent/docp-agent-windows-amd64.exe
-          asset_name: docp-agent-windows-amd64.exe
-          asset_content_type: application/octet-stream
-
-      - name: Upload Agent Linux AMD64 Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: cmd/agent/docp-agent-linux-amd64
-          asset_name: docp-agent-linux-amd64
-          asset_content_type: application/octet-stream
-
-      - name: Upload Agent Linux ARM64 Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: cmd/agent/docp-agent-linux-arm64
-          asset_name: docp-agent-linux-arm64
-          asset_content_type: application/octet-stream
-
-      - name: Upload Agent macOS AMD64 Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: cmd/agent/docp-agent-macos-amd64
-          asset_name: docp-agent-macos-amd64
-          asset_content_type: application/octet-stream
-
-      - name: Upload Agent macOS ARM64 Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: cmd/agent/docp-agent-macos-arm64
-          asset_name: docp-agent-macos-arm64
-          asset_content_type: application/octet-stream
-
-      - name: Upload Manager Windows AMD64 Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: cmd/manager/docp-manager-windows-amd64.exe
-          asset_name: docp-manager-windows-amd64.exe
-          asset_content_type: application/octet-stream
-
-      - name: Upload Manager Linux AMD64 Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: cmd/manager/docp-manager-linux-amd64
-          asset_name: docp-manager-linux-amd64
-          asset_content_type: application/octet-stream
-
-      - name: Upload Manager Linux ARM64 Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: cmd/manager/docp-manager-linux-arm64
-          asset_name: docp-manager-linux-arm64
-          asset_content_type: application/octet-stream
-
-      - name: Upload Manager macOS AMD64 Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: cmd/manager/docp-manager-macos-amd64
-          asset_name: docp-manager-macos-amd64
-          asset_content_type: application/octet-stream
-
-      - name: Upload Manager macOS ARM64 Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: cmd/manager/docp-manager-macos-arm64
-          asset_name: docp-manager-macos-arm64
-          asset_content_type: application/octet-stream
