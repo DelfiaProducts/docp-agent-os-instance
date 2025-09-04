@@ -12,11 +12,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Binarios Agent Windows amd64 and arm64
+      - name: Build Binarios Agent Windows amd64
         run: |
-          cd src/agent
+          cd cmd/manager
           GOOS=windows GOARCH=amd64 go build -o win_amd64.exe main.go
-          GOOS=windows GOARCH=arm64 go build -o win_arm64.exe main.go
       
       - name: Build Binarios Agent Linux amd64 and arm64
         run: |
