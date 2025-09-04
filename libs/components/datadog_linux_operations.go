@@ -1,6 +1,8 @@
 package components
 
 import (
+	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
@@ -76,6 +78,22 @@ func (d *DatadogLinuxOperation) parseDatadogAgentVersion(output string, prefix s
 		}
 	}
 	return "", errors.New("installed version not found")
+}
+
+func (d *DatadogLinuxOperation) getVersionFromOutput(output []byte, version string) (string, error) {
+	scanner := bufio.NewScanner(bytes.NewReader(output))
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.Contains(line, version) {
+			fields := strings.Fields(line)
+			if len(fields) > 0 {
+				return fields[0], nil
+			}
+		}
+	}
+
+	return "", utils.ErrDatadogVersionNotFound()
 }
 
 func (d *DatadogLinuxOperation) Setup() error {
@@ -258,6 +276,23 @@ func (d *DatadogLinuxOperation) GetLatestVersion() (string, error) {
 		return "", err
 	}
 	return d.parseDatadogAgentVersion(output, "Candidate:")
+}
+
+// UpdateVersion execute update the version of the datadog agent
+func (d *DatadogLinuxOperation) UpdateVersion(version string) error {
+	output, err := d.program.ExecuteWithOutput("apt-cache", []string{}, "policy", "datadog-agent")
+	if err != nil {
+		return err
+	}
+	datadogVersion, err := d.getVersionFromOutput([]byte(output), version)
+	if err != nil {
+		return err
+	}
+	d.logger.Debug("update version", "datadogVersion", datadogVersion)
+	if err := d.program.Execute("sudo", []string{}, "apt-get", "install", "-y", fmt.Sprintf("datadog-agent=%s", datadogVersion)); err != nil {
+		return err
+	}
+	return nil
 }
 
 // DPKGConfigure execute configure dpkg
