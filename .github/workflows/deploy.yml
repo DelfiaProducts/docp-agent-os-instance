@@ -1,1 +1,42 @@
+name: Deploy agent Os Instance
 
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Binarios Agent Windows amd64 and arm64
+        run: |
+          cd src/agent
+          GOOS=windows GOARCH=amd64 go build -o win_amd64.exe main.go
+          GOOS=windows GOARCH=arm64 go build -o win_arm64.exe main.go
+      
+      - name: Build Binarios Agent Linux amd64 and arm64
+        run: |
+          cd cmd/manager
+          GOOS=linux GOARCH=arm64 go build -o linux_arm64 main.go
+          GOOS=linux GOARCH=amd64 go build -o linux_amd64 main.go
+      
+      - name: Build Binarios Agent MacOS amd64 and arm64
+        run: |
+          cd cmd/manager
+          GOOS=darwin GOARCH=arm64 go build -o mac_arm64 main.go
+          GOOS=darwin GOARCH=amd64 go build -o mac_amd64 main.go
+      
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
