@@ -12,22 +12,44 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Binarios Agent Windows amd64
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Build Agent Binaries - Windows amd64
         run: |
-          cd cmd/manager
-          GOOS=windows GOARCH=amd64 go build -o win_amd64.exe main.go
+          cd cmd/agent
+          GOOS=windows GOARCH=amd64 go build -o docp-agent-windows-amd64.exe main.go
       
-      - name: Build Binarios Agent Linux amd64 and arm64
+      - name: Build Agent Binaries - Linux amd64 and arm64
         run: |
-          cd cmd/manager
-          GOOS=linux GOARCH=arm64 go build -o linux_arm64 main.go
-          GOOS=linux GOARCH=amd64 go build -o linux_amd64 main.go
+          cd cmd/agent
+          GOOS=linux GOARCH=arm64 go build -o docp-agent-linux-arm64 main.go
+          GOOS=linux GOARCH=amd64 go build -o docp-agent-linux-amd64 main.go
       
-      - name: Build Binarios Agent MacOS amd64 and arm64
+      - name: Build Agent Binaries - macOS amd64 and arm64
+        run: |
+          cd cmd/agent
+          GOOS=darwin GOARCH=arm64 go build -o docp-agent-macos-arm64 main.go
+          GOOS=darwin GOARCH=amd64 go build -o docp-agent-macos-amd64 main.go
+
+      - name: Build Manager Binaries - Windows amd64
         run: |
           cd cmd/manager
-          GOOS=darwin GOARCH=arm64 go build -o mac_arm64 main.go
-          GOOS=darwin GOARCH=amd64 go build -o mac_amd64 main.go
+          GOOS=windows GOARCH=amd64 go build -o docp-manager-windows-amd64.exe main.go
+      
+      - name: Build Manager Binaries - Linux amd64 and arm64
+        run: |
+          cd cmd/manager
+          GOOS=linux GOARCH=arm64 go build -o docp-manager-linux-arm64 main.go
+          GOOS=linux GOARCH=amd64 go build -o docp-manager-linux-amd64 main.go
+      
+      - name: Build Manager Binaries - macOS amd64 and arm64
+        run: |
+          cd cmd/manager
+          GOOS=darwin GOARCH=arm64 go build -o docp-manager-macos-arm64 main.go
+          GOOS=darwin GOARCH=amd64 go build -o docp-manager-macos-amd64 main.go
       
       - name: Create Release
         id: create_release
@@ -39,3 +61,103 @@ jobs:
           release_name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
+
+      - name: Upload Agent Windows AMD64 Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cmd/agent/docp-agent-windows-amd64.exe
+          asset_name: docp-agent-windows-amd64.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload Agent Linux AMD64 Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cmd/agent/docp-agent-linux-amd64
+          asset_name: docp-agent-linux-amd64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Agent Linux ARM64 Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cmd/agent/docp-agent-linux-arm64
+          asset_name: docp-agent-linux-arm64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Agent macOS AMD64 Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cmd/agent/docp-agent-macos-amd64
+          asset_name: docp-agent-macos-amd64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Agent macOS ARM64 Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cmd/agent/docp-agent-macos-arm64
+          asset_name: docp-agent-macos-arm64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Manager Windows AMD64 Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cmd/manager/docp-manager-windows-amd64.exe
+          asset_name: docp-manager-windows-amd64.exe
+          asset_content_type: application/octet-stream
+
+      - name: Upload Manager Linux AMD64 Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cmd/manager/docp-manager-linux-amd64
+          asset_name: docp-manager-linux-amd64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Manager Linux ARM64 Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cmd/manager/docp-manager-linux-arm64
+          asset_name: docp-manager-linux-arm64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Manager macOS AMD64 Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cmd/manager/docp-manager-macos-amd64
+          asset_name: docp-manager-macos-amd64
+          asset_content_type: application/octet-stream
+
+      - name: Upload Manager macOS ARM64 Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: cmd/manager/docp-manager-macos-arm64
+          asset_name: docp-manager-macos-arm64
+          asset_content_type: application/octet-stream
