@@ -60,35 +60,34 @@ jobs:
           mkdir -p release/manager
           mkdir -p release/agent
           
-          # Copy manager binaries
+          # Copy manager binaries with organized structure
           cp cmd/manager/docp-manager-windows-amd64.exe release/manager/
           cp cmd/manager/docp-manager-linux-amd64 release/manager/
           cp cmd/manager/docp-manager-linux-arm64 release/manager/
           cp cmd/manager/docp-manager-macos-amd64 release/manager/
           cp cmd/manager/docp-manager-macos-arm64 release/manager/
           
-          # Copy agent binaries
+          # Copy agent binaries with organized structure
           cp cmd/agent/docp-agent-windows-amd64.exe release/agent/
           cp cmd/agent/docp-agent-linux-amd64 release/agent/
           cp cmd/agent/docp-agent-linux-arm64 release/agent/
           cp cmd/agent/docp-agent-macos-amd64 release/agent/
           cp cmd/agent/docp-agent-macos-arm64 release/agent/
-          
-          # Create compressed archives
-          cd release
-          tar -czf manager-binaries.tar.gz manager/
-          tar -czf agent-binaries.tar.gz agent/
-          zip -r manager-binaries.zip manager/
-          zip -r agent-binaries.zip agent/
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            release/manager-binaries.tar.gz
-            release/manager-binaries.zip
-            release/agent-binaries.tar.gz
-            release/agent-binaries.zip
+            release/manager/docp-manager-windows-amd64.exe
+            release/manager/docp-manager-linux-amd64
+            release/manager/docp-manager-linux-arm64
+            release/manager/docp-manager-macos-amd64
+            release/manager/docp-manager-macos-arm64
+            release/agent/docp-agent-windows-amd64.exe
+            release/agent/docp-agent-linux-amd64
+            release/agent/docp-agent-linux-arm64
+            release/agent/docp-agent-macos-amd64
+            release/agent/docp-agent-macos-arm64
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           draft: false
