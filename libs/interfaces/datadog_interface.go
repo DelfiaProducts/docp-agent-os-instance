@@ -18,5 +18,6 @@ type IDatadogOperation interface {
 	UpdateRepository() error
 	GetVersion() (string, error)
 	GetLatestVersion() (string, error)
+	UpdateVersion(version string) error
 	DPKGConfigure() error
 }
