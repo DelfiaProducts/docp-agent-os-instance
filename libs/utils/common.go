@@ -117,3 +117,8 @@ func ErrFailedGetAgentVersions() error {
 func ErrAgentVersionNotFound() error {
 	return pkg.ErrAgentVersionNotFound
 }
+
+// ErrDatadogVersionNotFound return error the datadog version not found
+func ErrDatadogVersionNotFound() error {
+	return pkg.ErrDatadogVersionNotFound
+}
