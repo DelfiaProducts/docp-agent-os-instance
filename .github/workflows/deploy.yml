@@ -53,21 +53,42 @@ jobs:
           cd cmd/manager
           GOOS=darwin GOARCH=arm64 go build -o docp-manager-macos-arm64 main.go
           GOOS=darwin GOARCH=amd64 go build -o docp-manager-macos-amd64 main.go
+
+      - name: Organize Release Assets
+        run: |
+          # Create directories for organized release
+          mkdir -p release/manager
+          mkdir -p release/agent
+          
+          # Copy manager binaries
+          cp cmd/manager/docp-manager-windows-amd64.exe release/manager/
+          cp cmd/manager/docp-manager-linux-amd64 release/manager/
+          cp cmd/manager/docp-manager-linux-arm64 release/manager/
+          cp cmd/manager/docp-manager-macos-amd64 release/manager/
+          cp cmd/manager/docp-manager-macos-arm64 release/manager/
+          
+          # Copy agent binaries
+          cp cmd/agent/docp-agent-windows-amd64.exe release/agent/
+          cp cmd/agent/docp-agent-linux-amd64 release/agent/
+          cp cmd/agent/docp-agent-linux-arm64 release/agent/
+          cp cmd/agent/docp-agent-macos-amd64 release/agent/
+          cp cmd/agent/docp-agent-macos-arm64 release/agent/
+          
+          # Create compressed archives
+          cd release
+          tar -czf manager-binaries.tar.gz manager/
+          tar -czf agent-binaries.tar.gz agent/
+          zip -r manager-binaries.zip manager/
+          zip -r agent-binaries.zip agent/
       
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            cmd/agent/docp-agent-windows-amd64.exe
-            cmd/agent/docp-agent-linux-amd64
-            cmd/agent/docp-agent-linux-arm64
-            cmd/agent/docp-agent-macos-amd64
-            cmd/agent/docp-agent-macos-arm64
-            cmd/manager/docp-manager-windows-amd64.exe
-            cmd/manager/docp-manager-linux-amd64
-            cmd/manager/docp-manager-linux-arm64
-            cmd/manager/docp-manager-macos-amd64
-            cmd/manager/docp-manager-macos-arm64
+            release/manager-binaries.tar.gz
+            release/manager-binaries.zip
+            release/agent-binaries.tar.gz
+            release/agent-binaries.zip
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           draft: false
