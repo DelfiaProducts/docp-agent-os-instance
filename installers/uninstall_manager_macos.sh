@@ -4,7 +4,7 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-MANAGER_IS_RUNNING=$(ps aux | grep -v grep | grep docp-agent/bin/manager)
+MANAGER_IS_RUNNING=$(ps aux | grep -v grep | grep docp-agent/bin/current/manager)
 DOCP_FILES_PATH=/opt/docp-agent
 USER_GROUP_NAME=docp-agent
 
