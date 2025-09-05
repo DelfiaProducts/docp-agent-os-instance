@@ -10,14 +10,6 @@ import (
 	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
 )
 
-const (
-	CURL_AGENT_LINUX_INSTALL_SH     = "curl -L https://test-docp-agent-data.s3.amazonaws.com/installer/install_agent_linux.sh | bash"
-	CURL_AGENT_LINUX_UNINSTALL_SH   = "curl -L https://test-docp-agent-data.s3.amazonaws.com/installer/uninstall_agent_linux.sh | bash"
-	CURL_UPDATER_LINUX_INSTALL_SH   = "curl -L https://test-docp-agent-data.s3.amazonaws.com/installer/install_updater_linux.sh | bash"
-	CURL_UPDATER_LINUX_UNINSTALL_SH = "curl -L https://test-docp-agent-data.s3.amazonaws.com/installer/uninstall_updater_linux.sh | bash"
-	CURL_LINUX_AUTO_UNINSTALL_SH    = "curl -L https://test-docp-agent-data.s3.amazonaws.com/installer/uninstall_manager_linux.sh | bash"
-)
-
 // LinuxOperations is instance of linux operations
 type LinuxOperations struct {
 	logger     interfaces.ILogger
@@ -90,7 +82,7 @@ func (l *LinuxOperations) StopService(serviceName string) error {
 
 // InstallAgent execute install the agent docp
 func (l *LinuxOperations) InstallAgent(version string) error {
-	if err := l.program.Execute("bash", []string{fmt.Sprintf("VERSION=%s", version)}, "-c", CURL_AGENT_LINUX_INSTALL_SH); err != nil {
+	if err := l.program.Execute("bash", []string{fmt.Sprintf("VERSION=%s", version)}, "-c", utils.ChoiceInstallerOrUninstaller("linux", "agent", "install", version)); err != nil {
 		return err
 	}
 	return nil
@@ -109,23 +101,23 @@ func (l *LinuxOperations) InstallUpdater(version string) error {
 		return err
 	}
 
-	if err := l.program.Execute("bash", []string{fmt.Sprintf("VERSION=%s", version)}, "-c", CURL_UPDATER_LINUX_INSTALL_SH); err != nil {
+	if err := l.program.Execute("bash", []string{fmt.Sprintf("VERSION=%s", version)}, "-c", utils.ChoiceInstallerOrUninstaller("linux", "updater", "install", version)); err != nil {
 		return err
 	}
 	return nil
 }
 
 // UninstallAgent execute uninstall the agent docp
-func (l *LinuxOperations) UninstallAgent() error {
-	if err := l.program.Execute("bash", []string{}, "-c", CURL_AGENT_LINUX_UNINSTALL_SH); err != nil {
+func (l *LinuxOperations) UninstallAgent(version string) error {
+	if err := l.program.Execute("bash", []string{}, "-c", utils.ChoiceInstallerOrUninstaller("linux", "agent", "uninstall", version)); err != nil {
 		return err
 	}
 	return nil
 }
 
 // UninstallUpdater execute uninstall the updater docp
-func (l *LinuxOperations) UninstallUpdater() error {
-	if err := l.program.Execute("bash", []string{}, "-c", CURL_UPDATER_LINUX_UNINSTALL_SH); err != nil {
+func (l *LinuxOperations) UninstallUpdater(version string) error {
+	if err := l.program.Execute("bash", []string{}, "-c", utils.ChoiceInstallerOrUninstaller("linux", "updater", "uninstall", version)); err != nil {
 		return err
 	}
 	return nil
@@ -142,14 +134,14 @@ func (l *LinuxOperations) UpdateAgent(version string) error {
 }
 
 // AutoUninstall execute auto uninstall the manager
-func (l *LinuxOperations) AutoUninstall() error {
-	if err := l.program.Execute("bash", []string{}, "-c", CURL_AGENT_LINUX_UNINSTALL_SH); err != nil {
+func (l *LinuxOperations) AutoUninstall(version string) error {
+	if err := l.program.Execute("bash", []string{}, "-c", utils.ChoiceInstallerOrUninstaller("linux", "agent", "uninstall", version)); err != nil {
 		return err
 	}
-	if err := l.program.Execute("bash", []string{}, "-c", CURL_UPDATER_LINUX_UNINSTALL_SH); err != nil {
+	if err := l.program.Execute("bash", []string{}, "-c", utils.ChoiceInstallerOrUninstaller("linux", "updater", "uninstall", version)); err != nil {
 		return err
 	}
-	job := fmt.Sprintf("* * * * * %s; crontab -l | grep -v '%s' | crontab -", CURL_LINUX_AUTO_UNINSTALL_SH, CURL_LINUX_AUTO_UNINSTALL_SH)
+	job := fmt.Sprintf("* * * * * %s; crontab -l | grep -v '%s' | crontab -", utils.ChoiceInstallerOrUninstaller("linux", "manager", "uninstall", version), utils.ChoiceInstallerOrUninstaller("linux", "manager", "uninstall", version))
 	command := fmt.Sprintf("(crontab -l 2>/dev/null; echo \"%s\") | crontab -", job)
 	if err := l.program.Execute("bash", []string{}, "-c", command); err != nil {
 		return err
