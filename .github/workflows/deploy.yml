@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  deploy:
+  build-binaries:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -70,69 +70,122 @@ jobs:
           cd cmd/updater
           GOOS=darwin GOARCH=arm64 go build -o updater-macos-arm64 main.go
           GOOS=darwin GOARCH=amd64 go build -o updater-macos-amd64 main.go
+
+      - name: Upload Binaries
+        uses: actions/upload-artifact@v3
+        with:
+          name: binaries
+          path: |
+            cmd/agent/agent-*
+            cmd/manager/manager-*
+            cmd/updater/updater-*
+
+  build-windows-installers:
+    runs-on: windows-latest
+    needs: build-binaries
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Binaries
+        uses: actions/download-artifact@v3
+        with:
+          name: binaries
+          path: binaries/
+
+      - name: Setup WiX Toolset
+        run: |
+          # Install WiX Toolset via Chocolatey
+          choco install wixtoolset
+          # Add WiX to PATH (if needed)
+          echo "C:\Program Files (x86)\WiX Toolset v3.11\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Prepare Windows Binaries
+        run: |
+          # Enter installers directory
+          cd installers
+          # Copy the manager binary to current directory for WiX to find
+          copy ..\binaries\cmd\manager\manager-windows-amd64.exe manager.exe
+          # Copy the agent binary to current directory for WiX to find  
+          copy ..\binaries\cmd\agent\agent-windows-amd64.exe agent.exe
+          # List files to verify
+          dir
+
+      - name: Build Windows Installers
+        run: |
+          # Enter installers directory
+          cd installers
+          
+          # Build Manager MSI
+          # Use candle.exe to compile manager XML to wixobj
+          candle.exe install_manager_windows.xml
+          # Use light.exe with WixUIExtension to create MSI
+          light.exe -ext WixUIExtension install_manager_windows.wixobj -o install_manager_windows.msi
+          
+          # Build Agent MSI  
+          # Use candle.exe to compile agent XML to wixobj
+          candle.exe install_agent_windows.xml
+          # Use light.exe with WixUIExtension to create MSI
+          light.exe -ext WixUIExtension install_agent_windows.wixobj -o install_agent_windows.msi
+          
+          # List generated files
+          dir *.msi
+
+      - name: Upload Windows Installers
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-installers
+          path: |
+            installers/*.msi
+
+  organize-and-release:
+    runs-on: ubuntu-latest
+    needs: [build-binaries, build-windows-installers]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download Binaries
+        uses: actions/download-artifact@v3
+        with:
+          name: binaries
+          path: binaries/
+
+      - name: Download Windows Installers
+        uses: actions/download-artifact@v3
+        with:
+          name: windows-installers
+          path: windows-installers/
+
       - name: Organize Release Assets
         run: |
           # Create directories for organized release
           mkdir -p release/manager
           mkdir -p release/agent
           mkdir -p release/updater
-          
-          # Copy manager binaries with organized structure
-          cp cmd/manager/manager-windows-amd64.exe release/manager/
-          cp cmd/manager/manager-linux-amd64 release/manager/
-          cp cmd/manager/manager-linux-arm64 release/manager/
-          cp cmd/manager/manager-macos-amd64 release/manager/
-          cp cmd/manager/manager-macos-arm64 release/manager/
-          
-          # Copy agent binaries with organized structure
-          cp cmd/agent/agent-windows-amd64.exe release/agent/
-          cp cmd/agent/agent-linux-amd64 release/agent/
-          cp cmd/agent/agent-linux-arm64 release/agent/
-          cp cmd/agent/agent-macos-amd64 release/agent/
-          cp cmd/agent/agent-macos-arm64 release/agent/
-
-          # Copy updater binaries with organized structure
-          cp cmd/updater/updater-windows-amd64.exe release/updater/
-          cp cmd/updater/updater-linux-amd64 release/updater/
-          cp cmd/updater/updater-linux-arm64 release/updater/
-          cp cmd/updater/updater-macos-arm64 release/updater/
-          cp cmd/updater/updater-macos-amd64 release/updater/
-
-      - name: Setup WiX Toolset
-        run: |
-          # Install WiX Toolset
-          wget -O wix.zip https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip
-          unzip wix.zip -d /tmp/wix
-          # Add WiX to PATH
-          echo "/tmp/wix" >> $GITHUB_PATH
-          # Make executables runnable
-          chmod +x /tmp/wix/candle.exe /tmp/wix/light.exe
-
-      - name: Build Windows Installer - Manager
-        run: |
-          cd installers
-          # Copy the manager binary to current directory for WiX to find
-          cp ../cmd/manager/manager-windows-amd64.exe manager.exe
-          # Compile WiX source to object file
-          /tmp/wix/candle.exe install_manager_windows.xml
-          # Link object file to create MSI
-          /tmp/wix/light.exe install_manager_windows.wixobj -o install_manager_windows.msi
-
-      - name: Build Windows Installer - Agent  
-        run: |
-          cd installers
-          # Copy the agent binary to current directory for WiX to find
-          cp ../cmd/agent/agent-windows-amd64.exe agent.exe
-          # Compile WiX source to object file
-          /tmp/wix/candle.exe install_agent_windows.xml
-          # Link object file to create MSI
-          /tmp/wix/light.exe install_agent_windows.wixobj -o install_agent_windows.msi
-
-      - name: Organize Installer Assets
-        run: |
-          # Create directories for organized release
           mkdir -p release/installer
           
+          # Copy manager binaries with organized structure
+          cp binaries/cmd/manager/manager-windows-amd64.exe release/manager/
+          cp binaries/cmd/manager/manager-linux-amd64 release/manager/
+          cp binaries/cmd/manager/manager-linux-arm64 release/manager/
+          cp binaries/cmd/manager/manager-macos-amd64 release/manager/
+          cp binaries/cmd/manager/manager-macos-arm64 release/manager/
+          
+          # Copy agent binaries with organized structure
+          cp binaries/cmd/agent/agent-windows-amd64.exe release/agent/
+          cp binaries/cmd/agent/agent-linux-amd64 release/agent/
+          cp binaries/cmd/agent/agent-linux-arm64 release/agent/
+          cp binaries/cmd/agent/agent-macos-amd64 release/agent/
+          cp binaries/cmd/agent/agent-macos-arm64 release/agent/
+
+          # Copy updater binaries with organized structure
+          cp binaries/cmd/updater/updater-windows-amd64.exe release/updater/
+          cp binaries/cmd/updater/updater-linux-amd64 release/updater/
+          cp binaries/cmd/updater/updater-linux-arm64 release/updater/
+          cp binaries/cmd/updater/updater-macos-arm64 release/updater/
+          cp binaries/cmd/updater/updater-macos-amd64 release/updater/
+
           # Copy manager installers linux
           cp installers/install_manager_linux.sh release/installer/
           cp installers/uninstall_manager_linux.sh release/installer/
@@ -158,8 +211,7 @@ jobs:
           cp installers/uninstall_updater_macos.sh release/installer/
 
           # Copy Windows installers
-          cp installers/install_manager_windows.msi release/installer/
-          cp installers/install_agent_windows.msi release/installer/
+          cp windows-installers/*.msi release/installer/
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
