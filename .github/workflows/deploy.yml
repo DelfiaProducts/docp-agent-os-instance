@@ -18,76 +18,105 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
+          go-version: '1.24'
 
       - name: Build Agent Binaries - Windows amd64
         run: |
           cd cmd/agent
-          GOOS=windows GOARCH=amd64 go build -o docp-agent-windows-amd64.exe main.go
+          GOOS=windows GOARCH=amd64 go build -o agent-windows-amd64.exe main.go
       
       - name: Build Agent Binaries - Linux amd64 and arm64
         run: |
           cd cmd/agent
-          GOOS=linux GOARCH=arm64 go build -o docp-agent-linux-arm64 main.go
-          GOOS=linux GOARCH=amd64 go build -o docp-agent-linux-amd64 main.go
+          GOOS=linux GOARCH=arm64 go build -o agent-linux-arm64 main.go
+          GOOS=linux GOARCH=amd64 go build -o agent-linux-amd64 main.go
       
       - name: Build Agent Binaries - macOS amd64 and arm64
         run: |
           cd cmd/agent
-          GOOS=darwin GOARCH=arm64 go build -o docp-agent-macos-arm64 main.go
-          GOOS=darwin GOARCH=amd64 go build -o docp-agent-macos-amd64 main.go
+          GOOS=darwin GOARCH=arm64 go build -o agent-macos-arm64 main.go
+          GOOS=darwin GOARCH=amd64 go build -o agent-macos-amd64 main.go
 
       - name: Build Manager Binaries - Windows amd64
         run: |
           cd cmd/manager
-          GOOS=windows GOARCH=amd64 go build -o docp-manager-windows-amd64.exe main.go
+          GOOS=windows GOARCH=amd64 go build -o manager-windows-amd64.exe main.go
       
       - name: Build Manager Binaries - Linux amd64 and arm64
         run: |
           cd cmd/manager
-          GOOS=linux GOARCH=arm64 go build -o docp-manager-linux-arm64 main.go
-          GOOS=linux GOARCH=amd64 go build -o docp-manager-linux-amd64 main.go
-      
+          GOOS=linux GOARCH=arm64 go build -o manager-linux-arm64 main.go
+          GOOS=linux GOARCH=amd64 go build -o manager-linux-amd64 main.go
+
       - name: Build Manager Binaries - macOS amd64 and arm64
         run: |
           cd cmd/manager
-          GOOS=darwin GOARCH=arm64 go build -o docp-manager-macos-arm64 main.go
-          GOOS=darwin GOARCH=amd64 go build -o docp-manager-macos-amd64 main.go
+          GOOS=darwin GOARCH=arm64 go build -o manager-macos-arm64 main.go
+          GOOS=darwin GOARCH=amd64 go build -o manager-macos-amd64 main.go
 
+      - name: Build Updater Binaries - Windows amd64
+        run: |
+          cd cmd/updater
+          GOOS=windows GOARCH=amd64 go build -o updater-windows-amd64.exe main.go
+
+      - name: Build Updater Binaries - Linux amd64 and arm64
+        run: |
+          cd cmd/updater
+          GOOS=linux GOARCH=arm64 go build -o updater-linux-arm64 main.go
+          GOOS=linux GOARCH=amd64 go build -o updater-linux-amd64 main.go
+
+      - name: Build Updater Binaries - macOS amd64 and arm64
+        run: |
+          cd cmd/updater
+          GOOS=darwin GOARCH=arm64 go build -o updater-macos-arm64 main.go
+          GOOS=darwin GOARCH=amd64 go build -o updater-macos-amd64 main.go
       - name: Organize Release Assets
         run: |
           # Create directories for organized release
           mkdir -p release/manager
           mkdir -p release/agent
+          mkdir -p release/updater
           
           # Copy manager binaries with organized structure
-          cp cmd/manager/docp-manager-windows-amd64.exe release/manager/
-          cp cmd/manager/docp-manager-linux-amd64 release/manager/
-          cp cmd/manager/docp-manager-linux-arm64 release/manager/
-          cp cmd/manager/docp-manager-macos-amd64 release/manager/
-          cp cmd/manager/docp-manager-macos-arm64 release/manager/
+          cp cmd/manager/manager-windows-amd64.exe release/manager/
+          cp cmd/manager/manager-linux-amd64 release/manager/
+          cp cmd/manager/manager-linux-arm64 release/manager/
+          cp cmd/manager/manager-macos-amd64 release/manager/
+          cp cmd/manager/manager-macos-arm64 release/manager/
           
           # Copy agent binaries with organized structure
-          cp cmd/agent/docp-agent-windows-amd64.exe release/agent/
-          cp cmd/agent/docp-agent-linux-amd64 release/agent/
-          cp cmd/agent/docp-agent-linux-arm64 release/agent/
-          cp cmd/agent/docp-agent-macos-amd64 release/agent/
-          cp cmd/agent/docp-agent-macos-arm64 release/agent/
-      
+          cp cmd/agent/agent-windows-amd64.exe release/agent/
+          cp cmd/agent/agent-linux-amd64 release/agent/
+          cp cmd/agent/agent-linux-arm64 release/agent/
+          cp cmd/agent/agent-macos-amd64 release/agent/
+          cp cmd/agent/agent-macos-arm64 release/agent/
+
+          # Copy updater binaries with organized structure
+          cp cmd/updater/updater-windows-amd64.exe release/updater/
+          cp cmd/updater/updater-linux-amd64 release/updater/
+          cp cmd/updater/updater-linux-arm64 release/updater/
+          cp cmd/updater/updater-macos-arm64 release/updater/
+          cp cmd/updater/updater-macos-amd64 release/updater/
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            release/manager/docp-manager-windows-amd64.exe
-            release/manager/docp-manager-linux-amd64
-            release/manager/docp-manager-linux-arm64
-            release/manager/docp-manager-macos-amd64
-            release/manager/docp-manager-macos-arm64
-            release/agent/docp-agent-windows-amd64.exe
-            release/agent/docp-agent-linux-amd64
-            release/agent/docp-agent-linux-arm64
-            release/agent/docp-agent-macos-amd64
-            release/agent/docp-agent-macos-arm64
+            release/manager/manager-windows-amd64.exe
+            release/manager/manager-linux-amd64
+            release/manager/manager-linux-arm64
+            release/manager/manager-macos-amd64
+            release/manager/manager-macos-arm64
+            release/agent/agent-windows-amd64.exe
+            release/agent/agent-linux-amd64
+            release/agent/agent-linux-arm64
+            release/agent/agent-macos-amd64
+            release/agent/agent-macos-arm64
+            release/updater/updater-windows-amd64.exe
+            release/updater/updater-linux-amd64
+            release/updater/updater-linux-arm64
+            release/updater/updater-macos-amd64
+            release/updater/updater-macos-arm64
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           draft: false
