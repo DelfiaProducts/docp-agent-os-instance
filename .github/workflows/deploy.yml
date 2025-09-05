@@ -98,6 +98,29 @@ jobs:
           cp cmd/updater/updater-macos-arm64 release/updater/
           cp cmd/updater/updater-macos-amd64 release/updater/
 
+      - name: Setup WiX Toolset
+        uses: wixtoolset/wix3-action@v3
+
+      - name: Build Windows Installer - Manager
+        run: |
+          cd installers
+          # Copy the manager binary to current directory for WiX to find
+          cp ../cmd/manager/manager-windows-amd64.exe manager.exe
+          # Compile WiX source to object file
+          candle.exe install_manager_windows.xml
+          # Link object file to create MSI
+          light.exe install_manager_windows.wixobj -o install_manager_windows.msi
+
+      - name: Build Windows Installer - Agent  
+        run: |
+          cd installers
+          # Copy the agent binary to current directory for WiX to find
+          cp ../cmd/agent/agent-windows-amd64.exe agent.exe
+          # Compile WiX source to object file
+          candle.exe install_agent_windows.xml
+          # Link object file to create MSI
+          light.exe install_agent_windows.wixobj -o install_agent_windows.msi
+
       - name: Organize Installer Assets
         run: |
           # Create directories for organized release
@@ -126,6 +149,10 @@ jobs:
           # Copy updater installers macos
           cp installers/install_updater_macos.sh release/installer/
           cp installers/uninstall_updater_macos.sh release/installer/
+
+          # Copy Windows installers
+          cp installers/install_manager_windows.msi release/installer/
+          cp installers/install_agent_windows.msi release/installer/
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -158,6 +185,8 @@ jobs:
             release/installer/uninstall_updater_linux.sh
             release/installer/install_updater_macos.sh
             release/installer/uninstall_updater_macos.sh
+            release/installer/install_manager_windows.msi
+            release/installer/install_agent_windows.msi
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           draft: false
