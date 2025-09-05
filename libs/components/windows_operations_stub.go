@@ -84,12 +84,12 @@ func (l *WindowsOperations) UpdateAgent(version string) error {
 }
 
 // UninstallAgent execute uninstall the agent docp
-func (l *WindowsOperations) UninstallAgent() error {
+func (l *WindowsOperations) UninstallAgent(version string) error {
 	return nil
 }
 
 // AutoUninstall execute auto uninstall the manager
-func (l *WindowsOperations) AutoUninstall() error {
+func (l *WindowsOperations) AutoUninstall(version string) error {
 	return nil
 }
 
