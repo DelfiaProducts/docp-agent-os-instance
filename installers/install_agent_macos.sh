@@ -4,7 +4,8 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-BINARY_URL="https://test-docp-agent-data.s3.amazonaws.com/agent"
+FILE_INDEX_URL="https://docp-agent-k8s.s3.us-east-1.amazonaws.com/index.json"
+BINARY_URL="https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
 VERSION="${VERSION:-${VERSION:-latest}}"
 AGENT_IS_RUNNING=$(ps aux | grep -v grep | grep docp-agent/bin/agent)
 DOCP_FILES_PATH=/opt/docp-agent
@@ -49,15 +50,28 @@ function setup(){
   already_running
 }
 
+# Corrige a função resolve_version para extrair corretamente o campo "latest" do JSON
+function resolve_version() {
+  local version="$1"
+  if [[ "$version" == "latest" ]]; then
+    version=$(curl -s "$FILE_INDEX_URL" | sed -n 's/.*"latest"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+    if [[ -z "$version" ]]; then
+      echo "Failed to fetch latest version." >&2
+      exit 1
+    fi
+  fi
+  echo "$version"
+}
+
 #get binary arm64
 function get_binary_arch64(){
-  sudo curl -s -o $DOCP_FILES_PATH/bin/agent "$BINARY_URL/$VERSION/macos_arm64"
-  sudo chmod +x $DOCP_FILES_PATH/bin/agent
+  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-macos-arm64"
+  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/agent
 }
 #get binary amd64
 function get_binary_amd64(){
-  sudo curl -s -o $DOCP_FILES_PATH/bin/agent "$BINARY_URL/$VERSION/macos_amd64"
-  sudo chmod +x $DOCP_FILES_PATH/bin/agent
+  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-macos-amd64"
+  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/agent
 }
 #set content service
 function set_content_service() {
@@ -75,10 +89,6 @@ function set_content_service() {
         <string>com.docp.agent</string>
         <key>EnvironmentVariables</key>
         <dict>
-            <key>DOCP_REGISTER_URL</key>
-            <string>https://msapi.sandbox.docphq.tech/agents</string>
-            <key>DOCP_STATE_CHECK_URL</key>
-            <string>https://msapi.sandbox.docphq.tech/agents</string>
             <key>DOCP_AGENT_PORT</key>
             <string>12012</string>
             <key>LOG_LEVEL</key>
@@ -88,7 +98,7 @@ function set_content_service() {
         </dict>
         <key>ProgramArguments</key>
         <array>
-            <string>/opt/docp-agent/bin/agent</string>
+            <string>/opt/docp-agent/bin/current/agent</string>
         </array>
         <key>StandardOutPath</key>
         <string>/opt/docp-agent/logs/launchd.log</string>
@@ -106,6 +116,7 @@ function prepare_launchd() {
   launchctl start gui/$(id -u)/com.docp.agent
 }
 #actions
+VERSION=$(resolve_version "$VERSION")
 setup
 verify_architecture
 set_content_service
