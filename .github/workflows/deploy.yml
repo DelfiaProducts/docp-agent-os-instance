@@ -146,6 +146,18 @@ jobs:
             release/updater/updater-linux-arm64
             release/updater/updater-macos-amd64
             release/updater/updater-macos-arm64
+            release/installer/install_manager_linux.sh
+            release/installer/uninstall_manager_linux.sh
+            release/installer/install_manager_macos.sh
+            release/installer/uninstall_manager_macos.sh
+            release/installer/install_agent_linux.sh
+            release/installer/uninstall_agent_linux.sh
+            release/installer/install_agent_macos.sh
+            release/installer/uninstall_agent_macos.sh
+            release/installer/install_updater_linux.sh
+            release/installer/uninstall_updater_linux.sh
+            release/installer/install_updater_macos.sh
+            release/installer/uninstall_updater_macos.sh
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           draft: false
