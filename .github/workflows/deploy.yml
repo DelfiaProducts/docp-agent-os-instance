@@ -129,9 +129,9 @@ jobs:
           cd installers
           
           # Copy the manager and agent binaries from the correct paths
-          # Based on the artifact structure, they should be in binaries/cmd/manager/ and binaries/cmd/agent/
-          $managerPath = "..\binaries\cmd\manager\manager-windows-amd64.exe"
-          $agentPath = "..\binaries\cmd\agent\agent-windows-amd64.exe"
+          # Based on the artifact structure, they are in binaries/manager/ and binaries/agent/
+          $managerPath = "..\binaries\manager\manager-windows-amd64.exe"
+          $agentPath = "..\binaries\agent\agent-windows-amd64.exe"
           
           # Check if manager binary exists
           if (Test-Path $managerPath) {
@@ -139,8 +139,8 @@ jobs:
             echo "Copied manager binary from $managerPath"
           } else {
             echo "ERROR: Manager binary not found at $managerPath"
-            echo "=== Available files in binaries/cmd/manager/ ==="
-            Get-ChildItem "..\binaries\cmd\manager\" -ErrorAction SilentlyContinue
+            echo "=== Available files in binaries/manager/ ==="
+            Get-ChildItem "..\binaries\manager\" -ErrorAction SilentlyContinue
             exit 1
           }
           
@@ -150,8 +150,8 @@ jobs:
             echo "Copied agent binary from $agentPath"
           } else {
             echo "ERROR: Agent binary not found at $agentPath"
-            echo "=== Available files in binaries/cmd/agent/ ==="
-            Get-ChildItem "..\binaries\cmd\agent\" -ErrorAction SilentlyContinue
+            echo "=== Available files in binaries/agent/ ==="
+            Get-ChildItem "..\binaries\agent\" -ErrorAction SilentlyContinue
             exit 1
           }
           
@@ -214,25 +214,25 @@ jobs:
           mkdir -p release/installer
           
           # Copy manager binaries with organized structure
-          cp binaries/cmd/manager/manager-windows-amd64.exe release/manager/
-          cp binaries/cmd/manager/manager-linux-amd64 release/manager/
-          cp binaries/cmd/manager/manager-linux-arm64 release/manager/
-          cp binaries/cmd/manager/manager-macos-amd64 release/manager/
-          cp binaries/cmd/manager/manager-macos-arm64 release/manager/
+          cp binaries/manager/manager-windows-amd64.exe release/manager/
+          cp binaries/manager/manager-linux-amd64 release/manager/
+          cp binaries/manager/manager-linux-arm64 release/manager/
+          cp binaries/manager/manager-macos-amd64 release/manager/
+          cp binaries/manager/manager-macos-arm64 release/manager/
           
           # Copy agent binaries with organized structure
-          cp binaries/cmd/agent/agent-windows-amd64.exe release/agent/
-          cp binaries/cmd/agent/agent-linux-amd64 release/agent/
-          cp binaries/cmd/agent/agent-linux-arm64 release/agent/
-          cp binaries/cmd/agent/agent-macos-amd64 release/agent/
-          cp binaries/cmd/agent/agent-macos-arm64 release/agent/
+          cp binaries/agent/agent-windows-amd64.exe release/agent/
+          cp binaries/agent/agent-linux-amd64 release/agent/
+          cp binaries/agent/agent-linux-arm64 release/agent/
+          cp binaries/agent/agent-macos-amd64 release/agent/
+          cp binaries/agent/agent-macos-arm64 release/agent/
 
           # Copy updater binaries with organized structure
-          cp binaries/cmd/updater/updater-windows-amd64.exe release/updater/
-          cp binaries/cmd/updater/updater-linux-amd64 release/updater/
-          cp binaries/cmd/updater/updater-linux-arm64 release/updater/
-          cp binaries/cmd/updater/updater-macos-arm64 release/updater/
-          cp binaries/cmd/updater/updater-macos-amd64 release/updater/
+          cp binaries/updater/updater-windows-amd64.exe release/updater/
+          cp binaries/updater/updater-linux-amd64 release/updater/
+          cp binaries/updater/updater-linux-arm64 release/updater/
+          cp binaries/updater/updater-macos-arm64 release/updater/
+          cp binaries/updater/updater-macos-amd64 release/updater/
 
           # Copy manager installers linux
           cp installers/install_manager_linux.sh release/installer/
