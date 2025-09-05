@@ -100,6 +100,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
       - name: Download Binaries
         uses: actions/download-artifact@v4
         with:
@@ -154,6 +159,19 @@ jobs:
             Get-ChildItem "..\binaries\agent\" -ErrorAction SilentlyContinue
             exit 1
           }
+          
+          # Build config executables needed by WiX
+          echo "=== Building config executables ==="
+          
+          # Build manager config executable
+          $env:GOOS = "windows"
+          $env:GOARCH = "amd64"
+          go build -o config_manager.exe manager/install_manager_windows.go
+          echo "Built config_manager.exe"
+          
+          # Build agent config executable  
+          go build -o config_agent.exe agent/install_agent_windows.go
+          echo "Built config_agent.exe"
           
           # List files to verify
           echo "=== Files in installers directory ==="
