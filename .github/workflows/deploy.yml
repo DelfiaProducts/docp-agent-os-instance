@@ -99,7 +99,14 @@ jobs:
           cp cmd/updater/updater-macos-amd64 release/updater/
 
       - name: Setup WiX Toolset
-        uses: wixtoolset/wix3-action@v3
+        run: |
+          # Install WiX Toolset
+          wget -O wix.zip https://github.com/wixtoolset/wix3/releases/download/wix3112rtm/wix311-binaries.zip
+          unzip wix.zip -d /tmp/wix
+          # Add WiX to PATH
+          echo "/tmp/wix" >> $GITHUB_PATH
+          # Make executables runnable
+          chmod +x /tmp/wix/candle.exe /tmp/wix/light.exe
 
       - name: Build Windows Installer - Manager
         run: |
@@ -107,9 +114,9 @@ jobs:
           # Copy the manager binary to current directory for WiX to find
           cp ../cmd/manager/manager-windows-amd64.exe manager.exe
           # Compile WiX source to object file
-          candle.exe install_manager_windows.xml
+          /tmp/wix/candle.exe install_manager_windows.xml
           # Link object file to create MSI
-          light.exe install_manager_windows.wixobj -o install_manager_windows.msi
+          /tmp/wix/light.exe install_manager_windows.wixobj -o install_manager_windows.msi
 
       - name: Build Windows Installer - Agent  
         run: |
@@ -117,9 +124,9 @@ jobs:
           # Copy the agent binary to current directory for WiX to find
           cp ../cmd/agent/agent-windows-amd64.exe agent.exe
           # Compile WiX source to object file
-          candle.exe install_agent_windows.xml
+          /tmp/wix/candle.exe install_agent_windows.xml
           # Link object file to create MSI
-          light.exe install_agent_windows.wixobj -o install_agent_windows.msi
+          /tmp/wix/light.exe install_agent_windows.wixobj -o install_agent_windows.msi
 
       - name: Organize Installer Assets
         run: |
