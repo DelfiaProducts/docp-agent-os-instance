@@ -505,9 +505,9 @@ func (l *ManagerAdapter) InstallAgent(version string) error {
 }
 
 // UninstallAgent execute uninstall the agent docp
-func (l *ManagerAdapter) UninstallAgent() error {
+func (l *ManagerAdapter) UninstallAgent(version string) error {
 	l.logger.Debug("uninstall agent", "trace", "docp-agent-os-instance.manager_adapter.UninstallAgent")
-	if err := l.osOperation.UninstallAgent(); err != nil {
+	if err := l.osOperation.UninstallAgent(version); err != nil {
 		return err
 	}
 	return nil
@@ -530,9 +530,9 @@ func (l *ManagerAdapter) UpdateAgent(version string) error {
 }
 
 // AutoUninstall execute auto uninstall the manager
-func (l *ManagerAdapter) AutoUninstall() error {
+func (l *ManagerAdapter) AutoUninstall(version string) error {
 	l.logger.Debug("auto uninstall agent", "trace", "docp-agent-os-instance.manager_adapter.AutoUninstall")
-	if err := l.osOperation.AutoUninstall(); err != nil {
+	if err := l.osOperation.AutoUninstall(version); err != nil {
 		return err
 	}
 	return nil
@@ -895,22 +895,6 @@ func (l *ManagerAdapter) prepareDocpAgentAction(stateCheckSignal dto.StateCheckS
 		}
 	}
 	return dto.StateAction{}
-}
-
-// getActionsEnvs return slice the envs from configurations
-func (l *ManagerAdapter) getActionsEnvs(envs []dto.StateCheckEnvVars) []dto.StateActionEnvs {
-	l.logger.Debug("get actions envs", "trace", "docp-agent-os-instance.manager_adapter.getActionsEnvs", "envs", envs)
-	var arrEnvs []dto.StateActionEnvs
-	if len(envs) > 0 {
-		for _, ev := range envs {
-			enAct := dto.StateActionEnvs{
-				Name:  ev.Name,
-				Value: ev.Value,
-			}
-			arrEnvs = append(arrEnvs, enAct)
-		}
-	}
-	return arrEnvs
 }
 
 // getActionsFiles return slice the files from configurations
