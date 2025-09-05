@@ -98,6 +98,35 @@ jobs:
           cp cmd/updater/updater-macos-arm64 release/updater/
           cp cmd/updater/updater-macos-amd64 release/updater/
 
+      - name: Organize Installer Assets
+        run: |
+          # Create directories for organized release
+          mkdir -p release/installer
+          
+          # Copy manager installers linux
+          cp installers/install_manager_linux.sh release/installer/
+          cp installers/uninstall_manager_linux.sh release/installer/
+
+          # Copy manager installers macos
+          cp installers/install_manager_macos.sh release/installer/
+          cp installers/uninstall_manager_macos.sh release/installer/
+
+          # Copy agent installers linux
+          cp installers/install_agent_linux.sh release/installer/
+          cp installers/uninstall_agent_linux.sh release/installer/
+
+          # Copy agent installers macos
+          cp installers/install_agent_macos.sh release/installer/
+          cp installers/uninstall_agent_macos.sh release/installer/
+
+          # Copy updater installers linux
+          cp installers/install_updater_linux.sh release/installer/
+          cp installers/uninstall_updater_linux.sh release/installer/
+
+          # Copy updater installers macos
+          cp installers/install_updater_macos.sh release/installer/
+          cp installers/uninstall_updater_macos.sh release/installer/
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
