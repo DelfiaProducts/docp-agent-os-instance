@@ -115,6 +115,257 @@ func (l *ManagerOperator) WaitGroupWait() {
 	l.wg.Wait()
 }
 
+// GetState get state from state check
+func (l *ManagerOperator) GetSignalFromStateCheck() error {
+	l.logger.Debug("get signal from state check", "trace", "docp-agent-os-instance.manager_operator.GetSignalFromStateCheck")
+	stateCheckBytes, statusCode, err := l.stateCheck.GetState()
+	if err != nil {
+		l.chanErrors <- dto.ManagerChanErrors{From: "GetState", Priority: dto.ErrLevelMedium, Err: err}
+	}
+	l.logger.Debug("get state", "trace", "docp-agent-os-instance.manager_operator.GetState", "statusCode", statusCode)
+	switch statusCode {
+	case 200:
+		l.validateIsComplete = false
+
+		// validate if duplicated signal
+		err := l.validateDuplicatedSignal(stateCheckBytes)
+		if err != nil {
+			l.chanErrors <- dto.ManagerChanErrors{From: "GetSignalFromStateCheck", Priority: dto.ErrLevelMedium, Err: err}
+			return err
+		}
+		// save signal on received state
+		err = l.adapter.SaveState(stateCheckBytes)
+		if err != nil {
+			l.chanErrors <- dto.ManagerChanErrors{From: "GetSignalFromStateCheck", Priority: dto.ErrLevelMedium, Err: err}
+			return err
+		}
+	case 204:
+		l.logger.Debug("get signal from state check", "trace", "docp-agent-os-instance.manager_operator.GetSignalFromStateCheck", "status", "not state present")
+		return nil
+	case 403:
+		l.logger.Debug("get signal from state check", "trace", "docp-agent-os-instance.manager_operator.GetSignalFromStateCheck", "status", "not authorized")
+		if err := l.executeAuthCall(); err != nil {
+			l.chanErrors <- dto.ManagerChanErrors{From: "GetSignalFromStateCheck", Priority: dto.ErrLevelMedium, Err: err}
+			return err
+		}
+		return nil
+	default:
+		return nil
+	}
+	return nil
+}
+
+// UpdateAgent execute update the agent docp
+func (l *ManagerOperator) UpdateAgent(version string) error {
+	l.logger.Debug("update the agent docp", "trace", "docp-agent-os-instance.manager_operator.updateAgent")
+	defer l.wg.Done()
+	statusManager, err := l.adapter.Status("manager")
+	if err != nil {
+		l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
+		return err
+	}
+
+	statusAgent, err := l.adapter.Status("agent")
+	if err != nil {
+		l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
+		return err
+	}
+
+	if statusAgent != "active" {
+		go l.installAgent()
+		return nil
+	}
+	l.logger.Info("auto update agent version", "statusManager", statusManager, "statusAgent", statusAgent)
+	if statusManager == "active" && statusAgent == "active" {
+		agentVersion, err := l.adapter.GetAgentVersion()
+		if err != nil {
+			l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
+			return err
+		}
+		l.logger.Info("auto update agent version", "version", version, "agentVersion", agentVersion)
+		if version != agentVersion {
+
+			transaction := libutils.NewTransactionStatus()
+			ctx := context.WithValue(context.Background(), libdto.ContextTransactionStatus, transaction)
+
+			go l.adapter.NotifyStatus("update_docp_received", pkg.TransactionEventOpen, "update docp received", ctx)
+			time.Sleep(l.delay)
+
+			go l.adapter.NotifyStatus("update_docp_initiate", pkg.TransactionEventUpdate, "update docp initialized", ctx)
+			time.Sleep(l.delay)
+
+			if err := l.adapter.UpdateAgent(version); err != nil {
+				go l.adapter.NotifyStatus("update_docp_error", pkg.TransactionEventClose, "failed update agent version", ctx)
+				l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
+				return err
+			}
+
+			//save new version
+			if err := l.adapter.SaveAgentVersion(version); err != nil {
+				go l.adapter.NotifyStatus("update_docp_error", pkg.TransactionEventClose, "failed save agent version", ctx)
+				l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
+				return err
+			}
+
+			//save rollback version
+			if err := l.adapter.SaveAgentRollbackVersion(agentVersion); err != nil {
+				go l.adapter.NotifyStatus("update_docp_error", pkg.TransactionEventClose, "failed save agent version", ctx)
+				l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
+				return err
+			}
+
+			go l.adapter.NotifyStatus("update_docp_completed", pkg.TransactionEventClose, "update docp completed", ctx)
+			return nil
+		}
+	}
+	return nil
+}
+
+// GetActions get action for execute in manager
+func (l *ManagerOperator) GetActions() ([]byte, error) {
+	l.logger.Debug("get actions", "trace", "docp-agent-os-instance.manager_operator.GetActions")
+	actions, err := l.adapter.GetState()
+	l.logger.Debug("get actions", "trace", "docp-agent-os-instance.manager_operator.GetActions", "actions", string(actions))
+	if err != nil {
+		return nil, err
+	}
+	return actions, nil
+}
+
+// Stop execute stoping the ManagerOperator
+func (l *ManagerOperator) Stop() {
+	l.logger.Debug("stop", "trace", "docp-agent-os-instance.manager_operator.Stop")
+	l.done <- struct{}{}
+}
+
+// AutoUpdateAgentVersion execute auto update agent version
+func (l *ManagerOperator) AutoUpdateAgentVersion() error {
+	received, err := l.adapter.GetStateReceived()
+	if err != nil {
+		return err
+	}
+	l.logger.Info("auto update agent version", "received", string(received))
+	applyVersion, err := l.adapter.GetAgentVersionFromSignalBytes(received)
+	if err != nil {
+		return err
+	}
+	l.logger.Info("auto update agent version", "applyVersion", applyVersion)
+	if applyVersion != "latest" {
+		l.logger.Info("auto update agent version not latest", "applyVersion", applyVersion)
+		return nil
+	}
+	//fetch agent versions
+	agentVersions, err := l.adapter.FetchAgentVersions()
+	if err != nil {
+		return err
+	}
+	l.logger.Info("auto update agent version", "agentVersions", agentVersions)
+	latestVersion := agentVersions.LatestVersion
+	l.logger.Info("auto update agent version", "latestVersion", latestVersion)
+	if len(latestVersion) > 0 {
+		l.wg.Add(1)
+		go l.UpdateAgent(latestVersion)
+	}
+
+	return nil
+}
+
+// Run execute loop the manager
+func (l *ManagerOperator) Run() error {
+	if err := l.Setup(); err != nil {
+		return err
+	}
+	l.logger.Info("execute manager")
+	l.logger.Debug("execute running", "trace", "docp-agent-os-instance.manager_operator.Run")
+	defer l.logger.Close()
+	l.wg.Add(14)
+	go l.persistLastSignalHashToStore()
+	go l.comunicateSCM()
+	go l.Profiling()
+	go l.Start()
+	go l.consumerErrors()
+	go l.consumerResultsFromApiDocpAgent()
+	go l.collectGetState()
+	go l.collectGetActions()
+	go l.consumeAllActions()
+	go l.handleMetadata()
+	go l.periodicHandlerMetadata()
+	go l.periodicAutoUpdate()
+	go l.periodicTasks()
+	go l.getMetadata()
+	l.wg.Wait()
+	return nil
+}
+
+// Start execute mathod for running in manager operator
+func (l *ManagerOperator) Start() {
+	l.logger.Debug("start tasks", "trace", "docp-agent-os-instance.manager_operator.Start")
+	defer l.wg.Done()
+
+	l.wg.Add(1)
+	go l.installAgent()
+
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			l.wg.Add(4)
+			go l.collectGetState()
+			go l.validateDocpAgentInstalled()
+			go l.validateDatadogAgentInstalled()
+			go l.validateDatadogAgentUpdateConfigs()
+
+		case <-l.done:
+			close(l.done)
+			return
+		}
+	}
+}
+
+func (l *ManagerOperator) CheckHealth() {
+	l.logger.Debug("in CheckHealth", "trace", "docp-agent-os-instance.manager_operator.CheckHealth")
+	resp, err := http.Get("http://localhost:3000/health")
+	if err != nil {
+		l.logger.Error("in CheckHealth", "trace", "docp-agent-os-instance.manager_operator.CheckHealth", "error", err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	var healthResp dto.HealthResponse
+	err = json.NewDecoder(resp.Body).Decode(&healthResp)
+	if err != nil {
+		l.logger.Error("in CheckHealth", "trace", "docp-agent-os-instance.manager_operator.CheckHealth", "error", err.Error())
+		return
+	}
+
+	if healthResp.Status == "success" && healthResp.Code == "HEALTH_OK" {
+		l.logger.Debug("check health success", "trace", "docp-agent-os-instance.manager_operator.CheckHealth", "healthResp", healthResp)
+	} else {
+		l.logger.Warn("check health failed", "trace", "docp-agent-os-instance.manager_operator.CheckHealth", "healthResp", healthResp)
+	}
+}
+
+func (l *ManagerOperator) Profiling() {
+	l.logger.Debug("profiling task", "trace", "docp-agent-os-instance.manager_operator.Profiling")
+	defer l.wg.Done()
+	if err := http.ListenAndServe(":4040", nil); err != nil {
+		l.chanErrors <- dto.ManagerChanErrors{From: "Profiling", Priority: dto.ErrLevelLow, Err: err}
+	}
+}
+
+// Close execute close the operator loop
+func (l *ManagerOperator) Close() error {
+	l.logger.Debug("execute close", "trace", "docp-agent-os-instance.linux_manager_operator.Close")
+	l.wg.Add(1)
+	go func() {
+		defer l.wg.Done()
+		l.adapter.Close()
+	}()
+	return nil
+}
+
 // marshaller execute marshal the inner
 func (l *ManagerOperator) marshaller(inner any) ([]byte, error) {
 	l.logger.Debug("marshaller", "trace", "docp-agent-os-instance.manager_operator.marshaller", "inner", inner)
@@ -164,6 +415,25 @@ func (l *ManagerOperator) consumerErrors() {
 			}
 		}
 	}
+}
+
+// resolveAgentVersion resolve the agent version
+func (l *ManagerOperator) resolveAgentVersion() (string, error) {
+	l.logger.Debug("resolve agent version", "trace", "docp-agent-os-instance.manager_operator.resolveAgentVersion")
+	var version string
+	versionInstalled, err := l.adapter.GetAgentVersion()
+	if err != nil {
+		return version, err
+	}
+	version = versionInstalled
+	if version == "latest" {
+		agentVersions, err := l.adapter.FetchAgentVersions()
+		if err != nil {
+			return version, err
+		}
+		version = agentVersions.LatestVersion
+	}
+	return version, nil
 }
 
 // executeAuthCall execute call to auth and save access token received
@@ -321,46 +591,6 @@ func (l *ManagerOperator) validateDuplicatedSignal(signalBytes []byte) error {
 	return nil
 }
 
-// GetState get state from state check
-func (l *ManagerOperator) GetSignalFromStateCheck() error {
-	l.logger.Debug("get signal from state check", "trace", "docp-agent-os-instance.manager_operator.GetSignalFromStateCheck")
-	stateCheckBytes, statusCode, err := l.stateCheck.GetState()
-	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "GetState", Priority: dto.ErrLevelMedium, Err: err}
-	}
-	l.logger.Debug("get state", "trace", "docp-agent-os-instance.manager_operator.GetState", "statusCode", statusCode)
-	switch statusCode {
-	case 200:
-		l.validateIsComplete = false
-
-		// validate if duplicated signal
-		err := l.validateDuplicatedSignal(stateCheckBytes)
-		if err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "GetSignalFromStateCheck", Priority: dto.ErrLevelMedium, Err: err}
-			return err
-		}
-		// save signal on received state
-		err = l.adapter.SaveState(stateCheckBytes)
-		if err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "GetSignalFromStateCheck", Priority: dto.ErrLevelMedium, Err: err}
-			return err
-		}
-	case 204:
-		l.logger.Debug("get signal from state check", "trace", "docp-agent-os-instance.manager_operator.GetSignalFromStateCheck", "status", "not state present")
-		return nil
-	case 403:
-		l.logger.Debug("get signal from state check", "trace", "docp-agent-os-instance.manager_operator.GetSignalFromStateCheck", "status", "not authorized")
-		if err := l.executeAuthCall(); err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "GetSignalFromStateCheck", Priority: dto.ErrLevelMedium, Err: err}
-			return err
-		}
-		return nil
-	default:
-		return nil
-	}
-	return nil
-}
-
 // getMetadata return metadata from host
 func (l *ManagerOperator) getMetadata() {
 	l.logger.Debug("execute get metadata", "trace", "docp-agent-os-instance.linux_manager_operator.getMetadata")
@@ -373,17 +603,6 @@ func (l *ManagerOperator) getMetadata() {
 	}
 	close(l.chanMetadata)
 	l.wg.Done()
-}
-
-// Close execute close the operator loop
-func (l *ManagerOperator) Close() error {
-	l.logger.Debug("execute close", "trace", "docp-agent-os-instance.linux_manager_operator.Close")
-	l.wg.Add(1)
-	go func() {
-		defer l.wg.Done()
-		l.adapter.Close()
-	}()
-	return nil
 }
 
 // extractDDApiKeyAndDDSiteFromEnvs return envs for install datadog agent
@@ -473,72 +692,6 @@ func (l *ManagerOperator) installAgent() {
 		return
 	}
 	return
-}
-
-// UpdateAgent execute update the agent docp
-func (l *ManagerOperator) UpdateAgent(version string) error {
-	l.logger.Debug("update the agent docp", "trace", "docp-agent-os-instance.manager_operator.updateAgent")
-	defer l.wg.Done()
-	statusManager, err := l.adapter.Status("manager")
-	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
-		return err
-	}
-
-	statusAgent, err := l.adapter.Status("agent")
-	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
-		return err
-	}
-
-	if statusAgent != "active" {
-		go l.installAgent()
-		return nil
-	}
-	l.logger.Info("auto update agent version", "statusManager", statusManager, "statusAgent", statusAgent)
-	if statusManager == "active" && statusAgent == "active" {
-		agentVersion, err := l.adapter.GetAgentVersion()
-		if err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
-			return err
-		}
-		l.logger.Info("auto update agent version", "version", version, "agentVersion", agentVersion)
-		if version != agentVersion {
-
-			transaction := libutils.NewTransactionStatus()
-			ctx := context.WithValue(context.Background(), libdto.ContextTransactionStatus, transaction)
-
-			go l.adapter.NotifyStatus("update_docp_received", pkg.TransactionEventOpen, "update docp received", ctx)
-			time.Sleep(l.delay)
-
-			go l.adapter.NotifyStatus("update_docp_initiate", pkg.TransactionEventUpdate, "update docp initialized", ctx)
-			time.Sleep(l.delay)
-
-			if err := l.adapter.UpdateAgent(version); err != nil {
-				go l.adapter.NotifyStatus("update_docp_error", pkg.TransactionEventClose, "failed update agent version", ctx)
-				l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
-				return err
-			}
-
-			//save new version
-			if err := l.adapter.SaveAgentVersion(version); err != nil {
-				go l.adapter.NotifyStatus("update_docp_error", pkg.TransactionEventClose, "failed save agent version", ctx)
-				l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
-				return err
-			}
-
-			//save rollback version
-			if err := l.adapter.SaveAgentRollbackVersion(agentVersion); err != nil {
-				go l.adapter.NotifyStatus("update_docp_error", pkg.TransactionEventClose, "failed save agent version", ctx)
-				l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
-				return err
-			}
-
-			go l.adapter.NotifyStatus("update_docp_completed", pkg.TransactionEventClose, "update docp completed", ctx)
-			return nil
-		}
-	}
-	return nil
 }
 
 // installAgentDatadog execute call to api docp agent
@@ -849,9 +1002,19 @@ loopuninstall:
 
 	go l.adapter.NotifyStatus("uninstall_docp_processing", pkg.TransactionEventUpdate, "uninstall docp processing", ctx)
 	time.Sleep(l.delay)
-	if err := l.adapter.AutoUninstall(); err != nil {
+
+	//get version installed
+	version, err := l.resolveAgentVersion()
+	if err != nil {
 		go l.adapter.NotifyStatus("uninstall_docp_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
 		l.chanErrors <- dto.ManagerChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
+		return
+	}
+
+	if err := l.adapter.AutoUninstall(version); err != nil {
+		go l.adapter.NotifyStatus("uninstall_docp_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
+		l.chanErrors <- dto.ManagerChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
+		return
 	}
 	go l.adapter.NotifyStatus("uninstall_docp_completed", pkg.TransactionEventClose, "uninstall docp completed", ctx)
 
@@ -882,9 +1045,18 @@ func (l *ManagerOperator) autoUninstall() {
 		go l.adapter.NotifyStatus("uninstall_docp_processing", pkg.TransactionEventUpdate, "uninstall docp processing", ctx)
 		time.Sleep(l.delay)
 
-		if err := l.adapter.AutoUninstall(); err != nil {
+		//get version
+		version, err := l.resolveAgentVersion()
+		if err != nil {
 			go l.adapter.NotifyStatus("uninstall_docp_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
 			l.chanErrors <- dto.ManagerChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
+			return
+		}
+
+		if err := l.adapter.AutoUninstall(version); err != nil {
+			go l.adapter.NotifyStatus("uninstall_docp_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
+			l.chanErrors <- dto.ManagerChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
+			return
 		}
 
 		go l.adapter.NotifyStatus("uninstall_docp_completed", pkg.TransactionEventClose, "uninstall docp completed", ctx)
@@ -1035,55 +1207,6 @@ func (l *ManagerOperator) managerActions(arrActions []dto.ManagerStateAction) {
 		}
 	}
 	defer l.wg.Done()
-}
-
-// GetActions get action for execute in manager
-func (l *ManagerOperator) GetActions() ([]byte, error) {
-	l.logger.Debug("get actions", "trace", "docp-agent-os-instance.manager_operator.GetActions")
-	actions, err := l.adapter.GetState()
-	l.logger.Debug("get actions", "trace", "docp-agent-os-instance.manager_operator.GetActions", "actions", string(actions))
-	if err != nil {
-		return nil, err
-	}
-	return actions, nil
-}
-
-// Stop execute stoping the ManagerOperator
-func (l *ManagerOperator) Stop() {
-	l.logger.Debug("stop", "trace", "docp-agent-os-instance.manager_operator.Stop")
-	l.done <- struct{}{}
-}
-
-// AutoUpdateAgentVersion execute auto update agent version
-func (l *ManagerOperator) AutoUpdateAgentVersion() error {
-	received, err := l.adapter.GetStateReceived()
-	if err != nil {
-		return err
-	}
-	l.logger.Info("auto update agent version", "received", string(received))
-	applyVersion, err := l.adapter.GetAgentVersionFromSignalBytes(received)
-	if err != nil {
-		return err
-	}
-	l.logger.Info("auto update agent version", "applyVersion", applyVersion)
-	if applyVersion != "latest" {
-		l.logger.Info("auto update agent version not latest", "applyVersion", applyVersion)
-		return nil
-	}
-	//fetch agent versions
-	agentVersions, err := l.adapter.FetchAgentVersions()
-	if err != nil {
-		return err
-	}
-	l.logger.Info("auto update agent version", "agentVersions", agentVersions)
-	latestVersion := agentVersions.LatestVersion
-	l.logger.Info("auto update agent version", "latestVersion", latestVersion)
-	if len(latestVersion) > 0 {
-		l.wg.Add(1)
-		go l.UpdateAgent(latestVersion)
-	}
-
-	return nil
 }
 
 func (l *ManagerOperator) verifyChangeMetadata(metadata []byte) bool {
@@ -1299,91 +1422,6 @@ func (l *ManagerOperator) persistLastSignalHashToStore() error {
 	}
 
 	return nil
-}
-
-// Run execute loop the manager
-func (l *ManagerOperator) Run() error {
-	if err := l.Setup(); err != nil {
-		return err
-	}
-	l.logger.Info("execute manager")
-	l.logger.Debug("execute running", "trace", "docp-agent-os-instance.manager_operator.Run")
-	defer l.logger.Close()
-	l.wg.Add(14)
-	go l.persistLastSignalHashToStore()
-	go l.comunicateSCM()
-	go l.Profiling()
-	go l.Start()
-	go l.consumerErrors()
-	go l.consumerResultsFromApiDocpAgent()
-	go l.collectGetState()
-	go l.collectGetActions()
-	go l.consumeAllActions()
-	go l.handleMetadata()
-	go l.periodicHandlerMetadata()
-	go l.periodicAutoUpdate()
-	go l.periodicTasks()
-	go l.getMetadata()
-	l.wg.Wait()
-	return nil
-}
-
-// Start execute mathod for running in manager operator
-func (l *ManagerOperator) Start() {
-	l.logger.Debug("start tasks", "trace", "docp-agent-os-instance.manager_operator.Start")
-	defer l.wg.Done()
-
-	l.wg.Add(1)
-	go l.installAgent()
-
-	ticker := time.NewTicker(1 * time.Minute)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ticker.C:
-			l.wg.Add(4)
-			go l.collectGetState()
-			go l.validateDocpAgentInstalled()
-			go l.validateDatadogAgentInstalled()
-			go l.validateDatadogAgentUpdateConfigs()
-
-		case <-l.done:
-			close(l.done)
-			return
-		}
-	}
-}
-
-func (l *ManagerOperator) CheckHealth() {
-	l.logger.Debug("in CheckHealth", "trace", "docp-agent-os-instance.manager_operator.CheckHealth")
-	resp, err := http.Get("http://localhost:3000/health")
-	if err != nil {
-		l.logger.Error("in CheckHealth", "trace", "docp-agent-os-instance.manager_operator.CheckHealth", "error", err.Error())
-		return
-	}
-	defer resp.Body.Close()
-
-	var healthResp dto.HealthResponse
-	err = json.NewDecoder(resp.Body).Decode(&healthResp)
-	if err != nil {
-		l.logger.Error("in CheckHealth", "trace", "docp-agent-os-instance.manager_operator.CheckHealth", "error", err.Error())
-		return
-	}
-
-	if healthResp.Status == "success" && healthResp.Code == "HEALTH_OK" {
-		l.logger.Debug("check health success", "trace", "docp-agent-os-instance.manager_operator.CheckHealth", "healthResp", healthResp)
-	} else {
-		l.logger.Warn("check health failed", "trace", "docp-agent-os-instance.manager_operator.CheckHealth", "healthResp", healthResp)
-	}
-}
-
-func (l *ManagerOperator) Profiling() {
-	l.logger.Debug("profiling task", "trace", "docp-agent-os-instance.manager_operator.Profiling")
-	defer l.wg.Done()
-	if err := http.ListenAndServe(":4040", nil); err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "Profiling", Priority: dto.ErrLevelLow, Err: err}
-	}
 }
 
 func (l *ManagerOperator) comunicateSCM() error {
