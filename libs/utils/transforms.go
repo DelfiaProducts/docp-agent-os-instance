@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
 )
 
 // TransformMapToSlice return slice of string from map
@@ -33,4 +35,42 @@ func GetBaseUrlSite(site string) (string, error) {
 		host = strings.Join(parts[len(parts)-2:], ".")
 	}
 	return host, nil
+}
+
+// ChoiceInstallerOrUninstaller return action for commands
+func ChoiceInstallerOrUninstaller(system, mode, action, version string) string {
+	switch {
+	//linux
+	case system == "linux" && mode == "agent" && action == "install":
+		release := fmt.Sprintf("%s/%s/install_agent_linux.sh", pkg.URL_RELEASE, version)
+		return fmt.Sprintf("curl -L %s | bash", release)
+	case system == "linux" && mode == "agent" && action == "uninstall":
+		release := fmt.Sprintf("%s/%s/uninstall_agent_linux.sh", pkg.URL_RELEASE, version)
+		return fmt.Sprintf("curl -L %s | bash", release)
+	case system == "linux" && mode == "updater" && action == "install":
+		release := fmt.Sprintf("%s/%s/install_updater_linux.sh", pkg.URL_RELEASE, version)
+		return fmt.Sprintf("curl -L %s | bash", release)
+	case system == "linux" && mode == "updater" && action == "uninstall":
+		release := fmt.Sprintf("%s/%s/uninstall_updater_linux.sh", pkg.URL_RELEASE, version)
+		return fmt.Sprintf("curl -L %s | bash", release)
+	case system == "linux" && mode == "manager" && action == "uninstall":
+		release := fmt.Sprintf("%s/%s/uninstall_manager_linux.sh", pkg.URL_RELEASE, version)
+		return fmt.Sprintf("curl -L %s | bash", release)
+	//windows
+	case system == "windows" && mode == "agent" && action == "install":
+		release := fmt.Sprintf("%s/%s/install_agent_windows.msi", pkg.URL_RELEASE, version)
+		return fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s'`, release)
+
+	//macos
+	case system == "macos" && mode == "agent" && action == "install":
+		release := fmt.Sprintf("%s/%s/install_agent_macos.sh", pkg.URL_RELEASE, version)
+		return fmt.Sprintf("curl -L %s | bash", release)
+	case system == "macos" && mode == "agent" && action == "uninstall":
+		release := fmt.Sprintf("%s/%s/uninstall_agent_macos.sh", pkg.URL_RELEASE, version)
+		return fmt.Sprintf("curl -L %s | bash", release)
+	case system == "macos" && mode == "manager" && action == "uninstall":
+		release := fmt.Sprintf("%s/%s/uninstall_manager_macos.sh", pkg.URL_RELEASE, version)
+		return fmt.Sprintf("curl -L %s | bash", release)
+	}
+	return ""
 }
