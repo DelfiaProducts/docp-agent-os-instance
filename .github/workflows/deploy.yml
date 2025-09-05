@@ -18,12 +18,14 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.24'
+          go-version: '1.21'
 
       - name: Build Agent Binaries - Windows amd64
         run: |
           cd cmd/agent
           GOOS=windows GOARCH=amd64 go build -o agent-windows-amd64.exe main.go
+          echo "Built agent binary:"
+          ls -la agent-windows-amd64.exe
       
       - name: Build Agent Binaries - Linux amd64 and arm64
         run: |
@@ -41,6 +43,8 @@ jobs:
         run: |
           cd cmd/manager
           GOOS=windows GOARCH=amd64 go build -o manager-windows-amd64.exe main.go
+          echo "Built manager binary:"
+          ls -la manager-windows-amd64.exe
       
       - name: Build Manager Binaries - Linux amd64 and arm64
         run: |
@@ -70,6 +74,15 @@ jobs:
           cd cmd/updater
           GOOS=darwin GOARCH=arm64 go build -o updater-macos-arm64 main.go
           GOOS=darwin GOARCH=amd64 go build -o updater-macos-amd64 main.go
+
+      - name: List built binaries
+        run: |
+          echo "=== Agent binaries ==="
+          ls -la cmd/agent/agent-*
+          echo "=== Manager binaries ==="
+          ls -la cmd/manager/manager-*
+          echo "=== Updater binaries ==="
+          ls -la cmd/updater/updater-*
 
       - name: Upload Binaries
         uses: actions/upload-artifact@v4
@@ -102,6 +115,10 @@ jobs:
 
       - name: Prepare Windows Binaries
         run: |
+          # Debug: List what was downloaded
+          echo "=== Debug: Contents of binaries directory ==="
+          Get-ChildItem -Recurse binaries/
+          
           # Check if installers directory exists
           if (!(Test-Path "installers")) {
             echo "ERROR: installers directory not found!"
@@ -111,54 +128,30 @@ jobs:
           # Enter installers directory
           cd installers
           
-          # Find and copy the manager binary - try different possible paths
-          $managerPath = ""
-          $agentPath = ""
+          # Copy the manager and agent binaries from the correct paths
+          # Based on the artifact structure, they should be in binaries/cmd/manager/ and binaries/cmd/agent/
+          $managerPath = "..\binaries\cmd\manager\manager-windows-amd64.exe"
+          $agentPath = "..\binaries\cmd\agent\agent-windows-amd64.exe"
           
-          # Check different possible paths for manager
-          $possibleManagerPaths = @(
-            "..\binaries\cmd\manager\manager-windows-amd64.exe",
-            "..\binaries\manager-windows-amd64.exe", 
-            "..\binaries\cmd_manager_manager-windows-amd64.exe"
-          )
-          
-          foreach ($path in $possibleManagerPaths) {
-            if (Test-Path $path) {
-              $managerPath = $path
-              echo "Found manager at: $path"
-              break
-            }
-          }
-          
-          # Check different possible paths for agent  
-          $possibleAgentPaths = @(
-            "..\binaries\cmd\agent\agent-windows-amd64.exe",
-            "..\binaries\agent-windows-amd64.exe",
-            "..\binaries\cmd_agent_agent-windows-amd64.exe"
-          )
-          
-          foreach ($path in $possibleAgentPaths) {
-            if (Test-Path $path) {
-              $agentPath = $path
-              echo "Found agent at: $path"
-              break
-            }
-          }
-          
-          # Copy files if found
-          if ($managerPath) {
+          # Check if manager binary exists
+          if (Test-Path $managerPath) {
             copy $managerPath manager.exe
-            echo "Copied manager binary"
+            echo "Copied manager binary from $managerPath"
           } else {
-            echo "ERROR: Manager binary not found in any expected location!"
+            echo "ERROR: Manager binary not found at $managerPath"
+            echo "=== Available files in binaries/cmd/manager/ ==="
+            Get-ChildItem "..\binaries\cmd\manager\" -ErrorAction SilentlyContinue
             exit 1
           }
           
-          if ($agentPath) {
+          # Check if agent binary exists
+          if (Test-Path $agentPath) {
             copy $agentPath agent.exe  
-            echo "Copied agent binary"
+            echo "Copied agent binary from $agentPath"
           } else {
-            echo "ERROR: Agent binary not found in any expected location!"
+            echo "ERROR: Agent binary not found at $agentPath"
+            echo "=== Available files in binaries/cmd/agent/ ==="
+            Get-ChildItem "..\binaries\cmd\agent\" -ErrorAction SilentlyContinue
             exit 1
           }
           
