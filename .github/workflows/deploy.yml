@@ -72,7 +72,7 @@ jobs:
           GOOS=darwin GOARCH=amd64 go build -o updater-macos-amd64 main.go
 
       - name: Upload Binaries
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: |
@@ -88,7 +88,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download Binaries
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: binaries
           path: binaries/
@@ -132,7 +132,7 @@ jobs:
           dir *.msi
 
       - name: Upload Windows Installers
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows-installers
           path: |
