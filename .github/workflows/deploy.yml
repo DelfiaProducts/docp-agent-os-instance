@@ -102,13 +102,68 @@ jobs:
 
       - name: Prepare Windows Binaries
         run: |
+          # Check if installers directory exists
+          if (!(Test-Path "installers")) {
+            echo "ERROR: installers directory not found!"
+            exit 1
+          }
+          
           # Enter installers directory
           cd installers
-          # Copy the manager binary to current directory for WiX to find
-          copy ..\binaries\cmd\manager\manager-windows-amd64.exe manager.exe
-          # Copy the agent binary to current directory for WiX to find  
-          copy ..\binaries\cmd\agent\agent-windows-amd64.exe agent.exe
+          
+          # Find and copy the manager binary - try different possible paths
+          $managerPath = ""
+          $agentPath = ""
+          
+          # Check different possible paths for manager
+          $possibleManagerPaths = @(
+            "..\binaries\cmd\manager\manager-windows-amd64.exe",
+            "..\binaries\manager-windows-amd64.exe", 
+            "..\binaries\cmd_manager_manager-windows-amd64.exe"
+          )
+          
+          foreach ($path in $possibleManagerPaths) {
+            if (Test-Path $path) {
+              $managerPath = $path
+              echo "Found manager at: $path"
+              break
+            }
+          }
+          
+          # Check different possible paths for agent  
+          $possibleAgentPaths = @(
+            "..\binaries\cmd\agent\agent-windows-amd64.exe",
+            "..\binaries\agent-windows-amd64.exe",
+            "..\binaries\cmd_agent_agent-windows-amd64.exe"
+          )
+          
+          foreach ($path in $possibleAgentPaths) {
+            if (Test-Path $path) {
+              $agentPath = $path
+              echo "Found agent at: $path"
+              break
+            }
+          }
+          
+          # Copy files if found
+          if ($managerPath) {
+            copy $managerPath manager.exe
+            echo "Copied manager binary"
+          } else {
+            echo "ERROR: Manager binary not found in any expected location!"
+            exit 1
+          }
+          
+          if ($agentPath) {
+            copy $agentPath agent.exe  
+            echo "Copied agent binary"
+          } else {
+            echo "ERROR: Agent binary not found in any expected location!"
+            exit 1
+          }
+          
           # List files to verify
+          echo "=== Files in installers directory ==="
           dir
 
       - name: Build Windows Installers
