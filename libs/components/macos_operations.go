@@ -9,12 +9,6 @@ import (
 	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
 )
 
-const (
-	CURL_AGENT_MACOS_INSTALL_SH   = "curl -L https://test-docp-agent-data.s3.amazonaws.com/installer/install_agent_macos.sh | bash"
-	CURL_AGENT_MACOS_UNINSTALL_SH = "curl -L https://test-docp-agent-data.s3.amazonaws.com/installer/uninstall_agent_macos.sh | bash"
-	CURL_MACOS_AUTO_UNINSTALL_SH  = "curl -L https://test-docp-agent-data.s3.amazonaws.com/installer/uninstall_manager_macos.sh | bash"
-)
-
 // MacosOperations is instance of macos operations
 type MacosOperations struct {
 	// systemd *internal.SystemdClient
@@ -95,7 +89,7 @@ func (l *MacosOperations) StopService(serviceName string) error {
 
 // InstallAgent execute install the agent docp
 func (l *MacosOperations) InstallAgent(version string) error {
-	if err := l.program.Execute("bash", []string{fmt.Sprintf("VERSION=%s", version)}, "-c", CURL_AGENT_MACOS_INSTALL_SH); err != nil {
+	if err := l.program.Execute("bash", []string{fmt.Sprintf("VERSION=%s", version)}, "-c", utils.ChoiceInstallerOrUninstaller("macos", "agent", "install", version)); err != nil {
 		return err
 	}
 	return nil
@@ -113,19 +107,19 @@ func (l *MacosOperations) UpdateAgent(version string) error {
 }
 
 // UninstallAgent execute uninstall the agent docp
-func (l *MacosOperations) UninstallAgent() error {
-	if err := l.program.Execute("bash", []string{}, "-c", CURL_AGENT_MACOS_UNINSTALL_SH); err != nil {
+func (l *MacosOperations) UninstallAgent(version string) error {
+	if err := l.program.Execute("bash", []string{}, "-c", utils.ChoiceInstallerOrUninstaller("macos", "agent", "uninstall", version)); err != nil {
 		return err
 	}
 	return nil
 }
 
 // AutoUninstall execute auto uninstall the manager
-func (l *MacosOperations) AutoUninstall() error {
-	if err := l.program.Execute("bash", []string{}, "-c", CURL_AGENT_MACOS_UNINSTALL_SH); err != nil {
+func (l *MacosOperations) AutoUninstall(version string) error {
+	if err := l.program.Execute("bash", []string{}, "-c", utils.ChoiceInstallerOrUninstaller("macos", "agent", "uninstall", version)); err != nil {
 		return err
 	}
-	job := fmt.Sprintf("* * * * * %s; crontab -l | grep -v '%s' | crontab -", CURL_MACOS_AUTO_UNINSTALL_SH, CURL_MACOS_AUTO_UNINSTALL_SH)
+	job := fmt.Sprintf("* * * * * %s; crontab -l | grep -v '%s' | crontab -", utils.ChoiceInstallerOrUninstaller("macos", "manager", "uninstall", version), utils.ChoiceInstallerOrUninstaller("macos", "manager", "uninstall", version))
 	command := fmt.Sprintf("(crontab -l 2>/dev/null; echo \"%s\") | crontab -", job)
 	if err := l.program.Execute("bash", []string{}, "-c", command); err != nil {
 		return err
