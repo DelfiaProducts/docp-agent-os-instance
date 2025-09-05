@@ -197,7 +197,7 @@ func TestManagerAdapterUninstallAgent(t *testing.T) {
 				err = manager.Prepare()
 			})
 			s.When("chamo UninstallAgent", func() {
-				err = manager.UninstallAgent()
+				err = manager.UninstallAgent("0.1.0")
 			})
 			s.Then("deve desinstalar sem erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "UninstallAgent não deve retornar erro")
@@ -216,7 +216,7 @@ func TestManagerAdapterAutoUninstall(t *testing.T) {
 				err = manager.Prepare()
 			})
 			s.When("chamo AutoUninstall", func() {
-				err = manager.AutoUninstall()
+				err = manager.AutoUninstall("0.1.0")
 			})
 			s.Then("deve auto desinstalar sem erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "AutoUninstall não deve retornar erro")
