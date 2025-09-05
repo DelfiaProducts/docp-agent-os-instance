@@ -22,13 +22,13 @@ Todos os arquivos necessarios pro build precisam estar na mesma pasta.
 Build do arquivo de configuração pro manager windows.
 
 ```
-GOOS=windows GOARCH=amd64 go build -o config_manager.exe install_manager_windows.go
+GOOS=windows GOARCH=amd64 go build -o config_manager.exe installers/manager/install_manager_windows.go
 ```
 
 Navegar ate o repositorio do manager e realizar o build.
 
 ```
-GOOS=windows GOARCH=amd64 go build -o manager.exe main.go
+GOOS=windows GOARCH=amd64 go build -o manager.exe cmd/manager/main.go
 ```
 
 ### Build
@@ -65,13 +65,13 @@ Todos os arquivos necessarios pro build precisam estar na mesma pasta.
 Build do arquivo de configuração pro agent windows.
 
 ```
-GOOS=windows GOARCH=amd64 go build -o config_agent.exe install_agent_windows.go
+GOOS=windows GOARCH=amd64 go build -o config_agent.exe installers/agent/install_agent_windows.go
 ```
 
 Navegar ate o repositorio do agent e realizar o build.
 
 ```
-SCM=agent GOOS=windows GOARCH=amd64 go build -o agent.exe main.go
+SCM=agent GOOS=windows GOARCH=amd64 go build -o agent.exe cmd/agent/main.go
 ```
 
 ### Build
