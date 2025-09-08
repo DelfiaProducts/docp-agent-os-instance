@@ -17,8 +17,8 @@ import (
 	"golang.org/x/sys/windows/svc/mgr"
 )
 
-const (
-	URL_AGENT_WINDOWS = "https://test-docp-agent-data.s3.amazonaws.com/installer/install_agent_windows.msi"
+var (
+	URL_AGENT_WINDOWS = fmt.Sprintf("%s/install_agent_windows.msi", utils.GetBinariesRepositoryUrl())
 )
 
 // WindowsOperations is instance of windows operations
