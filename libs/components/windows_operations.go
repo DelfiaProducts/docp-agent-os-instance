@@ -17,10 +17,6 @@ import (
 	"golang.org/x/sys/windows/svc/mgr"
 )
 
-var (
-	URL_AGENT_WINDOWS = fmt.Sprintf("%s/install_agent_windows.msi", utils.GetBinariesRepositoryUrl())
-)
-
 // WindowsOperations is instance of windows operations
 type WindowsOperations struct {
 	serviceName            string
