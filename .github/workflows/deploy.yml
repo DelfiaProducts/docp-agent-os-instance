@@ -170,6 +170,7 @@ jobs:
           echo "Built config_manager.exe"
           
           # Build agent config executable  
+          $env:SCM = "agent"
           go build -o config_agent.exe agent/install_agent_windows.go
           echo "Built config_agent.exe"
           
