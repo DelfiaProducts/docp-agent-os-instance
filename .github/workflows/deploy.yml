@@ -177,7 +177,24 @@ jobs:
           # List files to verify
           echo "=== Files in installers directory ==="
           dir
-
+          
+      - name: Update XML installers with version and generate UUIDs
+        run : |
+          # Generate unique UUIDs for each installer
+          $agentUpgradeCode = [System.Guid]::NewGuid().ToString().ToUpper()
+          $managerUpgradeCode = [System.Guid]::NewGuid().ToString().ToUpper()
+          
+          echo "Generated Agent UpgradeCode: $agentUpgradeCode"
+          echo "Generated Manager UpgradeCode: $managerUpgradeCode"
+          
+          # Update agent XML with version and UUID
+          (Get-Content installers\install_agent_windows.xml) -replace 'AGENT_VERSION', '${{ github.ref_name }}' | Set-Content installers\install_agent_windows.xml
+          (Get-Content installers\install_agent_windows.xml) -replace 'UPGRADE_CODE', $agentUpgradeCode | Set-Content installers\install_agent_windows.xml
+          
+          # Update manager XML with version and UUID  
+          (Get-Content installers\install_manager_windows.xml) -replace 'MANAGER_VERSION', '${{ github.ref_name }}' | Set-Content installers\install_manager_windows.xml
+          (Get-Content installers\install_manager_windows.xml) -replace 'UPGRADE_CODE', $managerUpgradeCode | Set-Content installers\install_manager_windows.xml
+ 
       - name: Build Windows Installers
         run: |
           # Enter installers directory
