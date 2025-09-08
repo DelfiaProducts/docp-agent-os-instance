@@ -42,8 +42,8 @@ func downloadFileAgent(url, dest string) error {
 // Função principal
 func main() {
 	var version string
-	baseUrl := "https://test-docp-agent-data.s3.amazonaws.com/agent"
-	fileName := "win_amd64.exe"
+	baseUrl := "https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
+	fileName := "agent-windows-amd64.exe"
 	url := prepareUrlAgent(baseUrl, version, fileName)
 
 	pathDir := os.Getenv("ProgramFiles")
