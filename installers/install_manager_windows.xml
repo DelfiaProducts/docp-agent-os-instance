@@ -36,8 +36,6 @@
                                 Start="auto"
                                 Type="ownProcess"
                                 ErrorControl="normal" />
-            </Component>
-            <Component Id="ServiceControlComponent" Win64="yes" Guid="39B5E1B5-7437-44F5-ABBD-000000000002">
                 <ServiceControl Id="ServiceControl" Start="install" Stop="uninstall" Remove="uninstall" Name="DocpManager" Wait="yes"/>
             </Component>
             <Component Id="AgentFileComponent" Directory="bindir" Win64="yes" Guid="35B5E1B5-7137-44F7-ABCD-000000000002">
