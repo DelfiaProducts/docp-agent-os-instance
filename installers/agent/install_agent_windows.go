@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,6 +13,12 @@ import (
 	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
 	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
 )
+
+// parseParams parse params
+func parseParams(version *string) {
+	flag.StringVar(version, "VERSION", "latest", "docp version")
+	flag.Parse()
+}
 
 // prepareUrlAgent return url the binary
 func prepareUrlAgent(url, version, fileName string) string {
@@ -59,6 +66,7 @@ func notifyError(title, message string) {
 // Função principal
 func main() {
 	var version string
+	parseParams(&version)
 	baseUrl := "https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
 	fileName := "agent-windows-amd64.exe"
 	//verify if version latest
@@ -66,11 +74,11 @@ func main() {
 		logger := utils.NewDocpLoggerText(os.Stdout)
 		utilityService := services.NewUtilityService(logger)
 		if err := utilityService.Setup(); err != nil {
-			notifyError("Installer Docp Manager", err.Error())
+			notifyError("Installer Docp Agent", err.Error())
 		}
 		agentVersions, err := utilityService.FetchAgentVersions()
 		if err != nil {
-			notifyError("Installer Docp Manager", err.Error())
+			notifyError("Installer Docp Agent", err.Error())
 		}
 		version = agentVersions.LatestVersion
 	}
