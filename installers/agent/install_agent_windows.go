@@ -6,6 +6,11 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"syscall"
+	"unsafe"
+
+	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
+	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
 )
 
 // prepareUrlAgent return url the binary
@@ -39,11 +44,36 @@ func downloadFileAgent(url, dest string) error {
 	return nil
 }
 
+// notifyError execute notify error to windows
+func notifyError(title, message string) {
+	user32 := syscall.NewLazyDLL("user32.dll")
+	msgBox := user32.NewProc("MessageBoxW")
+
+	titleUTF16, _ := syscall.UTF16PtrFromString(title)
+	messageUTF16, _ := syscall.UTF16PtrFromString(message)
+
+	msgBox.Call(0, uintptr(unsafe.Pointer(messageUTF16)), uintptr(unsafe.Pointer(titleUTF16)), 0x10)
+	os.Exit(1)
+}
+
 // Função principal
 func main() {
 	var version string
 	baseUrl := "https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
 	fileName := "agent-windows-amd64.exe"
+	//verify if version latest
+	if version == "latest" {
+		logger := utils.NewDocpLoggerText(os.Stdout)
+		utilityService := services.NewUtilityService(logger)
+		if err := utilityService.Setup(); err != nil {
+			notifyError("Installer Docp Manager", err.Error())
+		}
+		agentVersions, err := utilityService.FetchAgentVersions()
+		if err != nil {
+			notifyError("Installer Docp Manager", err.Error())
+		}
+		version = agentVersions.LatestVersion
+	}
 	url := prepareUrlAgent(baseUrl, version, fileName)
 
 	pathDir := os.Getenv("ProgramFiles")
