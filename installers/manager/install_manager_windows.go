@@ -164,8 +164,8 @@ func main() {
 	var version string
 	var noGroupAssociation string
 	parseParams(&apiKey, &tags, &version, &noGroupAssociation)
-	baseUrl := "https://test-docp-agent-data.s3.amazonaws.com/manager"
-	fileName := "win_amd64.exe"
+	baseUrl := "https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
+	fileName := "manager-windows-amd64.exe"
 	url := prepareUrl(baseUrl, version, fileName)
 
 	pathDir := os.Getenv("ProgramFiles")
