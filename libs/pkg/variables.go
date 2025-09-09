@@ -10,6 +10,7 @@ var (
 	ErrFailedGetAgentVersions = errors.New("failed get agent versions")
 	ErrAgentVersionNotFound   = errors.New("agent version not found")
 	ErrDatadogVersionNotFound = errors.New("datadog version not found")
+	ErrContextExpired         = errors.New("context expired")
 
 	// transactions events
 	TransactionEventOpen   = "open"
