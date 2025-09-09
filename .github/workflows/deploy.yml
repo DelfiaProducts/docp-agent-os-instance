@@ -4,6 +4,8 @@ on:
   push:
     tags:
       - '*'
+env:
+  TFSTATE_S3_PATH: ${{ secrets.TFSTATE_S3_PATH }}  
 
 permissions:
   contents: write
@@ -334,3 +336,93 @@ jobs:
           name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
+    
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.SERVICES_AWS_REGION }}
+      
+      - name: Download e Extrair Bucket S3 do tfstate
+        run: |
+          aws s3 cp ${{ env.TFSTATE_S3_PATH }} resources_publics.tfstate
+          echo "Verificando estrutura do tfstate..."
+          jq '.outputs.bucket_ids' resources_publics.tfstate
+          echo "Extraindo valor do docp-agent..."
+          docp_agent_k8s=$(jq -r '.outputs.public_bucket_ids.value."docp-agent"' resources_publics.tfstate)
+          echo "Valor extraído: $docp_agent_k8s"
+          echo "docp_agent_k8s=$docp_agent_k8s" >> $GITHUB_ENV
+      
+      - name: Gerar/Atualizar index_os_instance.json com versões
+        run: |
+          echo "=== GERANDO/ATUALIZANDO index_os_instance.json ==="
+          RELEASE_TAG="${{ github.ref_name }}"
+          
+          # Tentar baixar index_os_instance.json existente do bucket
+          if aws s3 cp s3://${{ env.docp_agent_k8s }}/index_os_instance.json ./index_os_instance.json 2>/dev/null; then
+            echo "index_os_instance.json encontrado no bucket, fazendo backup e atualizando..."
+            cp index_os_instance.json index_os_instance.json.backup
+            
+            # Extrair versões existentes e adicionar a nova se não existir
+            EXISTING_VERSIONS=$(jq -r '.versions[]' index_os_instance.json | sort -V)
+            echo "Versões existentes: $EXISTING_VERSIONS"
+            
+            # Criar array com todas as versões (existentes + nova se não existir)
+            ALL_VERSIONS=$(echo "$EXISTING_VERSIONS" | grep -v "^$RELEASE_TAG$" || true)
+            if [ -n "$ALL_VERSIONS" ]; then
+              ALL_VERSIONS="$ALL_VERSIONS"$'\n'"$RELEASE_TAG"
+            else
+              ALL_VERSIONS="$RELEASE_TAG"
+            fi
+            
+            # Ordenar versões
+            SORTED_VERSIONS=$(echo "$ALL_VERSIONS" | sort -V)
+            
+            # Criar novo index_os_instance.json
+            echo "{" > index_os_instance.json
+            echo "  \"latest\": \"$RELEASE_TAG\"," >> index_os_instance.json
+            echo "  \"versions\": [" >> index_os_instance.json
+            
+            # Adicionar versões ao array JSON
+            FIRST=true
+            for version in $SORTED_VERSIONS; do
+              if [ "$FIRST" = true ]; then
+                echo "    \"$version\"" >> index_os_instance.json
+                FIRST=false
+              else
+                echo "    ,\"$version\"" >> index_os_instance.json
+              fi
+            done
+            
+            echo "  ]" >> index_os_instance.json
+            echo "}" >> index_os_instance.json
+          else
+            echo "index_os_instance.json não encontrado no bucket, criando novo..."
+            cat > index_os_instance.json << EOF
+          {
+            "latest": "$RELEASE_TAG",
+            "versions": [
+              "$RELEASE_TAG"
+            ]
+          }
+          EOF
+          fi
+          
+          echo "=== CONTEÚDO DO index_os_instance.json ==="
+          cat index_os_instance.json
+          
+          echo "=== VALIDANDO JSON ==="
+          if jq . index_os_instance.json > /dev/null 2>&1; then
+            echo "JSON válido!"
+          else
+            echo "ERRO: JSON inválido!"
+            exit 1
+          fi
+          
+          echo "=== FAZENDO UPLOAD DO index_os_instance.json ==="
+          aws s3 cp index_os_instance.json s3://${{ env.docp_agent_k8s }}/
+          
+          echo "Upload do index_os_instance.json concluído!"
+          echo "Verificando arquivo no bucket:"
+          aws s3 ls s3://${{ env.docp_agent_k8s }}/index_os_instance.json
+
