@@ -5,7 +5,9 @@ on:
     tags:
       - '*'
 env:
-  TFSTATE_S3_PATH: ${{ secrets.TFSTATE_S3_PATH }}  
+  TFSTATE_S3_PATH: ${{ secrets.TFSTATE_S3_PATH }}
+  SERVICES_AWS_REGION: 'us-east-1'
+  
 
 permissions:
   contents: write
