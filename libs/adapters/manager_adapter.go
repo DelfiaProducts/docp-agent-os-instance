@@ -1105,6 +1105,7 @@ func (l *ManagerAdapter) prepareAgentDatadogAction(stateCheckSignal dto.StateChe
 				ComponentEnvs: componetEnvVars,
 				Envs:          envVars,
 				Files:         files,
+				Version:       datadogAgent.Version,
 			}
 		}
 	} else if stateCheckSignal.TypeSignal == "uninstall" {
@@ -1146,6 +1147,7 @@ func (l *ManagerAdapter) prepareAgentDatadogUpdateAction(stateCheckSignal dto.St
 				ComponentEnvs: componetEnvVars,
 				Envs:          envVars,
 				Files:         files,
+				Version:       datadogAgent.Version,
 			}
 			action = act
 		}
