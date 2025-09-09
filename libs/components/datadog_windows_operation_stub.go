@@ -98,6 +98,11 @@ func (d *DatadogWindowsOperation) UpdateVersion(version string) error {
 	return nil
 }
 
+// RollbackVersion execute rollback the version of the datadog agent
+func (d *DatadogWindowsOperation) RollbackVersion(version string) error {
+	return nil
+}
+
 // DPKGConfigure execute configure dpkg
 func (d *DatadogWindowsOperation) DPKGConfigure() error {
 	// TODO: not implemented windows
