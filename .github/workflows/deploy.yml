@@ -4,10 +4,6 @@ on:
   push:
     tags:
       - '*'
-env:
-  TFSTATE_S3_PATH: ${{ secrets.TFSTATE_S3_PATH }}
-  SERVICES_AWS_REGION: 'us-east-1'
-  
 
 permissions:
   contents: write
@@ -229,6 +225,9 @@ jobs:
   organize-and-release:
     runs-on: ubuntu-latest
     needs: [build-binaries, build-windows-installers]
+    env:
+      TFSTATE_S3_PATH: ${{ secrets.TFSTATE_S3_PATH }}  
+      SERVICES_AWS_REGION: 'us-east-1'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
