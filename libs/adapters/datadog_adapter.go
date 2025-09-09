@@ -207,6 +207,15 @@ func (d *DatadogAdapter) UpdateVersion(version string) error {
 	return nil
 }
 
+// RollbackVersion execute rollback the version of the datadog agent
+func (d *DatadogAdapter) RollbackVersion(version string) error {
+	d.logger.Debug("rollback version", "trace", "docp-agent-os-instance.datadog_linux_adapter.RollbackVersion", "version", version)
+	if err := d.datadogOperation.RollbackVersion(version); err != nil {
+		return err
+	}
+	return nil
+}
+
 // DPKGConfigure execute configure dpkg
 func (d *DatadogAdapter) DPKGConfigure() error {
 	d.logger.Debug("dpkg configure", "trace", "docp-agent-os-instance.datadog_linux_adapter.DPKGConfigure")
