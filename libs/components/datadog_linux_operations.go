@@ -289,7 +289,7 @@ func (d *DatadogLinuxOperation) UpdateVersion(version string) error {
 		return err
 	}
 	d.logger.Debug("update version", "datadogVersion", datadogVersion)
-	if err := d.program.Execute("sudo", []string{}, "apt-get", "install", "-y", fmt.Sprintf("datadog-agent=%s", datadogVersion)); err != nil {
+	if err := d.program.Execute("sudo", []string{}, "apt-get", "install", "-y", "--allow-downgrades", fmt.Sprintf("datadog-agent=%s", datadogVersion)); err != nil {
 		return err
 	}
 	return nil
