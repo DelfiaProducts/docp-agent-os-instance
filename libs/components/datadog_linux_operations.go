@@ -295,6 +295,14 @@ func (d *DatadogLinuxOperation) UpdateVersion(version string) error {
 	return nil
 }
 
+// RollbackVersion execute rollback the version of the datadog agent
+func (d *DatadogLinuxOperation) RollbackVersion(version string) error {
+	if err := d.UpdateVersion(version); err != nil {
+		return err
+	}
+	return nil
+}
+
 // DPKGConfigure execute configure dpkg
 func (d *DatadogLinuxOperation) DPKGConfigure() error {
 	if err := d.program.Execute("sudo", []string{}, "dpkg", "--configure", "-a"); err != nil {
