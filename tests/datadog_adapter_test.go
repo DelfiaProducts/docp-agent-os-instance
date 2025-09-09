@@ -318,3 +318,29 @@ func TestDatadogAdapterUpdateVersion(t *testing.T) {
 		})
 	})
 }
+
+func TestDatadogAdapterRollbackVersion(t *testing.T) {
+	bdd.Feature(t, "TestDatadogAdapterRollbackVersion", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
+		Scenario("RollbackVersion não deve retornar erro", func(s *bdd.Scenario) {
+			var datadogAdapter *adapters.DatadogAdapter
+			var logger interfaces.ILogger
+			var err error
+			s.When("logger é criado", func() {
+				logger = utils.NewDocpLoggerText(os.Stdout)
+			})
+			s.Given("DatadogAdapter válido e setup executado", func() {
+				datadogAdapter = adapters.NewDatadogAdapter(logger)
+				err = datadogAdapter.Setup()
+				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
+
+			})
+			s.When("RollbackVersion é chamado", func() {
+				err = datadogAdapter.RollbackVersion("7.69.2")
+
+			})
+			s.Then("não deve retornar erro", func(t *testing.T) {
+				bdd.AssertNoError(t, err, "RollbackVersion não deve retornar erro")
+			})
+		})
+	})
+}
