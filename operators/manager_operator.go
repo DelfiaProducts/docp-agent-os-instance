@@ -406,6 +406,16 @@ func (l *ManagerOperator) getLevelError() int {
 	}
 }
 
+// getVendorLatestVersion retrieves the latest version of the vendor
+func (l *ManagerOperator) getVendorLatestVersion() (string, error) {
+	l.logger.Debug("get vendor latest version", "trace", "docp-agent-os-instance.manager_operator.getVendorLatestVersion")
+	latestVersion, err := l.vendorAdapter.GetLatestVersion()
+	if err != nil {
+		return "", err
+	}
+	return latestVersion, nil
+}
+
 // consumerErrors execute consumer for errors
 func (l *ManagerOperator) consumerErrors() {
 	l.logger.Debug("execute consumer errors", "trace", "docp-agent-os-instance.manager_operator.consumerErrors")
@@ -948,14 +958,14 @@ func (l *ManagerOperator) UpdateAgentVersionDatadog(version string) error {
 	executeRollback := false
 	attempt := 0
 	//get installed version datadog
-	datadogInstalledVersion, err := l.vendorAdapter.GetVersion()
+	lastVersion, err := l.vendorAdapter.GetVersion()
 	if err != nil {
 		l.chanErrors <- dto.CommonChanErrors{From: "updateAgentVersionDatadog", Priority: dto.ErrLevelMedium, Err: err}
 		return err
 	}
-	l.logger.Debug("installed version datadog", "datadogInstalledVersion", datadogInstalledVersion, "version", version)
+	l.logger.Debug("installed version datadog", "lastVersion", lastVersion, "version", version)
 
-	if datadogInstalledVersion == version {
+	if lastVersion == version {
 		l.logger.Debug("datadog agent version is already up to date")
 		return nil
 	}
@@ -989,6 +999,7 @@ loopupdateversiondatadog:
 		case <-ctx.Done():
 			l.logger.Error("Context timeout or cancellation reached")
 			l.chanErrors <- dto.CommonChanErrors{From: "updateAgentVersionDatadog", Priority: dto.ErrLevelMedium, Err: utils.ErrContextExpired()}
+			go l.adapter.NotifyStatus("update_vendor_version_error", pkg.TransactionEventClose, "failed update vendor version", ctxTransaction)
 			return utils.ErrContextExpired()
 
 		case <-ticker.C:
@@ -1015,7 +1026,14 @@ loopupdateversiondatadog:
 	}
 	if executeRollback {
 		l.logger.Debug("rollback update vendor version", "trace", "docp-agent-os-instance.manager_operator.UpdateAgentVersionDatadog")
-		//TODO: implement rollback
+		if err := l.vendorAdapter.RollbackVersion(lastVersion); err != nil {
+			go l.adapter.NotifyStatus("update_vendor_version_rollback_error", pkg.TransactionEventClose, "failed update vendor version with rollback", ctxTransaction)
+			l.chanErrors <- dto.CommonChanErrors{From: "updateAgentVersionDatadog", Priority: dto.ErrLevelMedium, Err: err}
+			return err
+		}
+		l.logger.Debug("rollback update vendor version", "lastVersion", lastVersion)
+		go l.adapter.NotifyStatus("update_vendor_version_with_rollback_complete", pkg.TransactionEventClose, "update vendor version with rollback completed", ctxTransaction)
+		return nil
 	}
 	l.logger.Debug("datadog agent service is already active")
 
@@ -1209,6 +1227,16 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 				if datadogAlreadyInstalled {
 					l.wg.Add(2)
 					go l.updateAgentDatadog(flsBytes)
+					//validate if version is latest
+					if act.Version == "latest" {
+						latestVersion, err := l.getVendorLatestVersion()
+						if err != nil {
+							l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+							return
+						}
+						act.Version = latestVersion
+					}
+					//dispatch update version
 					go l.UpdateAgentVersionDatadog(act.Version)
 				}
 			}
