@@ -176,3 +176,27 @@ func TestManagerOperatorAutoUpdateAgentVersion(t *testing.T) {
 		})
 	})
 }
+
+func TestManagerOperatorUpdateAgentVersionDatadog(t *testing.T) {
+	bdd.Feature(t, "UpdateAgentVersionDatadog do ManagerOperator", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
+		Scenario("UpdateAgentVersionDatadog não deve causar panic ou erro", func(s *bdd.Scenario) {
+			var linux *operators.ManagerOperator
+			var err error
+			s.Given("um ManagerOperator válido", func() {
+				linux = operators.NewManagerOperator()
+			})
+			s.When("Setup é chamado", func() {
+				err = linux.Setup()
+				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
+			})
+			s.When("UpdateAgentVersionDatadog é chamado", func() {
+				linux.WaitGroupAdd(1)
+				err = linux.UpdateAgentVersionDatadog("7.69.4")
+				linux.WaitGroupWait()
+			})
+			s.Then("não deve retornar erro no update agent version datadog", func(t *testing.T) {
+				bdd.AssertNoError(t, err, "UpdateAgentVersionDatadog não deve retornar erro")
+			})
+		})
+	})
+}
