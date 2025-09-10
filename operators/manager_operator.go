@@ -1328,6 +1328,50 @@ func (l *ManagerOperator) managerActions(arrActions []dto.StateAction) {
 	defer l.wg.Done()
 }
 
+// AutoUpdateAgentDatadogVersion execute auto update agent datadog version
+func (l *ManagerOperator) AutoUpdateAgentDatadogVersion() error {
+	received, err := l.adapter.GetStateReceived()
+	if err != nil {
+		return err
+	}
+	l.logger.Info("auto update agent datadog version", "received", string(received))
+	applyVersion, err := l.adapter.GetAgentVersionDatadogFromSignalBytes(received)
+	if err != nil {
+		return err
+	}
+	l.logger.Info("auto update agent datadog version", "applyVersion", applyVersion)
+	if applyVersion != "latest" {
+		l.logger.Info("auto update agent datadog version not latest", "applyVersion", applyVersion)
+		return nil
+	}
+	//update repository
+	if err := l.vendorAdapter.UpdateRepository(); err != nil {
+		return err
+	}
+
+	//get latest and installed versions
+	latestVersion, err := l.vendorAdapter.GetLatestVersion()
+	if err != nil {
+		return err
+	}
+
+	installedVersion, err := l.vendorAdapter.GetVersion()
+	if err != nil {
+		return err
+	}
+
+	if latestVersion == installedVersion {
+		l.logger.Info("auto update agent datadog version already installed", "latestVersion", latestVersion, "installedVersion", installedVersion)
+		return nil
+	}
+
+	if err := l.UpdateAgentVersionDatadog(latestVersion); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (l *ManagerOperator) verifyChangeMetadata(metadata []byte) bool {
 	l.logger.Debug("verify change metadata", "trace", "docp-agent-os-instance.manager_operator.verifyChangeMetadata", "metadata", string(metadata))
 	meta := libdto.Metadata{}
@@ -1499,6 +1543,9 @@ func (l *ManagerOperator) periodicAutoUpdate() {
 			l.wg.Add(1)
 			if err := l.AutoUpdateAgentVersion(); err != nil {
 				l.logger.Error("error executing auto update agent version", "error", err.Error())
+			}
+			if err := l.AutoUpdateAgentDatadogVersion(); err != nil {
+				l.logger.Error("error executing auto update agent datadog version", "error", err.Error())
 			}
 		case <-l.done:
 			close(l.done)
