@@ -84,7 +84,9 @@ func (d *DatadogLinuxOperation) getVersionFromOutput(output []byte, version stri
 	scanner := bufio.NewScanner(bytes.NewReader(output))
 	for scanner.Scan() {
 		line := scanner.Text()
-
+		if strings.Contains(line, "Installed") || strings.Contains(line, "Candidate") {
+			continue
+		}
 		if strings.Contains(line, version) {
 			fields := strings.Fields(line)
 			if len(fields) > 0 {
