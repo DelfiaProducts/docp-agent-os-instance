@@ -385,6 +385,20 @@ func (l *ManagerAdapter) GetAgentVersionFromSignalBytes(data []byte) (string, er
 	return version, nil
 }
 
+// GetAgentVersionDatadogFromSignalBytes return version the datadog from signal bytes
+func (l *ManagerAdapter) GetAgentVersionDatadogFromSignalBytes(data []byte) (string, error) {
+	var stateCheckResponse dto.StateCheckResponse
+	var version string
+	if err := l.unmarshaller(data, &stateCheckResponse); err != nil {
+		return version, err
+	}
+
+	if len(stateCheckResponse.Signal.Agents.DatadogAgent.Version) > 0 {
+		version = stateCheckResponse.Signal.Agents.DatadogAgent.Version
+	}
+	return version, nil
+}
+
 // SaveAgentVersion save version installed agent
 func (l *ManagerAdapter) SaveAgentVersion(version string) error {
 	var configAgent dto.ConfigAgent
