@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-    <Product Id="*" Name="DocpManager" Language="1033" Version="1.0.0.0" Manufacturer="Docp" UpgradeCode="DDE34CE7-CD50-40DF-B644-92460A0EE958">
+    <Product Id="*" Name="DocpManager" Language="1033" Version="MANAGER_VERSION" Manufacturer="Docp" UpgradeCode="UPGRADE_CODE">
         <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x64"/>
 
         <MajorUpgrade DowngradeErrorMessage="New recent version the [ProductName] already installed" />

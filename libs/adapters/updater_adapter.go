@@ -156,13 +156,26 @@ func (l *UpdaterAdapter) ExecuteUpdateVersion(version string) error {
 	var agentUrl string
 	repoUrl := utils.GetBinariesRepositoryUrl()
 	arch := utils.GetRuntimeArch()
-	switch arch {
-	case "amd64":
-		managerUrl = fmt.Sprintf("%s/manager/%s/linux_amd64", repoUrl, version)
-		agentUrl = fmt.Sprintf("%s/agent/%s/linux_amd64", repoUrl, version)
-	case "arm64":
-		managerUrl = fmt.Sprintf("%s/manager/%s/linux_arm64", repoUrl, version)
-		agentUrl = fmt.Sprintf("%s/agent/%s/linux_arm64", repoUrl, version)
+	osSystem := utils.GetOSSystem()
+	switch osSystem {
+	case "linux":
+		switch arch {
+		case "amd64":
+			managerUrl = fmt.Sprintf("%s/%s/manager-linux-amd64", repoUrl, version)
+			agentUrl = fmt.Sprintf("%s/%s/agent-linux-amd64", repoUrl, version)
+		case "arm64":
+			managerUrl = fmt.Sprintf("%s/%s/manager-linux-arm64", repoUrl, version)
+			agentUrl = fmt.Sprintf("%s/%s/agent-linux-arm64", repoUrl, version)
+		}
+	case "darwin":
+		switch arch {
+		case "amd64":
+			managerUrl = fmt.Sprintf("%s/%s/manager-macos-amd64", repoUrl, version)
+			agentUrl = fmt.Sprintf("%s/%s/agent-macos-amd64", repoUrl, version)
+		case "arm64":
+			managerUrl = fmt.Sprintf("%s/%s/manager-macos-arm64", repoUrl, version)
+			agentUrl = fmt.Sprintf("%s/%s/agent-macos-arm64", repoUrl, version)
+		}
 	}
 
 	statusManager, err := l.Status("manager")

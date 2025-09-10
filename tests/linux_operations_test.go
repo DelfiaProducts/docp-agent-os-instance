@@ -266,7 +266,7 @@ func TestLinuxOperationsUninstallAgent(t *testing.T) {
 				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
 			})
 			s.When("chamo UninstallAgent", func() {
-				err = ops.UninstallAgent()
+				err = ops.UninstallAgent("0.1.0")
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "UninstallAgent não deve retornar erro")
@@ -293,7 +293,7 @@ func TestLinuxOperationsUninstallUpdater(t *testing.T) {
 				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
 			})
 			s.When("chamo UninstallUpdater", func() {
-				err = ops.UninstallUpdater()
+				err = ops.UninstallUpdater("0.1.0")
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "UninstallUpdater não deve retornar erro")
@@ -351,7 +351,7 @@ func TestLinuxOperationsAutoUninstall(t *testing.T) {
 				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
 			})
 			s.When("chamo AutoUninstall", func() {
-				err = ops.AutoUninstall()
+				err = ops.AutoUninstall("0.1.0")
 			})
 			s.Then("não deve retornar erro (mock)", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "AutoUninstall não deve retornar erro (mock)")

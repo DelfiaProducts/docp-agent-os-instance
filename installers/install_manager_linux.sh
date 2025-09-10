@@ -4,8 +4,8 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-FILE_INDEX_URL="https://test-docp-agent-data.s3.amazonaws.com/index.json"
-BINARY_URL="https://test-docp-agent-data.s3.amazonaws.com/manager"
+FILE_INDEX_URL="https://docp-agent.s3.us-east-1.amazonaws.com/index_os_instance.json"
+BINARY_URL="https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
 VERSION="latest"
 MANAGER_IS_RUNNING=$($sudo_cmd systemctl is-active docp-manager)
 DOCP_FILES_PATH=/opt/docp-agent
@@ -163,12 +163,12 @@ function resolve_version() {
 
 #get binary arm64
 function get_binary_arch64(){
-  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/manager "$BINARY_URL/$VERSION/linux_arm64"
+  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/manager "$BINARY_URL/$VERSION/manager-linux-arm64"
   sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/manager
 }
 #get binary amd64
 function get_binary_amd64(){
-  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/manager "$BINARY_URL/$VERSION/linux_amd64"
+  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/manager "$BINARY_URL/$VERSION/manager-linux-amd64"
   sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/manager
 }
 

@@ -4,8 +4,8 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-FILE_INDEX_URL="https://test-docp-agent-data.s3.amazonaws.com/index.json"
-BINARY_URL="https://test-docp-agent-data.s3.amazonaws.com/agent"
+FILE_INDEX_URL="https://docp-agent.s3.us-east-1.amazonaws.com/index_os_instance.json"
+BINARY_URL="https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
 VERSION="${VERSION:-${VERSION:-latest}}"
 AGENT_IS_RUNNING=$($sudo_cmd systemctl is-active docp-agent)
 DOCP_FILES_PATH=/opt/docp-agent
@@ -81,12 +81,12 @@ function add_perm_work_dir(){
 
 #get binary arm64
 function get_binary_arch64(){
-  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/linux_arm64"
+  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-linux-arm64"
   sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/agent
 }
 #get binary amd64
 function get_binary_amd64(){
-  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/linux_amd64"
+  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-linux-amd64"
   sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/agent
 }
 # create symbolic link

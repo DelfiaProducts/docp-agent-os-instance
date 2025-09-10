@@ -75,7 +75,12 @@ func RemoveItemFromSlice(items []string, item string) []string {
 
 // GetBinariesRepositoryUrl return url the repository
 func GetBinariesRepositoryUrl() string {
-	return pkg.DOCP_BINARIES_REPO
+	return pkg.URL_RELEASE
+}
+
+// GetBucketUrl return the bucket url
+func GetBucketUrl() string {
+	return pkg.BUCKET_URL
 }
 
 // GetFileAgentVersionsName return the file name for agent versions
@@ -86,6 +91,11 @@ func GetFileAgentVersionsName() string {
 // GetRuntimeArch return runtime arch
 func GetRuntimeArch() string {
 	return runtime.GOARCH
+}
+
+// GetOSSystem return the operating system
+func GetOSSystem() string {
+	return runtime.GOOS
 }
 
 // ErrAuthTokenClaimsInvalid return error the invalid claims token

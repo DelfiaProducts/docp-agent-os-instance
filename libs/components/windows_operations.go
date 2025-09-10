@@ -17,10 +17,6 @@ import (
 	"golang.org/x/sys/windows/svc/mgr"
 )
 
-const (
-	URL_AGENT_WINDOWS = "https://test-docp-agent-data.s3.amazonaws.com/installer/install_agent_windows.msi"
-)
-
 // WindowsOperations is instance of windows operations
 type WindowsOperations struct {
 	serviceName            string
@@ -161,7 +157,7 @@ func (l *WindowsOperations) InstallAgent(version string) error {
 	s, err := m.OpenService("DocpAgent")
 	if err != nil {
 		if errors.Is(err, windows.ERROR_SERVICE_DOES_NOT_EXIST) {
-			command := fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s'`, URL_AGENT_WINDOWS)
+			command := utils.ChoiceInstallerOrUninstaller("windows", "agent", "install", version)
 			out, err := l.program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
 			if err != nil {
 				l.logger.Error("error in install docp agent start process", "error", err)
@@ -189,7 +185,7 @@ func (l *WindowsOperations) UpdateAgent(version string) error {
 }
 
 // UninstallAgent execute uninstall the agent docp
-func (l *WindowsOperations) UninstallAgent() error {
+func (l *WindowsOperations) UninstallAgent(version string) error {
 	wmiCmd := `(Get-Package -Name "DocpAgent").Metadata['ProductCode']`
 	out, err := l.program.ExecuteWithOutput("powershell", []string{}, "-Command", wmiCmd)
 	if err != nil {
@@ -262,7 +258,7 @@ func (l *WindowsOperations) schedulerAutoUninstall() error {
 }
 
 // AutoUninstall execute auto uninstall the manager
-func (l *WindowsOperations) AutoUninstall() error {
+func (l *WindowsOperations) AutoUninstall(version string) error {
 	if !l.isProcessAutoUninstall {
 		if err := l.schedulerAutoUninstall(); err != nil {
 			return err

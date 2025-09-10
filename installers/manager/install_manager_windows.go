@@ -12,6 +12,8 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
+	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
 	"gopkg.in/yaml.v2"
 )
 
@@ -82,15 +84,6 @@ func processTags(tags string) map[string]string {
 		}
 	}
 	return tagMap
-}
-
-// formatTagsForYAML recebe um slice de tags e formata para a estrutura YAML desejada
-func formatTagsForYAML(tags []string) string {
-	var formattedTags []string
-	for _, tag := range tags {
-		formattedTags = append(formattedTags, fmt.Sprintf("%s", tag))
-	}
-	return strings.Join(formattedTags, "\n")
 }
 
 // addContentConfigYml save initial config yml
@@ -164,8 +157,21 @@ func main() {
 	var version string
 	var noGroupAssociation string
 	parseParams(&apiKey, &tags, &version, &noGroupAssociation)
-	baseUrl := "https://test-docp-agent-data.s3.amazonaws.com/manager"
-	fileName := "win_amd64.exe"
+	baseUrl := "https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
+	fileName := "manager-windows-amd64.exe"
+	//verify if version latest
+	if version == "latest" {
+		logger := utils.NewDocpLoggerText(os.Stdout)
+		utilityService := services.NewUtilityService(logger)
+		if err := utilityService.Setup(); err != nil {
+			notifyError("Installer Docp Manager", err.Error())
+		}
+		agentVersions, err := utilityService.FetchAgentVersions()
+		if err != nil {
+			notifyError("Installer Docp Manager", err.Error())
+		}
+		version = agentVersions.LatestVersion
+	}
 	url := prepareUrl(baseUrl, version, fileName)
 
 	pathDir := os.Getenv("ProgramFiles")

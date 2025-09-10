@@ -5,7 +5,8 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-BINARY_URL="https://test-docp-agent-data.s3.amazonaws.com/manager"
+FILE_INDEX_URL="https://docp-agent.s3.us-east-1.amazonaws.com/index_os_instance.json"
+BINARY_URL="https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
 VERSION="latest"
 MANAGER_IS_RUNNING=$(ps aux | grep -v grep | grep docp-agent/bin/manager)
 DOCP_FILES_PATH=/opt/docp-agent
@@ -89,14 +90,14 @@ fi
 
 #get binary arm64
 function get_binary_arch64(){
-  sudo curl -s -o $DOCP_FILES_PATH/bin/manager "$BINARY_URL/$VERSION/macos_arm64"
-  sudo chmod +x $DOCP_FILES_PATH/bin/manager
+  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/manager "$BINARY_URL/$VERSION/manager-macos-arm64"
+  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/manager
 }
 
 #get binary amd64
 function get_binary_amd64(){
-  sudo curl -s -o $DOCP_FILES_PATH/bin/manager "$BINARY_URL/$VERSION/macos_amd64"
-  sudo chmod +x $DOCP_FILES_PATH/bin/manager
+  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/manager "$BINARY_URL/$VERSION/manager-macos-amd64"
+  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/manager
 }
 
 #verify is architecture and get binary
@@ -135,6 +136,18 @@ function save_api_key_and_tags(){
   printf "DOCP_API_KEY=$api_key\nDOCP_TAGS=$tgs\nDOCP_REGISTER_URL=https://msapi.sandbox.docphq.tech/agents\nDOCP_STATE_CHECK_URL=https://msapi.sandbox.docphq.tech/agents\nDOCP_AGENT_PORT=12012\n" | sudo tee $DOCP_FILES_PATH/environments > /dev/null
 }
 
+# Corrige a função resolve_version para extrair corretamente o campo "latest" do JSON
+function resolve_version() {
+  local version="$1"
+  if [[ "$version" == "latest" ]]; then
+    version=$(curl -s "$FILE_INDEX_URL" | sed -n 's/.*"latest"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+    if [[ -z "$version" ]]; then
+      echo "Failed to fetch latest version." >&2
+      exit 1
+    fi
+  fi
+  echo "$version"
+}
 
 #set content service
 function set_content_service() {
@@ -152,10 +165,6 @@ function set_content_service() {
         <string>com.docp.manager</string>
         <key>EnvironmentVariables</key>
         <dict>
-            <key>DOCP_REGISTER_URL</key>
-            <string>https://msapi.sandbox.docphq.tech/agents</string>
-            <key>DOCP_STATE_CHECK_URL</key>
-            <string>https://msapi.sandbox.docphq.tech/agents</string>
             <key>DOCP_AGENT_PORT</key>
             <string>12012</string>
             <key>LOG_LEVEL</key>
@@ -165,7 +174,7 @@ function set_content_service() {
         </dict>
         <key>ProgramArguments</key>
         <array>
-            <string>/opt/docp-agent/bin/manager</string>
+            <string>/opt/docp-agent/bin/current/manager</string>
         </array>
         <key>StandardOutPath</key>
         <string>/opt/docp-agent/logs/launchd.log</string>
@@ -228,6 +237,7 @@ agent:
 EOF
 }
 #actions
+VERSION=$(resolve_version "$VERSION")
 verify_script
 setup
 create_workdir

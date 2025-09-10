@@ -7,7 +7,6 @@ ARCHITECTURE=$(uname -m)
 FILE_INDEX_URL="https://docp-agent.s3.us-east-1.amazonaws.com/index_os_instance.json"
 BINARY_URL="https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
 VERSION="${VERSION:-${VERSION:-latest}}"
-AGENT_IS_RUNNING=$(ps aux | grep -v grep | grep docp-agent/bin/agent)
 DOCP_FILES_PATH=/opt/docp-agent
 USER_GROUP_NAME=docp-agent
 
@@ -18,17 +17,21 @@ else
     sudo_cmd='sudo'
 fi
 
-# verify is already running manager
-function already_running(){
-if [[ "$AGENT_IS_RUNNING" ]]; then
-  printf "\033[31mAlready running agent\033[0m\n"
-  exit 0
-fi
-}
+#analize options
+while [[ $# -gt 0 ]]; do
+    key="$1"
+    case $key in --version)
+        VERSION="$2"
+        shift 
+        shift 
+        ;;
+    esac
+done
+
 
 #verify is linux kernel
 function verify_kernel(){
-if [[ "$KERNEL_NAME" != "Darwin" ]]; then
+if [[ "$KERNEL_NAME" != "Linux" ]]; then
   printf "\033[31mInvalid installer for machine\033[0m\n"
   exit 0
 fi
@@ -47,7 +50,6 @@ fi
 #setup configure e verify machine
 function setup(){
   verify_kernel
-  already_running
 }
 
 # Corrige a função resolve_version para extrair corretamente o campo "latest" do JSON
@@ -63,16 +65,26 @@ function resolve_version() {
   echo "$version"
 }
 
+#add permission workdir
+function add_perm_work_dir(){
+  $sudo_cmd chown -R $USER_GROUP_NAME:$USER_GROUP_NAME /opt/docp-agent/
+}
+
 #get binary arm64
 function get_binary_arch64(){
-  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-macos-arm64"
-  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/agent
+  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/updater "$BINARY_URL/$VERSION/updater-macos-arm64"
+  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/updater
 }
 #get binary amd64
 function get_binary_amd64(){
-  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-macos-amd64"
-  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/agent
+  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/updater "$BINARY_URL/$VERSION/updater-macos-amd64"
+  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/updater
 }
+# create symbolic link
+function create_link_simbolic(){
+  sudo ln -sfn $DOCP_FILES_PATH/bin/releases/$VERSION/updater $DOCP_FILES_PATH/bin/current/updater
+}
+
 #set content service
 function set_content_service() {
   printf '
@@ -86,7 +98,7 @@ function set_content_service() {
             <false/>
         </dict>
         <key>Label</key>
-        <string>com.docp.agent</string>
+        <string>com.docp.manager</string>
         <key>EnvironmentVariables</key>
         <dict>
             <key>DOCP_AGENT_PORT</key>
@@ -98,7 +110,7 @@ function set_content_service() {
         </dict>
         <key>ProgramArguments</key>
         <array>
-            <string>/opt/docp-agent/bin/current/agent</string>
+            <string>/opt/docp-agent/bin/current/updater</string>
         </array>
         <key>StandardOutPath</key>
         <string>/opt/docp-agent/logs/launchd.log</string>
@@ -107,17 +119,20 @@ function set_content_service() {
         <key>ExitTimeOut</key>
         <integer>10</integer>
     </dict>
-    </plist>' | sudo tee ~/Library/LaunchAgents/com.docp.agent.plist > /dev/null
+    </plist>' | sudo tee ~/Library/LaunchAgents/com.docp.updater.plist > /dev/null
+
 }
 
 #prepare launchd
 function prepare_launchd() {
-  launchctl load ~/Library/LaunchAgents/com.docp.agent.plist
-  launchctl start gui/$(id -u)/com.docp.agent
+  launchctl load ~/Library/LaunchAgents/com.docp.updater.plist
+  launchctl start gui/$(id -u)/com.docp.updater
 }
 #actions
 VERSION=$(resolve_version "$VERSION")
 setup
 verify_architecture
+create_link_simbolic
+add_perm_work_dir
 set_content_service
 prepare_launchd

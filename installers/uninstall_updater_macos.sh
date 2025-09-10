@@ -4,7 +4,7 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-MANAGER_IS_RUNNING=$(ps aux | grep -v grep | grep docp-agent/bin/current/manager)
+MANAGER_IS_RUNNING=$(ps aux | grep -v grep | grep docp-agent/bin/current/updater)
 DOCP_FILES_PATH=/opt/docp-agent
 USER_GROUP_NAME=docp-agent
 
@@ -17,19 +17,15 @@ fi
 
 #stop and disable launchd
 function stop_and_disable() {
-  launchctl bootout gui/$(id -u)/com.docp.manager 
-  launchctl unload ~/Library/LaunchAgents/com.docp.manager.plist
+  launchctl bootout gui/$(id -u)/com.docp.updater 
+  launchctl unload ~/Library/LaunchAgents/com.docp.updater.plist
 }
 
 #remove file service
 function remove_file_service(){
-  $sudo_cmd rm ~/Library/LaunchAgents/com.docp.manager.plist
+  $sudo_cmd rm ~/Library/LaunchAgents/com.docp.updater.plist
 }
 
-#remove work dir
-function remove_work_dir() {
-  $sudo_cmd rm -rf $DOCP_FILES_PATH 
-}
 
 #verify is darwin kernel
 function verify_kernel(){
@@ -47,7 +43,6 @@ function setup(){
 function _uninstaller(){
   stop_and_disable
   remove_file_service
-  remove_work_dir
 }
 
 #uninstall manager
@@ -68,7 +63,7 @@ function already_running(){
 if [[ "$MANAGER_IS_RUNNING" ]]; then
   uninstall
 else
-  printf "\033[31mNot running manager\033[0m\n"
+  printf "\033[31mNot running updater\033[0m\n"
   exit 0
 fi
 }

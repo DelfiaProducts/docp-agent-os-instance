@@ -38,7 +38,7 @@ func (u *UtilityService) Setup() error {
 
 // FetchAgentVersions fetches the summary agent versions from the repository.
 func (u *UtilityService) FetchAgentVersions() (dto.AgentVersions, error) {
-	urlVersions, err := url.JoinPath(utils.GetBinariesRepositoryUrl(), utils.GetFileAgentVersionsName())
+	urlVersions, err := url.JoinPath(utils.GetBucketUrl(), utils.GetFileAgentVersionsName())
 	if err != nil {
 		return dto.AgentVersions{}, err
 	}
