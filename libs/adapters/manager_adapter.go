@@ -375,12 +375,14 @@ func (l *ManagerAdapter) GetAgentRollbackVersion() (string, error) {
 func (l *ManagerAdapter) GetAgentVersionFromSignalBytes(data []byte) (string, error) {
 	var stateCheckResponse dto.StateCheckResponse
 	var version string
-	if err := l.unmarshaller(data, &stateCheckResponse); err != nil {
-		return version, err
-	}
+	if len(data) > 0 {
+		if err := l.unmarshaller(data, &stateCheckResponse); err != nil {
+			return version, err
+		}
 
-	if len(stateCheckResponse.Signal.Agents.DocpAgent.Version) > 0 {
-		version = stateCheckResponse.Signal.Agents.DocpAgent.Version
+		if len(stateCheckResponse.Signal.Agents.DocpAgent.Version) > 0 {
+			version = stateCheckResponse.Signal.Agents.DocpAgent.Version
+		}
 	}
 	return version, nil
 }
@@ -389,12 +391,14 @@ func (l *ManagerAdapter) GetAgentVersionFromSignalBytes(data []byte) (string, er
 func (l *ManagerAdapter) GetAgentVersionDatadogFromSignalBytes(data []byte) (string, error) {
 	var stateCheckResponse dto.StateCheckResponse
 	var version string
-	if err := l.unmarshaller(data, &stateCheckResponse); err != nil {
-		return version, err
-	}
+	if len(data) > 0 {
+		if err := l.unmarshaller(data, &stateCheckResponse); err != nil {
+			return version, err
+		}
 
-	if len(stateCheckResponse.Signal.Agents.DatadogAgent.Version) > 0 {
-		version = stateCheckResponse.Signal.Agents.DatadogAgent.Version
+		if len(stateCheckResponse.Signal.Agents.DatadogAgent.Version) > 0 {
+			version = stateCheckResponse.Signal.Agents.DatadogAgent.Version
+		}
 	}
 	return version, nil
 }
