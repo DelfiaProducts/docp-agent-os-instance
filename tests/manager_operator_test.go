@@ -214,7 +214,9 @@ func TestManagerOperatorAutoUpdateAgentDatadogVersion(t *testing.T) {
 				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
 			})
 			s.When("AutoUpdateAgentDatadogVersion é chamado", func() {
+				linux.WaitGroupAdd(1)
 				err = linux.AutoUpdateAgentDatadogVersion()
+				linux.WaitGroupWait()
 			})
 			s.Then("não deve retornar erro no auto update agent datadog version", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "AutoUpdateAgentDatadogVersion não deve retornar erro")
