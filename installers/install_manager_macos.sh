@@ -5,7 +5,7 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-FILE_INDEX_URL="https://docp-agent-k8s.s3.us-east-1.amazonaws.com/index.json"
+FILE_INDEX_URL="https://docp-agent.s3.us-east-1.amazonaws.com/index_os_instance.json"
 BINARY_URL="https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
 VERSION="latest"
 MANAGER_IS_RUNNING=$(ps aux | grep -v grep | grep docp-agent/bin/manager)
