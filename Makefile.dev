@@ -1,0 +1,50 @@
+#DD_API_KEY -> dd api key datadog
+#DD_SITE -> dd site datadog
+install-datadog:
+	@echo "Install agent datadog"
+	DD_API_KEY=$(DD_API_KEY) DD_SITE=$(DD_SITE) bash -c "$(curl -L https://install.datadoghq.com/scripts/install_script_agent7.sh)"
+	@echo "Agent datadog installed"
+
+#uninstall agent datadog
+uninstall-datadog:
+	@echo "Uninstall agent datadog"
+	@sudo apt-get remove datadog-agent -y
+	@echo "Agent datadog uninstalled"
+
+#install manager linux local
+#DOCP_API_KEY -> docp api key
+#DOCP_AGENT_TAGS -> docp agent tags
+install-manager-linux-local:
+	@echo "Install manager linux local"
+	@bash -c "./installers/install_manager_linux.sh --apiKey $(DOCP_API_KEY) --tags $(DOCP_AGENT_TAGS)"
+	@echo "Manager linux local installed"
+
+#uninstall manager linux local
+uninstall-manager-linux-local:
+	@echo "Uninstall manager linux local"
+	@bash -c "./installers/uninstall_manager_linux.sh"
+	@echo "Manager linux local uninstalled"
+
+#install agent linux local
+install-agent-linux-local:
+	@echo "Install agent linux local"
+	@bash -c "./installers/install_agent_linux.sh"
+	@echo "Agent linux local installed"
+
+#uninstall agent linux local
+uninstall-agent-linux-local:
+	@echo "Uninstall agent linux local"
+	@bash -c "./installers/uninstall_agent_linux.sh"
+	@echo "Agent linux local uninstalled"
+
+#install updater linux local
+install-updater-linux-local:
+	@echo "Install updater linux local"
+	@bash -c "./installers/install_updater_linux.sh"
+	@echo "Updater linux local installed"
+
+#uninstall updater linux local
+uninstall-updater-linux-local:
+	@echo "Uninstall updater linux local"
+	@bash -c "./installers/uninstall_updater_linux.sh"
+	@echo "Updater linux local uninstalled"

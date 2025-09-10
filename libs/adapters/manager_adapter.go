@@ -375,12 +375,30 @@ func (l *ManagerAdapter) GetAgentRollbackVersion() (string, error) {
 func (l *ManagerAdapter) GetAgentVersionFromSignalBytes(data []byte) (string, error) {
 	var stateCheckResponse dto.StateCheckResponse
 	var version string
-	if err := l.unmarshaller(data, &stateCheckResponse); err != nil {
-		return version, err
-	}
+	if len(data) > 0 {
+		if err := l.unmarshaller(data, &stateCheckResponse); err != nil {
+			return version, err
+		}
 
-	if len(stateCheckResponse.Signal.Agents.DocpAgent.Version) > 0 {
-		version = stateCheckResponse.Signal.Agents.DocpAgent.Version
+		if len(stateCheckResponse.Signal.Agents.DocpAgent.Version) > 0 {
+			version = stateCheckResponse.Signal.Agents.DocpAgent.Version
+		}
+	}
+	return version, nil
+}
+
+// GetAgentVersionDatadogFromSignalBytes return version the datadog from signal bytes
+func (l *ManagerAdapter) GetAgentVersionDatadogFromSignalBytes(data []byte) (string, error) {
+	var stateCheckResponse dto.StateCheckResponse
+	var version string
+	if len(data) > 0 {
+		if err := l.unmarshaller(data, &stateCheckResponse); err != nil {
+			return version, err
+		}
+
+		if len(stateCheckResponse.Signal.Agents.DatadogAgent.Version) > 0 {
+			version = stateCheckResponse.Signal.Agents.DatadogAgent.Version
+		}
 	}
 	return version, nil
 }
@@ -810,6 +828,40 @@ func (l *ManagerAdapter) DocpAgentApiUpdateConfigurationsDatadog(content []byte)
 	return respBytes, nil
 }
 
+// DocpAgentApiUpdateVersionDatadog execute call to api docp for update datadog version
+func (l *ManagerAdapter) DocpAgentApiUpdateVersionDatadog(version string) ([]byte, error) {
+	l.logger.Debug("execute send request for update version in datadog agent", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateVersionDatadog", "version", version)
+	updateVersion := dto.DatadogUpdateVersionDTO{Version: version}
+	bodyUpdateVersion, err := l.marshaller(updateVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	urlDocpUpdateVersion := fmt.Sprintf("http://127.0.0.1:%s/datadog/update/version", l.docpApiPort)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlDocpUpdateVersion, bytes.NewBuffer(bodyUpdateVersion))
+	if err != nil {
+		l.logger.Error("error in create request", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateVersionDatadog", "error", err.Error())
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	res, err := l.client.Do(req)
+	if err != nil {
+		l.logger.Error("error in execute request", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateVersionDatadog", "error", err.Error())
+		return nil, err
+	}
+
+	defer res.Body.Close()
+	respBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		l.logger.Error("error in read body response", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateVersionDatadog", "error", err.Error())
+		return nil, err
+	}
+
+	return respBytes, nil
+}
+
 // GetStateReceived return state received from state check service
 func (l *ManagerAdapter) GetStateReceived() ([]byte, error) {
 	l.logger.Debug("get state received", "trace", "docp-agent-os-instance.manager_adapter.GetStateReceived")
@@ -1071,6 +1123,7 @@ func (l *ManagerAdapter) prepareAgentDatadogAction(stateCheckSignal dto.StateChe
 				ComponentEnvs: componetEnvVars,
 				Envs:          envVars,
 				Files:         files,
+				Version:       datadogAgent.Version,
 			}
 		}
 	} else if stateCheckSignal.TypeSignal == "uninstall" {
@@ -1112,6 +1165,7 @@ func (l *ManagerAdapter) prepareAgentDatadogUpdateAction(stateCheckSignal dto.St
 				ComponentEnvs: componetEnvVars,
 				Envs:          envVars,
 				Files:         files,
+				Version:       datadogAgent.Version,
 			}
 			action = act
 		}

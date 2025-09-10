@@ -51,6 +51,11 @@ func (d *DatadogRoutes) UpdateAgentConfigurations(w http.ResponseWriter, r *http
 	d.controller.UpdateAgentConfigurations(w, r)
 }
 
+// UpdateAgentVersion is handler for update agent version in datadog
+func (d *DatadogRoutes) UpdateAgentVersion(w http.ResponseWriter, r *http.Request) {
+	d.controller.UpdateAgentVersion(w, r)
+}
+
 // BuildRoutes execute build the routes datadog
 func (d *DatadogRoutes) BuildRoutes(router *mux.Router) error {
 	route := router.PathPrefix("/datadog").Subrouter()
@@ -58,5 +63,6 @@ func (d *DatadogRoutes) BuildRoutes(router *mux.Router) error {
 	route.HandleFunc("/uninstall", d.UninstallAgent).Methods("POST")
 	route.HandleFunc("/tracer/install", d.InstallTracer).Methods("POST")
 	route.HandleFunc("/configurations", d.UpdateAgentConfigurations).Methods("POST")
+	route.HandleFunc("/update/version", d.UpdateAgentVersion).Methods("POST")
 	return nil
 }

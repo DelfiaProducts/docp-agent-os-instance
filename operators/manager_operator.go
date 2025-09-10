@@ -29,15 +29,16 @@ type ManagerOperator struct {
 	filePath             string
 	logger               libinterfaces.ILogger
 	adapter              *adapters.ManagerAdapter
+	vendorAdapter        *adapters.DatadogAdapter
 	register             *services.AgentRegisterService
 	stateCheck           *services.StateCheckService
 	wg                   *sync.WaitGroup
 	done                 chan struct{}
-	chanErrors           chan dto.ManagerChanErrors
+	chanErrors           chan dto.CommonChanErrors
 	chanMetadata         chan []byte
 	chanResultsApi       chan []byte
-	chanDocpAgent        chan dto.ManagerStateAction
-	chanDocpAgentDatadog chan dto.ManagerStateAction
+	chanDocpAgent        chan dto.StateAction
+	chanDocpAgentDatadog chan dto.StateAction
 	validateIsComplete   bool
 	retryRegister        int
 	maxRetry             int
@@ -49,11 +50,11 @@ func NewManagerOperator() *ManagerOperator {
 	return &ManagerOperator{
 		wg:                   &sync.WaitGroup{},
 		done:                 make(chan struct{}),
-		chanErrors:           make(chan dto.ManagerChanErrors, 1),
+		chanErrors:           make(chan dto.CommonChanErrors, 1),
 		chanMetadata:         make(chan []byte, 1),
 		chanResultsApi:       make(chan []byte, 1),
-		chanDocpAgent:        make(chan dto.ManagerStateAction, 1),
-		chanDocpAgentDatadog: make(chan dto.ManagerStateAction, 1),
+		chanDocpAgent:        make(chan dto.StateAction, 1),
+		chanDocpAgentDatadog: make(chan dto.StateAction, 1),
 		validateIsComplete:   false,
 		retryRegister:        0,
 		maxRetry:             10,
@@ -81,6 +82,11 @@ func (l *ManagerOperator) Setup() error {
 		return err
 	}
 	l.adapter = adapterManager
+	vendorAdapter := adapters.NewDatadogAdapter(l.logger)
+	if err := vendorAdapter.Setup(); err != nil {
+		return err
+	}
+	l.vendorAdapter = vendorAdapter
 	stateCheck := services.NewStateCheckService(l.logger)
 	if err := stateCheck.Setup(); err != nil {
 		return err
@@ -120,7 +126,7 @@ func (l *ManagerOperator) GetSignalFromStateCheck() error {
 	l.logger.Debug("get signal from state check", "trace", "docp-agent-os-instance.manager_operator.GetSignalFromStateCheck")
 	stateCheckBytes, statusCode, err := l.stateCheck.GetState()
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "GetState", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "GetState", Priority: dto.ErrLevelMedium, Err: err}
 	}
 	l.logger.Debug("get state", "trace", "docp-agent-os-instance.manager_operator.GetState", "statusCode", statusCode)
 	switch statusCode {
@@ -130,13 +136,13 @@ func (l *ManagerOperator) GetSignalFromStateCheck() error {
 		// validate if duplicated signal
 		err := l.validateDuplicatedSignal(stateCheckBytes)
 		if err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "GetSignalFromStateCheck", Priority: dto.ErrLevelMedium, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "GetSignalFromStateCheck", Priority: dto.ErrLevelMedium, Err: err}
 			return err
 		}
 		// save signal on received state
 		err = l.adapter.SaveState(stateCheckBytes)
 		if err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "GetSignalFromStateCheck", Priority: dto.ErrLevelMedium, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "GetSignalFromStateCheck", Priority: dto.ErrLevelMedium, Err: err}
 			return err
 		}
 	case 204:
@@ -145,7 +151,7 @@ func (l *ManagerOperator) GetSignalFromStateCheck() error {
 	case 403:
 		l.logger.Debug("get signal from state check", "trace", "docp-agent-os-instance.manager_operator.GetSignalFromStateCheck", "status", "not authorized")
 		if err := l.executeAuthCall(); err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "GetSignalFromStateCheck", Priority: dto.ErrLevelMedium, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "GetSignalFromStateCheck", Priority: dto.ErrLevelMedium, Err: err}
 			return err
 		}
 		return nil
@@ -161,13 +167,13 @@ func (l *ManagerOperator) UpdateAgent(version string) error {
 	defer l.wg.Done()
 	statusManager, err := l.adapter.Status("manager")
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
 		return err
 	}
 
 	statusAgent, err := l.adapter.Status("agent")
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
 		return err
 	}
 
@@ -179,7 +185,7 @@ func (l *ManagerOperator) UpdateAgent(version string) error {
 	if statusManager == "active" && statusAgent == "active" {
 		agentVersion, err := l.adapter.GetAgentVersion()
 		if err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
 			return err
 		}
 		l.logger.Info("auto update agent version", "version", version, "agentVersion", agentVersion)
@@ -196,21 +202,21 @@ func (l *ManagerOperator) UpdateAgent(version string) error {
 
 			if err := l.adapter.UpdateAgent(version); err != nil {
 				go l.adapter.NotifyStatus("update_docp_error", pkg.TransactionEventClose, "failed update agent version", ctx)
-				l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
+				l.chanErrors <- dto.CommonChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
 				return err
 			}
 
 			//save new version
 			if err := l.adapter.SaveAgentVersion(version); err != nil {
 				go l.adapter.NotifyStatus("update_docp_error", pkg.TransactionEventClose, "failed save agent version", ctx)
-				l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
+				l.chanErrors <- dto.CommonChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
 				return err
 			}
 
 			//save rollback version
 			if err := l.adapter.SaveAgentRollbackVersion(agentVersion); err != nil {
 				go l.adapter.NotifyStatus("update_docp_error", pkg.TransactionEventClose, "failed save agent version", ctx)
-				l.chanErrors <- dto.ManagerChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
+				l.chanErrors <- dto.CommonChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
 				return err
 			}
 
@@ -265,6 +271,142 @@ func (l *ManagerOperator) AutoUpdateAgentVersion() error {
 	if len(latestVersion) > 0 {
 		l.wg.Add(1)
 		go l.UpdateAgent(latestVersion)
+	}
+
+	return nil
+}
+
+// updateAgentVersionDatadog execute update agent version datadog
+func (l *ManagerOperator) UpdateAgentVersionDatadog(version string) error {
+	l.logger.Debug("update agent version datadog", "trace", "docp-agent-os-instance.manager_operator.updateAgentVersionDatadog")
+	defer l.wg.Done()
+
+	executeRollback := false
+	attempt := 0
+	//get installed version datadog
+	lastVersion, err := l.vendorAdapter.GetVersion()
+	if err != nil {
+		l.chanErrors <- dto.CommonChanErrors{From: "updateAgentVersionDatadog", Priority: dto.ErrLevelMedium, Err: err}
+		return err
+	}
+	l.logger.Debug("installed version datadog", "lastVersion", lastVersion, "version", version)
+
+	if lastVersion == version {
+		l.logger.Debug("datadog agent version is already up to date")
+		return nil
+	}
+	//prepare transaction
+	transaction := utils.NewTransactionStatus()
+	ctxTransaction := context.WithValue(context.Background(), dto.ContextTransactionStatus, transaction)
+
+	go l.adapter.NotifyStatus("update_vendor_version_received", pkg.TransactionEventOpen, "update vendor version received", ctxTransaction)
+	time.Sleep(l.delay)
+
+	//send request for update version datadog
+	_, err = l.adapter.DocpAgentApiUpdateVersionDatadog(version)
+	if err != nil {
+		go l.adapter.NotifyStatus("update_vendor_version_error", pkg.TransactionEventClose, "failed update vendor version", ctxTransaction)
+		l.chanErrors <- dto.CommonChanErrors{From: "updateAgentVersionDatadog", Priority: dto.ErrLevelMedium, Err: err}
+		return err
+	}
+
+	go l.adapter.NotifyStatus("update_vendor_version_processing", pkg.TransactionEventUpdate, "update vendor version processing", ctxTransaction)
+	time.Sleep(l.delay)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+loopupdateversiondatadog:
+	for {
+		select {
+		case <-ctx.Done():
+			l.logger.Error("Context timeout or cancellation reached")
+			l.chanErrors <- dto.CommonChanErrors{From: "updateAgentVersionDatadog", Priority: dto.ErrLevelMedium, Err: utils.ErrContextExpired()}
+			go l.adapter.NotifyStatus("update_vendor_version_error", pkg.TransactionEventClose, "failed update vendor version", ctxTransaction)
+			return utils.ErrContextExpired()
+
+		case <-ticker.C:
+			attempt++
+			l.logger.Debug("checking datadog agent status", "attempt", attempt)
+			datadogActive, err := l.adapter.Status("datadog")
+			if err != nil {
+				l.logger.Error("failed to get datadog agent service already installed", "error", err)
+				l.chanErrors <- dto.CommonChanErrors{From: "updateAgentVersionDatadog", Priority: dto.ErrLevelMedium, Err: err}
+				continue
+			}
+
+			if datadogActive == "active" {
+				break loopupdateversiondatadog
+			}
+
+			if attempt >= l.maxRetry {
+				l.logger.Error("max retry reached", "attempt", attempt)
+				executeRollback = true
+				break loopupdateversiondatadog
+			}
+
+		}
+	}
+	if executeRollback {
+		l.logger.Debug("rollback update vendor version", "trace", "docp-agent-os-instance.manager_operator.UpdateAgentVersionDatadog")
+		if err := l.vendorAdapter.RollbackVersion(lastVersion); err != nil {
+			go l.adapter.NotifyStatus("update_vendor_version_rollback_error", pkg.TransactionEventClose, "failed update vendor version with rollback", ctxTransaction)
+			l.chanErrors <- dto.CommonChanErrors{From: "updateAgentVersionDatadog", Priority: dto.ErrLevelMedium, Err: err}
+			return err
+		}
+		l.logger.Debug("rollback update vendor version", "lastVersion", lastVersion)
+		go l.adapter.NotifyStatus("update_vendor_version_with_rollback_complete", pkg.TransactionEventClose, "update vendor version with rollback completed", ctxTransaction)
+		return nil
+	}
+	l.logger.Debug("datadog agent service is already active")
+
+	go l.adapter.NotifyStatus("update_vendor_version_complete", pkg.TransactionEventClose, "update vendor version completed", ctxTransaction)
+
+	return nil
+}
+
+// AutoUpdateAgentDatadogVersion execute auto update agent datadog version
+func (l *ManagerOperator) AutoUpdateAgentDatadogVersion() error {
+	received, err := l.adapter.GetStateReceived()
+	if err != nil {
+		return err
+	}
+	l.logger.Info("auto update agent datadog version", "received", string(received))
+	applyVersion, err := l.adapter.GetAgentVersionDatadogFromSignalBytes(received)
+	if err != nil {
+		return err
+	}
+	l.logger.Info("auto update agent datadog version", "applyVersion", applyVersion)
+	if applyVersion != "latest" {
+		l.logger.Info("auto update agent datadog version not latest", "applyVersion", applyVersion)
+		return nil
+	}
+	//update repository
+	if err := l.vendorAdapter.UpdateRepository(); err != nil {
+		return err
+	}
+
+	//get latest and installed versions
+	latestVersion, err := l.vendorAdapter.GetLatestVersion()
+	if err != nil {
+		return err
+	}
+
+	installedVersion, err := l.vendorAdapter.GetVersion()
+	if err != nil {
+		return err
+	}
+
+	if latestVersion == installedVersion {
+		l.logger.Info("auto update agent datadog version already installed", "latestVersion", latestVersion, "installedVersion", installedVersion)
+		return nil
+	}
+
+	if err := l.UpdateAgentVersionDatadog(latestVersion); err != nil {
+		return err
 	}
 
 	return nil
@@ -351,7 +493,7 @@ func (l *ManagerOperator) Profiling() {
 	l.logger.Debug("profiling task", "trace", "docp-agent-os-instance.manager_operator.Profiling")
 	defer l.wg.Done()
 	if err := http.ListenAndServe(":4040", nil); err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "Profiling", Priority: dto.ErrLevelLow, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "Profiling", Priority: dto.ErrLevelLow, Err: err}
 	}
 }
 
@@ -398,6 +540,16 @@ func (l *ManagerOperator) getLevelError() int {
 	default:
 		return dto.ErrLevelHigh
 	}
+}
+
+// getVendorLatestVersion retrieves the latest version of the vendor
+func (l *ManagerOperator) getVendorLatestVersion() (string, error) {
+	l.logger.Debug("get vendor latest version", "trace", "docp-agent-os-instance.manager_operator.getVendorLatestVersion")
+	latestVersion, err := l.vendorAdapter.GetLatestVersion()
+	if err != nil {
+		return "", err
+	}
+	return latestVersion, nil
 }
 
 // consumerErrors execute consumer for errors
@@ -460,7 +612,7 @@ func (l *ManagerOperator) handleMetadata() {
 	defer l.wg.Done()
 	isAlreadyCreated, err := l.adapter.IsAlreadyCreated()
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "handleMetadata", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "handleMetadata", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	if isAlreadyCreated {
@@ -486,14 +638,14 @@ func (l *ManagerOperator) sendMetadataCreate() {
 			}
 			result, statusCode, err := l.register.SendMetadataCreate(metadata)
 			if err != nil {
-				l.chanErrors <- dto.ManagerChanErrors{From: "sendMetadataCreate", Priority: dto.ErrLevelMedium, Err: err}
+				l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataCreate", Priority: dto.ErrLevelMedium, Err: err}
 			}
 
 			l.logger.Debug("execute send metadata create", "trace", "docp-agent-os-instance.linux_manager_operator.sendMetadataCreate", "statusCode", statusCode)
 			switch statusCode {
 			case 202:
 				if err := l.adapter.SaveInitialConfigFromRegister(result); err != nil {
-					l.chanErrors <- dto.ManagerChanErrors{From: "sendMetadataCreate", Priority: dto.ErrLevelMedium, Err: err}
+					l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataCreate", Priority: dto.ErrLevelMedium, Err: err}
 					return
 				}
 			default:
@@ -525,7 +677,7 @@ func (l *ManagerOperator) sendMetadataUpdate() {
 			result, statusCode, err := l.register.SendMetadataUpdate(metadata)
 			if err != nil {
 				go l.adapter.NotifyStatus("update_metadata_error", pkg.TransactionEventClose, "error on update metadata", ctx)
-				l.chanErrors <- dto.ManagerChanErrors{From: "sendMetadataUpdate", Priority: dto.ErrLevelMedium, Err: err}
+				l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataUpdate", Priority: dto.ErrLevelMedium, Err: err}
 			}
 
 			go l.adapter.NotifyStatus("update_metadata_completed", pkg.TransactionEventClose, "update metadata completed", ctx)
@@ -535,12 +687,12 @@ func (l *ManagerOperator) sendMetadataUpdate() {
 			case 202:
 				configAgent, err := l.adapter.GetConfigAgent()
 				if err != nil {
-					l.chanErrors <- dto.ManagerChanErrors{From: "sendMetadataUpdate", Priority: dto.ErrLevelMedium, Err: err}
+					l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataUpdate", Priority: dto.ErrLevelMedium, Err: err}
 				}
 
 				var agentRegisterResponse libdto.AgentRegisterDataResponseSuccess
 				if err := l.unmarshaller(result, &agentRegisterResponse); err != nil {
-					l.chanErrors <- dto.ManagerChanErrors{From: "sendMetadataUpdate", Priority: dto.ErrLevelMedium, Err: err}
+					l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataUpdate", Priority: dto.ErrLevelMedium, Err: err}
 				}
 
 				if len(agentRegisterResponse.AccessToken) > 0 {
@@ -548,12 +700,12 @@ func (l *ManagerOperator) sendMetadataUpdate() {
 				}
 
 				if err := l.adapter.UpdateConfigAgent(configAgent); err != nil {
-					l.chanErrors <- dto.ManagerChanErrors{From: "sendMetadataUpdate", Priority: dto.ErrLevelMedium, Err: err}
+					l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataUpdate", Priority: dto.ErrLevelMedium, Err: err}
 				}
 
 			case 401:
 				if err := l.executeAuthCall(); err != nil {
-					l.chanErrors <- dto.ManagerChanErrors{From: "sendMetadataUpdate", Priority: dto.ErrLevelMedium, Err: err}
+					l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataUpdate", Priority: dto.ErrLevelMedium, Err: err}
 				}
 
 				if l.retryRegister <= l.maxRetry {
@@ -606,7 +758,7 @@ func (l *ManagerOperator) getMetadata() {
 }
 
 // extractDDApiKeyAndDDSiteFromEnvs return envs for install datadog agent
-func (l *ManagerOperator) extractDDApiKeyAndDDSiteFromEnvs(envs []dto.ManagerStateActionEnvs) (string, string, error) {
+func (l *ManagerOperator) extractDDApiKeyAndDDSiteFromEnvs(envs []dto.StateActionEnvs) (string, string, error) {
 	l.logger.Debug("extract envs the datadog", "trace", "docp-agent-os-instance.manager_operator.extractDDApiKeyAndDDSiteFromEnvs", "envs", envs)
 	var ddApiKey string
 	var ddSite string
@@ -622,7 +774,7 @@ func (l *ManagerOperator) extractDDApiKeyAndDDSiteFromEnvs(envs []dto.ManagerSta
 }
 
 // extractDDApiKeyAndDDSiteFromEnvs return envs for install datadog agent
-func (l *ManagerOperator) extractApmSingleStepEnvs(envs []dto.ManagerStateActionEnvs) (string, string, string, error) {
+func (l *ManagerOperator) extractApmSingleStepEnvs(envs []dto.StateActionEnvs) (string, string, string, error) {
 	l.logger.Debug("extract envs the datadog", "trace", "docp-agent-os-instance.manager_operator.extractDDApiKeyAndDDSiteFromEnvs", "envs", envs)
 	var ddApmInstrumentationEnabled string
 	var ddEnv string
@@ -648,7 +800,7 @@ func (l *ManagerOperator) extractApmSingleStepEnvs(envs []dto.ManagerStateAction
 }
 
 // extractApmTracingLibrayEnvs return envs for install datadog agent
-func (l *ManagerOperator) extractApmTracingLibrayEnvs(envs []dto.ManagerStateActionEnvs) (string, string, string, error) {
+func (l *ManagerOperator) extractApmTracingLibrayEnvs(envs []dto.StateActionEnvs) (string, string, string, error) {
 	l.logger.Debug("extract envs the datadog", "trace", "docp-agent-os-instance.manager_operator.extractApmTracingLibrayEnvs", "envs", envs)
 	var language, pathTracer, version string
 	for _, env := range envs {
@@ -675,18 +827,18 @@ func (l *ManagerOperator) installAgent() {
 	defer l.wg.Done()
 	status, err := l.adapter.Status("agent")
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "installAgent", Priority: dto.ErrLevelHigh, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "installAgent", Priority: dto.ErrLevelHigh, Err: err}
 		return
 	}
 	if status != "active" {
 		//get version
 		version, err := l.adapter.GetAgentVersion()
 		if err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "installAgent", Priority: dto.ErrLevelHigh, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "installAgent", Priority: dto.ErrLevelHigh, Err: err}
 			return
 		}
 		if err := l.adapter.InstallAgent(version); err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "installAgent", Priority: dto.ErrLevelHigh, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "installAgent", Priority: dto.ErrLevelHigh, Err: err}
 			return
 		}
 		return
@@ -701,13 +853,13 @@ func (l *ManagerOperator) installAgentDatadog(ddApiKey, ddSite string) {
 	defer l.wg.Done()
 	status, err := l.adapter.Status("datadog")
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "installAgentDatadog", Priority: dto.ErrLevelHigh, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "installAgentDatadog", Priority: dto.ErrLevelHigh, Err: err}
 		return
 	}
 	if status != "active" {
 		result, err := l.adapter.DocpAgentApiInstallDatadog(ddApiKey, ddSite)
 		if err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "installAgentDatadog", Priority: dto.ErrLevelHigh, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "installAgentDatadog", Priority: dto.ErrLevelHigh, Err: err}
 			return
 		}
 		l.chanResultsApi <- result
@@ -716,7 +868,7 @@ func (l *ManagerOperator) installAgentDatadog(ddApiKey, ddSite string) {
 }
 
 // handlerUpdateAgentDatadogAfterInstall execute install agent datadog and update configurations after agent active
-func (l *ManagerOperator) handlerUpdateAgentDatadogAfterInstall(files []dto.ManagerStateActionFiles) {
+func (l *ManagerOperator) handlerUpdateAgentDatadogAfterInstall(files []dto.StateActionFiles) {
 	l.logger.Debug("install and update agent datadog", "trace", "docp-agent-os-instance.manager_operator.installAndUpdateAgentDatadog")
 	defer l.wg.Done()
 
@@ -731,14 +883,14 @@ loopinstalldatadog:
 		select {
 		case <-ctx.Done():
 			l.logger.Error("Context timeout or cancellation reached")
-			l.chanErrors <- dto.ManagerChanErrors{From: "installAndUpdateAgentDatadog", Priority: dto.ErrLevelMedium, Err: fmt.Errorf("installation process timed out")}
+			l.chanErrors <- dto.CommonChanErrors{From: "installAndUpdateAgentDatadog", Priority: dto.ErrLevelMedium, Err: fmt.Errorf("installation process timed out")}
 			return
 
 		case <-ticker.C:
 			datadogActive, err := l.adapter.Status("datadog")
 			if err != nil {
 				l.logger.Error("failed to get datadog agent service already installed", "error", err)
-				l.chanErrors <- dto.ManagerChanErrors{From: "installAndUpdateAgentDatadog", Priority: dto.ErrLevelMedium, Err: err}
+				l.chanErrors <- dto.CommonChanErrors{From: "installAndUpdateAgentDatadog", Priority: dto.ErrLevelMedium, Err: err}
 				continue
 			}
 
@@ -757,7 +909,7 @@ loopinstalldatadog:
 	for _, fls := range files {
 		flsBytes, err := l.marshaller(&fls)
 		if err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
 			return
 		}
 
@@ -783,14 +935,14 @@ func (l *ManagerOperator) handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSit
 		select {
 		case <-ctx.Done():
 			l.logger.Error("Context timeout or cancellation reached")
-			l.chanErrors <- dto.ManagerChanErrors{From: "handlerInstallDatadogWithApmSingleStep", Priority: dto.ErrLevelMedium, Err: fmt.Errorf("installation process timed out")}
+			l.chanErrors <- dto.CommonChanErrors{From: "handlerInstallDatadogWithApmSingleStep", Priority: dto.ErrLevelMedium, Err: fmt.Errorf("installation process timed out")}
 			return
 
 		case <-ticker.C:
 			alreadyInstalled, err := l.adapter.AlreadyInstalled("datadog")
 			if err != nil {
 				l.logger.Error("Failed to get Datadog agent service already installed", "error", err)
-				l.chanErrors <- dto.ManagerChanErrors{From: "handlerInstallDatadogWithApmSingleStep", Priority: dto.ErrLevelMedium, Err: err}
+				l.chanErrors <- dto.CommonChanErrors{From: "handlerInstallDatadogWithApmSingleStep", Priority: dto.ErrLevelMedium, Err: err}
 				continue
 			}
 
@@ -802,7 +954,7 @@ func (l *ManagerOperator) handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSit
 				)
 				if err != nil {
 					l.logger.Error("Failed to install Datadog agent with APM single step", "error", err)
-					l.chanErrors <- dto.ManagerChanErrors{From: "handlerInstallDatadogWithApmSingleStep", Priority: dto.ErrLevelMedium, Err: err}
+					l.chanErrors <- dto.CommonChanErrors{From: "handlerInstallDatadogWithApmSingleStep", Priority: dto.ErrLevelMedium, Err: err}
 					return
 				}
 
@@ -823,19 +975,19 @@ func (l *ManagerOperator) installAgentDatadogWithApmSingleStep(ddApiKey, ddSite,
 	defer l.wg.Done()
 	status, err := l.adapter.Status("datadog")
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "installAgentDatadogWithApmSingleStep", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "installAgentDatadogWithApmSingleStep", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	alreadyTracer, err := l.adapter.GetAlreadyTracer()
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "installAgentDatadogWithApmSingleStep", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "installAgentDatadogWithApmSingleStep", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	l.logger.Debug("install agent datadog with apm single step", "trace", "docp-agent-os-instance.manager_operator.installAgentDatadogWithApmSingleStep", "docpStatus", status, "alreadyTracer", alreadyTracer)
 	if status != "active" {
 		result, err := l.adapter.DocpAgentApiInstallDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
 		if err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "installAgentDatadogWithApmSingleStep", Priority: dto.ErrLevelMedium, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "installAgentDatadogWithApmSingleStep", Priority: dto.ErrLevelMedium, Err: err}
 			return
 		}
 		l.chanResultsApi <- result
@@ -854,12 +1006,12 @@ func (l *ManagerOperator) installDatadogTracerWithTracingLibrary(ddApiKey, ddSit
 	defer l.wg.Done()
 	status, err := l.adapter.Status("datadog")
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "installDatadogTracerWithTracingLibrary", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "installDatadogTracerWithTracingLibrary", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	alreadyTracer, err := l.adapter.GetAlreadyTracer()
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "installDatadogTracerWithTracingLibrary", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "installDatadogTracerWithTracingLibrary", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	l.logger.Debug("install datadog tracer", "trace", "docp-agent-os-instance.manager_operator.installDatadogTracerWithTracingLibrary", "docpStatus", status, "alreadyTracer", alreadyTracer)
@@ -870,7 +1022,7 @@ func (l *ManagerOperator) installDatadogTracerWithTracingLibrary(ddApiKey, ddSit
 	l.logger.Debug("install datadog tracer", "trace", "docp-agent-os-instance.manager_operator.installDatadogTracerWithTracingLibrary", "language", language, "existLanguage", existLanguage)
 	if status == "active" && !existLanguage {
 		if err := l.adapter.AddTracerLanguage(language); err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "installDatadogTracerWithTracingLibrary", Priority: dto.ErrLevelMedium, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "installDatadogTracerWithTracingLibrary", Priority: dto.ErrLevelMedium, Err: err}
 			return
 		}
 		l.wg.Add(1)
@@ -887,12 +1039,12 @@ func (l *ManagerOperator) uninstallAgentDatadog() {
 
 	result, err := l.adapter.DocpAgentApiUninstallDatadog()
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "uninstallAgentDatadog", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "uninstallAgentDatadog", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	l.chanResultsApi <- result
 	if err := l.adapter.ClearTracerLanguage(); err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "uninstallAgentDatadog", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "uninstallAgentDatadog", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	return
@@ -910,22 +1062,22 @@ func (l *ManagerOperator) updateAgentDatadog(content []byte) {
 	if existsDatadogHash == nil {
 		result, err := l.adapter.DocpAgentApiUpdateConfigurationsDatadog(content)
 		if err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "updateAgentDatadog", Priority: dto.ErrLevelMedium, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "updateAgentDatadog", Priority: dto.ErrLevelMedium, Err: err}
 			return
 		}
 
 		l.chanResultsApi <- result
 		if err := l.adapter.SetStore("update.datadog.hash", newHash); err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "updateAgentDatadog", Priority: dto.ErrLevelMedium, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "updateAgentDatadog", Priority: dto.ErrLevelMedium, Err: err}
 			return
 		}
 
 		if err := l.adapter.DaemonReload(); err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "updateAgentDatadog", Priority: dto.ErrLevelMedium, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "updateAgentDatadog", Priority: dto.ErrLevelMedium, Err: err}
 			return
 		}
 		if err := l.adapter.RestartService("datadog"); err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "updateAgentDatadog", Priority: dto.ErrLevelMedium, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "updateAgentDatadog", Priority: dto.ErrLevelMedium, Err: err}
 			return
 		}
 		return
@@ -944,7 +1096,7 @@ func (l *ManagerOperator) autoUninstallWithOtherVendors() {
 
 	allVendors, err := l.adapter.GetRemoveOtherVendors()
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "autoUninstallWithOtherVendors", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "autoUninstallWithOtherVendors", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 
@@ -968,7 +1120,7 @@ loopuninstall:
 
 				statusDatadog, err := l.adapter.Status("datadog")
 				if err != nil {
-					l.chanErrors <- dto.ManagerChanErrors{From: "autoUninstallWithOtherVendors", Priority: dto.ErrLevelMedium, Err: err}
+					l.chanErrors <- dto.CommonChanErrors{From: "autoUninstallWithOtherVendors", Priority: dto.ErrLevelMedium, Err: err}
 					return
 				}
 
@@ -1007,13 +1159,13 @@ loopuninstall:
 	version, err := l.resolveAgentVersion()
 	if err != nil {
 		go l.adapter.NotifyStatus("uninstall_docp_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
-		l.chanErrors <- dto.ManagerChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 		return
 	}
 
 	if err := l.adapter.AutoUninstall(version); err != nil {
 		go l.adapter.NotifyStatus("uninstall_docp_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
-		l.chanErrors <- dto.ManagerChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 		return
 	}
 	go l.adapter.NotifyStatus("uninstall_docp_completed", pkg.TransactionEventClose, "uninstall docp completed", ctx)
@@ -1028,7 +1180,7 @@ func (l *ManagerOperator) autoUninstall() {
 	// validate if exists other vendors and execute autoUninstallWithOtherVendors
 	existsOtherVendor, err := l.adapter.ExisteOtherVendors()
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 	}
 	if existsOtherVendor {
 		l.wg.Add(1)
@@ -1049,13 +1201,13 @@ func (l *ManagerOperator) autoUninstall() {
 		version, err := l.resolveAgentVersion()
 		if err != nil {
 			go l.adapter.NotifyStatus("uninstall_docp_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
-			l.chanErrors <- dto.ManagerChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 			return
 		}
 
 		if err := l.adapter.AutoUninstall(version); err != nil {
 			go l.adapter.NotifyStatus("uninstall_docp_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
-			l.chanErrors <- dto.ManagerChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 			return
 		}
 
@@ -1102,7 +1254,7 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 		// verify if datadog already installed
 		datadogAlreadyInstalled, err := l.adapter.AlreadyInstalled("datadog")
 		if err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
 			return
 		}
 		l.logger.Debug("consumer actions datadog", "trace", "docp-agent-os-instance.manager_operator.consumerActionsDatadog", "action", act)
@@ -1111,26 +1263,37 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 			for _, fls := range act.Files {
 				flsBytes, err := l.marshaller(&fls)
 				if err != nil {
-					l.chanErrors <- dto.ManagerChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+					l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
 					return
 				}
 
 				// if agent already installed execute update configurations
 				if datadogAlreadyInstalled {
-					l.wg.Add(1)
+					l.wg.Add(2)
 					go l.updateAgentDatadog(flsBytes)
+					//validate if version is latest
+					if act.Version == "latest" {
+						latestVersion, err := l.getVendorLatestVersion()
+						if err != nil {
+							l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+							return
+						}
+						act.Version = latestVersion
+					}
+					//dispatch update version
+					go l.UpdateAgentVersionDatadog(act.Version)
 				}
 			}
 		}
 
 		l.logger.Debug("consumer actions datadog", "trace", "docp-agent-os-instance.manager_operator.consumerActionsDatadog", "datadogAlreadyInstalled", datadogAlreadyInstalled)
 		if err != nil {
-			l.chanErrors <- dto.ManagerChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+			l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
 		}
 		if act.Action == "install" {
 			ddApiKey, ddSite, err := l.extractDDApiKeyAndDDSiteFromEnvs(act.Envs)
 			if err != nil {
-				l.chanErrors <- dto.ManagerChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+				l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
 				return
 			}
 			if act.Component == "tracer" {
@@ -1138,7 +1301,7 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 					if datadogAlreadyInstalled {
 						ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries, err := l.extractApmSingleStepEnvs(act.ComponentEnvs)
 						if err != nil {
-							l.chanErrors <- dto.ManagerChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+							l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
 							return
 						}
 						l.wg.Add(1)
@@ -1147,7 +1310,7 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 						l.wg.Add(1)
 						ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries, err := l.extractApmSingleStepEnvs(act.ComponentEnvs)
 						if err != nil {
-							l.chanErrors <- dto.ManagerChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+							l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
 							return
 						}
 						go l.installAgentDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
@@ -1156,7 +1319,7 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 					if datadogAlreadyInstalled {
 						language, pathTracer, version, err := l.extractApmTracingLibrayEnvs(act.ComponentEnvs)
 						if err != nil {
-							l.chanErrors <- dto.ManagerChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+							l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
 							return
 						}
 						l.wg.Add(1)
@@ -1196,7 +1359,7 @@ func (l *ManagerOperator) consumeAllActions() {
 }
 
 // managerActions execut segment actions by type
-func (l *ManagerOperator) managerActions(arrActions []dto.ManagerStateAction) {
+func (l *ManagerOperator) managerActions(arrActions []dto.StateAction) {
 	l.logger.Debug("manager actions", "trace", "docp-agent-os-instance.manager_operator.managerActions", "arrActions", arrActions)
 	for _, act := range arrActions {
 		switch act.Type {
@@ -1213,12 +1376,12 @@ func (l *ManagerOperator) verifyChangeMetadata(metadata []byte) bool {
 	l.logger.Debug("verify change metadata", "trace", "docp-agent-os-instance.manager_operator.verifyChangeMetadata", "metadata", string(metadata))
 	meta := libdto.Metadata{}
 	if err := l.unmarshaller(metadata, &meta); err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "verifyChangeMetadata", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "verifyChangeMetadata", Priority: dto.ErrLevelMedium, Err: err}
 		return true
 	}
 	computeInfoBytes, err := l.marshaller(meta.ComputeInfo)
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "verifyChangeMetadata", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "verifyChangeMetadata", Priority: dto.ErrLevelMedium, Err: err}
 		return true
 	}
 	hashMetadata := libutils.GenerateMd5Hash(computeInfoBytes)
@@ -1237,7 +1400,7 @@ func (l *ManagerOperator) compareState() {
 	defer l.wg.Done()
 	equals, err := l.adapter.CompareState()
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "compareState", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "compareState", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	l.logger.Debug("compare state", "trace", "docp-agent-os-instance.manager_operator.compareState", "equals", equals)
@@ -1254,7 +1417,7 @@ func (l *ManagerOperator) validateState() {
 	l.logger.Debug("validate state", "trace", "docp-agent-os-instance.manager_operator.validateState")
 	defer l.wg.Done()
 	if err := l.adapter.Validate(); err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "validateState", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "validateState", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	return
@@ -1266,14 +1429,14 @@ func (l *ManagerOperator) validateDocpAgentInstalled() {
 	defer l.wg.Done()
 	installed, err := l.adapter.ValidateDocpInstalled()
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "validateDocpAgentInstalled", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "validateDocpAgentInstalled", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	if installed {
 	}
 	notInstalled, err := l.adapter.ValidateDocpNotInstalled()
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "validateDocpAgentInstalled", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "validateDocpAgentInstalled", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	if notInstalled {
@@ -1286,14 +1449,14 @@ func (l *ManagerOperator) validateDatadogAgentInstalled() {
 	defer l.wg.Done()
 	installed, err := l.adapter.ValidateDatadogInstalled()
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "validateDatadogAgentInstalled", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "validateDatadogAgentInstalled", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	if installed {
 	}
 	notInstalled, err := l.adapter.ValidateDatadogNotInstalled()
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "validateDatadogAgentInstalled", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "validateDatadogAgentInstalled", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	if notInstalled {
@@ -1306,7 +1469,7 @@ func (l *ManagerOperator) validateDatadogAgentUpdateConfigs() {
 	defer l.wg.Done()
 	equals, err := l.adapter.CompareState()
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "validateDatadogAgentUpdateConfigs", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "validateDatadogAgentUpdateConfigs", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	if equals {
@@ -1320,7 +1483,7 @@ func (l *ManagerOperator) collectGetState() {
 	defer l.wg.Done()
 	err := l.GetSignalFromStateCheck()
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "collectGetState", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "collectGetState", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	return
@@ -1330,14 +1493,14 @@ func (l *ManagerOperator) collectGetState() {
 func (l *ManagerOperator) collectGetActions() {
 	l.logger.Debug("collect get actions", "trace", "docp-agent-os-instance.manager_operator.collectGetActions")
 	defer l.wg.Done()
-	var arrActions []dto.ManagerStateAction
+	var arrActions []dto.StateAction
 	actions, err := l.GetActions()
 	if err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "collectGetActions", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "collectGetActions", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	if err := l.unmarshaller(actions, &arrActions); err != nil {
-		l.chanErrors <- dto.ManagerChanErrors{From: "collectGetActions", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "collectGetActions", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	l.wg.Add(1)
@@ -1380,6 +1543,9 @@ func (l *ManagerOperator) periodicAutoUpdate() {
 			l.wg.Add(1)
 			if err := l.AutoUpdateAgentVersion(); err != nil {
 				l.logger.Error("error executing auto update agent version", "error", err.Error())
+			}
+			if err := l.AutoUpdateAgentDatadogVersion(); err != nil {
+				l.logger.Error("error executing auto update agent datadog version", "error", err.Error())
 			}
 		case <-l.done:
 			close(l.done)

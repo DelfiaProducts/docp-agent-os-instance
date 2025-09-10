@@ -1,10 +1,14 @@
 package components
 
 import (
+	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
 	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
@@ -58,6 +62,40 @@ func (d *DatadogLinuxOperation) getApmEnvVarsSingleStep(envs []dto.DatadogEnvVar
 		}
 	}
 	return ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries
+}
+
+// parseDatadogAgentVersion parses the installed version from the output of `apt-cache policy datadog-agent`
+func (d *DatadogLinuxOperation) parseDatadogAgentVersion(output string, prefix string) (string, error) {
+	lines := strings.Split(output, "\n")
+	re := regexp.MustCompile(fmt.Sprintf(`%s\s*([0-9]+:)?([0-9]+\.[0-9]+\.[0-9]+)-[0-9]+`, prefix))
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, prefix) {
+			matches := re.FindStringSubmatch(line)
+			if len(matches) >= 3 {
+				return matches[2], nil
+			}
+		}
+	}
+	return "", errors.New("installed version not found")
+}
+
+func (d *DatadogLinuxOperation) getVersionFromOutput(output []byte, version string) (string, error) {
+	scanner := bufio.NewScanner(bytes.NewReader(output))
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(line, "Installed") || strings.Contains(line, "Candidate") {
+			continue
+		}
+		if strings.Contains(line, version) {
+			fields := strings.Fields(line)
+			if len(fields) > 0 {
+				return fields[0], nil
+			}
+		}
+	}
+
+	return "", utils.ErrDatadogVersionNotFound()
 }
 
 func (d *DatadogLinuxOperation) Setup() error {
@@ -211,6 +249,57 @@ func (d *DatadogLinuxOperation) UpdateConfigFileDatadog(filePath string) error {
 		return err
 	}
 	if err := d.program.Execute("sudo", []string{}, "-u", "dd-agent", "bash", "-c", fmt.Sprintf("cat %s | tee %s > /dev/null", docpStateDatadogPath, filePath)); err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpdateRepository execute update repository local
+func (d *DatadogLinuxOperation) UpdateRepository() error {
+	if err := d.program.Execute("sudo", []string{}, "bash", "-c", "apt-get update"); err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetVersion return the version of the datadog agent
+func (d *DatadogLinuxOperation) GetVersion() (string, error) {
+	output, err := d.program.ExecuteWithOutput("apt-cache", []string{}, "policy", "datadog-agent")
+	if err != nil {
+		return "", err
+	}
+	return d.parseDatadogAgentVersion(output, "Installed:")
+}
+
+// GetLatestVersion return the latest version of the datadog agent
+func (d *DatadogLinuxOperation) GetLatestVersion() (string, error) {
+	output, err := d.program.ExecuteWithOutput("apt-cache", []string{}, "policy", "datadog-agent")
+	if err != nil {
+		return "", err
+	}
+	return d.parseDatadogAgentVersion(output, "Candidate:")
+}
+
+// UpdateVersion execute update the version of the datadog agent
+func (d *DatadogLinuxOperation) UpdateVersion(version string) error {
+	output, err := d.program.ExecuteWithOutput("apt-cache", []string{}, "policy", "datadog-agent")
+	if err != nil {
+		return err
+	}
+	datadogVersion, err := d.getVersionFromOutput([]byte(output), version)
+	if err != nil {
+		return err
+	}
+	d.logger.Debug("update version", "datadogVersion", datadogVersion)
+	if err := d.program.Execute("sudo", []string{}, "apt-get", "install", "-y", "--allow-downgrades", fmt.Sprintf("datadog-agent=%s", datadogVersion)); err != nil {
+		return err
+	}
+	return nil
+}
+
+// RollbackVersion execute rollback the version of the datadog agent
+func (d *DatadogLinuxOperation) RollbackVersion(version string) error {
+	if err := d.UpdateVersion(version); err != nil {
 		return err
 	}
 	return nil

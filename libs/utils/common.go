@@ -117,3 +117,13 @@ func ErrFailedGetAgentVersions() error {
 func ErrAgentVersionNotFound() error {
 	return pkg.ErrAgentVersionNotFound
 }
+
+// ErrDatadogVersionNotFound return error the datadog version not found
+func ErrDatadogVersionNotFound() error {
+	return pkg.ErrDatadogVersionNotFound
+}
+
+// ErrContextExpired return error the context expired
+func ErrContextExpired() error {
+	return pkg.ErrContextExpired
+}
