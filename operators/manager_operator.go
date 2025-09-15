@@ -123,6 +123,7 @@ func (l *ManagerOperator) WaitGroupWait() {
 
 // GetState get state from state check
 func (l *ManagerOperator) GetSignalFromStateCheck() error {
+	l.logger.Info("get signal", "timestamp", time.Now().UTC())
 	l.logger.Debug("get signal from state check", "trace", "docp-agent-os-instance.manager_operator.GetSignalFromStateCheck")
 	stateCheckBytes, statusCode, err := l.stateCheck.GetState()
 	if err != nil {
@@ -163,6 +164,7 @@ func (l *ManagerOperator) GetSignalFromStateCheck() error {
 
 // UpdateAgent execute update the agent docp
 func (l *ManagerOperator) UpdateAgent(version string) error {
+	l.logger.Info("update the agent", "timestamp", time.Now().UTC(), "version", version)
 	l.logger.Debug("update the agent docp", "trace", "docp-agent-os-instance.manager_operator.updateAgent")
 	defer l.wg.Done()
 	statusManager, err := l.adapter.Status("manager")
@@ -278,6 +280,7 @@ func (l *ManagerOperator) AutoUpdateAgentVersion() error {
 
 // updateAgentVersionDatadog execute update agent version datadog
 func (l *ManagerOperator) UpdateAgentVersionDatadog(version string) error {
+	l.logger.Info("update agent version vendor", "timestamp", time.Now().UTC(), "version", version)
 	l.logger.Debug("update agent version datadog", "trace", "docp-agent-os-instance.manager_operator.updateAgentVersionDatadog")
 	defer l.wg.Done()
 
@@ -370,6 +373,7 @@ loopupdateversiondatadog:
 
 // AutoUpdateAgentDatadogVersion execute auto update agent datadog version
 func (l *ManagerOperator) AutoUpdateAgentDatadogVersion() error {
+	l.logger.Info("auto update agent datadog version", "timestamp", time.Now().UTC())
 	received, err := l.adapter.GetStateReceived()
 	if err != nil {
 		return err
