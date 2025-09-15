@@ -2,7 +2,6 @@ package utils
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -44,10 +43,9 @@ func (s *Store) StartCleanupGoroutine(excludePrefixes []string, interval time.Du
 		defer ticker.Stop()
 
 		for range ticker.C {
-			fmt.Println("Execute cleanup store keys ...")
 			s.store.Range(func(key, value any) bool {
 				k, ok := key.(string)
-				if !ok{
+				if !ok {
 					return true
 				}
 
@@ -62,7 +60,6 @@ func (s *Store) StartCleanupGoroutine(excludePrefixes []string, interval time.Du
 
 				// Se a chave não estiver na lista de exclusão, a removemos.
 				if !shouldExclude {
-					fmt.Printf("Removing key from store: %s\n", k)
 					s.store.Delete(k)
 				}
 

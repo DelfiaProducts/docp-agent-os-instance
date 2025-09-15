@@ -158,3 +158,43 @@ func (d *DatadogHttpController) UpdateAgentConfigurations(w http.ResponseWriter,
 		return
 	}
 }
+
+// UpdateAgentVersion execute update the agent version datadog
+func (d *DatadogHttpController) UpdateAgentVersion(w http.ResponseWriter, r *http.Request) {
+	d.logger.Debug("update agent version", "trace", "docp-agent-os-instance.datadog_http_controller.UpdateAgentVersion")
+	var datadogUpdateVersionDto dto.DatadogUpdateVersionDTO
+
+	defer r.Body.Close()
+	if err := json.NewDecoder(r.Body).Decode(&datadogUpdateVersionDto); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		if errMarshal := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "error", Code: "DATADOG_UPDATE_VERSION_ERR", Message: err.Error()}); errMarshal != nil {
+			d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.UpdateAgentVersion", "error", errMarshal.Error())
+			return
+		}
+		return
+	}
+	//update repository local
+	if err := d.adapter.UpdateRepository(); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		if errMarshal := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "error", Code: "DATADOG_UPDATE_VERSION_ERR", Message: err.Error()}); errMarshal != nil {
+			d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.UpdateAgentVersion", "error", errMarshal.Error())
+			return
+		}
+		return
+	}
+	//update version
+	if err := d.adapter.UpdateVersion(datadogUpdateVersionDto.Version); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		if errMarshal := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "error", Code: "DATADOG_UPDATE_VERSION_ERR", Message: err.Error()}); errMarshal != nil {
+			d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.UpdateAgentVersion", "error", errMarshal.Error())
+			return
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusAccepted)
+	if err := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "accepted", Code: "DATADOG_UPDATED_VERSION_ACCEPTED", Message: "accepted update version"}); err != nil {
+		d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.UpdateAgentVersion", "error", err.Error())
+		return
+	}
+}

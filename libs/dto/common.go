@@ -1,5 +1,11 @@
 package dto
 
+const (
+	ErrLevelHigh = iota
+	ErrLevelMedium
+	ErrLevelLow
+)
+
 // Metadata is struct for metadata the host
 type Metadata struct {
 	ComputeInfo  ComputeInfo   `json:"compute_info"`
@@ -63,4 +69,16 @@ type StateActionFiles struct {
 type AuthTokenClaims struct {
 	DocpOrgId int    `json:"docp_org_id"`
 	ComputeId string `json:"compute_id"`
+}
+
+type HealthResponse struct {
+	Status  string `json:"status"`
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+
+type CommonChanErrors struct {
+	From     string
+	Priority int
+	Err      error
 }

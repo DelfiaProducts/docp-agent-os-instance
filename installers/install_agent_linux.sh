@@ -81,12 +81,12 @@ function add_perm_work_dir(){
 
 #get binary arm64
 function get_binary_arch64(){
-  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-linux-arm64"
+  sudo curl -s -L -o $DOCP_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-linux-arm64"
   sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/agent
 }
 #get binary amd64
 function get_binary_amd64(){
-  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-linux-amd64"
+  sudo curl -s -L -o $DOCP_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-linux-amd64"
   sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/agent
 }
 # create symbolic link

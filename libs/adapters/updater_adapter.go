@@ -103,6 +103,7 @@ func (l *UpdaterAdapter) closeChannels() {
 
 // Status return status from systemd api
 func (l *UpdaterAdapter) Status(serviceName string) (string, error) {
+	l.logger.Info("execute verify status the service", "serviceName", serviceName)
 	l.logger.Debug("execute verify status the service", "trace", "docp-agent-os-instance.updater_adapter.Status", "serviceName", serviceName)
 	output, err := l.osOperation.Status(serviceName)
 	if err != nil {
@@ -115,6 +116,7 @@ func (l *UpdaterAdapter) Status(serviceName string) (string, error) {
 
 // DaemonReload execute daemon reload the service in systemd
 func (l *UpdaterAdapter) DaemonReload() error {
+	l.logger.Info("daemon reload", "timestamp", time.Now().UTC())
 	l.logger.Debug("daemon reload", "trace", "docp-agent-os-instance.updater_adapter.DaemonReload")
 	if err := l.osOperation.DaemonReload(); err != nil {
 		return err
@@ -124,6 +126,7 @@ func (l *UpdaterAdapter) DaemonReload() error {
 
 // RestartService execute restart the service in systemd
 func (l *UpdaterAdapter) RestartService(serviceName string) error {
+	l.logger.Info("restart service", "timestamp", time.Now().UTC())
 	l.logger.Debug("restart service", "trace", "docp-agent-os-instance.manager_adapter.RestartService")
 	if err := l.osOperation.RestartService(serviceName); err != nil {
 		return err
@@ -133,6 +136,7 @@ func (l *UpdaterAdapter) RestartService(serviceName string) error {
 
 // StopService execute stop the service in systemd
 func (l *UpdaterAdapter) StopService(serviceName string) error {
+	l.logger.Info("stop service", "timestamp", time.Now().UTC())
 	l.logger.Debug("stop service", "trace", "docp-agent-os-instance.manager_adapter.StopService")
 	if err := l.osOperation.StopService(serviceName); err != nil {
 		return err
@@ -152,6 +156,9 @@ func (l *UpdaterAdapter) FetchAgentVersions() (dto.AgentVersions, error) {
 
 // ExecuteUpdateVersion execute update the version
 func (l *UpdaterAdapter) ExecuteUpdateVersion(version string) error {
+	l.logger.Info("execute update version", "version", version)
+	l.logger.Debug("fetch agent versions", "trace", "docp-agent-os-instance.updater_adapter.ExecuteUpdateVersion", "version", version)
+
 	var managerUrl string
 	var agentUrl string
 	repoUrl := utils.GetBinariesRepositoryUrl()
@@ -295,6 +302,7 @@ func (l *UpdaterAdapter) GetAgentVersionFromSignal(response []byte) (string, err
 
 // GetAgentVersion return rollback version installed agent
 func (l *UpdaterAdapter) GetAgentVersion() (string, error) {
+	l.logger.Debug("get agent version", "trace", "docp-agent-os-instance.updater_adapter.GetAgentVersion")
 	var configAgent dto.ConfigAgent
 	configPath, err := utils.GetConfigFilePath()
 	if err != nil {
@@ -315,6 +323,7 @@ func (l *UpdaterAdapter) GetAgentVersion() (string, error) {
 
 // GetAgentRollbackVersion return rollback version installed agent
 func (l *UpdaterAdapter) GetAgentRollbackVersion() (string, error) {
+	l.logger.Debug("get agent rollback version", "trace", "docp-agent-os-instance.updater_adapter.GetAgentRollbackVersion")
 	var configAgent dto.ConfigAgent
 	configPath, err := utils.GetConfigFilePath()
 	if err != nil {
@@ -335,6 +344,7 @@ func (l *UpdaterAdapter) GetAgentRollbackVersion() (string, error) {
 
 // ValidateSuccessUpdated validate if update was successful
 func (l *UpdaterAdapter) ValidateSuccessUpdated() (bool, error) {
+	l.logger.Debug("validate success updated", "trace", "docp-agent-os-instance.updater_adapter.ValidateSuccessUpdated")
 	activeManager, err := l.osOperation.Status("manager")
 	if err != nil {
 		return false, err
@@ -348,6 +358,7 @@ func (l *UpdaterAdapter) ValidateSuccessUpdated() (bool, error) {
 
 // ExecuteRollbackVersion execute rollback to previous version
 func (l *UpdaterAdapter) ExecuteRollbackVersion(version string) error {
+	l.logger.Debug("execute rollback version", "trace", "docp-agent-os-instance.updater_adapter.ExecuteRollbackVersion", "version", version)
 	workdir, err := utils.GetWorkDirPath()
 	if err != nil {
 		return err
@@ -390,6 +401,7 @@ func (l *UpdaterAdapter) ExecuteRollbackVersion(version string) error {
 
 // UpdaterUninstall execute uninstall the updater
 func (l *UpdaterAdapter) UpdaterUninstall() error {
+	l.logger.Debug("uninstall updater", "trace", "docp-agent-os-instance.updater_adapter.UpdaterUninstall")
 	job := fmt.Sprintf("* * * * * %s; crontab -l | grep -v '%s' | crontab -", CURL_UPDATER_LINUX_UNINSTALL_SH, CURL_UPDATER_LINUX_UNINSTALL_SH)
 	command := fmt.Sprintf("(crontab -l 2>/dev/null; echo \"%s\") | crontab -", job)
 	if err := l.program.Execute("bash", []string{}, "-c", command); err != nil {

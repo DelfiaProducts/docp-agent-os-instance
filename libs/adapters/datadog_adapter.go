@@ -169,6 +169,53 @@ func (d *DatadogAdapter) UpdateConfigFileDatadog(filePath string) error {
 	return nil
 }
 
+// UpdateRepository execute update repository local
+func (d *DatadogAdapter) UpdateRepository() error {
+	d.logger.Debug("update repository", "trace", "docp-agent-os-instance.datadog_linux_adapter.UpdateRepository")
+	if err := d.datadogOperation.UpdateRepository(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetVersion return version installed datadog
+func (d *DatadogAdapter) GetVersion() (string, error) {
+	d.logger.Debug("get version", "trace", "docp-agent-os-instance.datadog_linux_adapter.GetVersion")
+	version, err := d.datadogOperation.GetVersion()
+	if err != nil {
+		return "", err
+	}
+	return version, nil
+}
+
+// GetLatestVersion return latest version datadog
+func (d *DatadogAdapter) GetLatestVersion() (string, error) {
+	d.logger.Debug("get latest version", "trace", "docp-agent-os-instance.datadog_linux_adapter.GetLatestVersion")
+	version, err := d.datadogOperation.GetLatestVersion()
+	if err != nil {
+		return "", err
+	}
+	return version, nil
+}
+
+// UpdateVersion execute update the version of the datadog agent
+func (d *DatadogAdapter) UpdateVersion(version string) error {
+	d.logger.Debug("update version", "trace", "docp-agent-os-instance.datadog_linux_adapter.UpdateVersion", "version", version)
+	if err := d.datadogOperation.UpdateVersion(version); err != nil {
+		return err
+	}
+	return nil
+}
+
+// RollbackVersion execute rollback the version of the datadog agent
+func (d *DatadogAdapter) RollbackVersion(version string) error {
+	d.logger.Debug("rollback version", "trace", "docp-agent-os-instance.datadog_linux_adapter.RollbackVersion", "version", version)
+	if err := d.datadogOperation.RollbackVersion(version); err != nil {
+		return err
+	}
+	return nil
+}
+
 // DPKGConfigure execute configure dpkg
 func (d *DatadogAdapter) DPKGConfigure() error {
 	d.logger.Debug("dpkg configure", "trace", "docp-agent-os-instance.datadog_linux_adapter.DPKGConfigure")

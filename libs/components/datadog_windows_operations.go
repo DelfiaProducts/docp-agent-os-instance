@@ -217,6 +217,31 @@ func (d *DatadogWindowsOperation) UpdateConfigFileDatadog(filePath string) error
 	return nil
 }
 
+// UpdateRepository execute update repository local
+func (d *DatadogWindowsOperation) UpdateRepository() error {
+	return nil
+}
+
+// GetVersion return the version of the datadog agent
+func (d *DatadogWindowsOperation) GetVersion() (string, error) {
+	return "", nil
+}
+
+// GetLatestVersion return the latest version of the datadog agent
+func (d *DatadogWindowsOperation) GetLatestVersion() (string, error) {
+	return "", nil
+}
+
+// UpdateVersion execute update the version of the datadog agent
+func (d *DatadogWindowsOperation) UpdateVersion(version string) error {
+	return nil
+}
+
+// RollbackVersion execute rollback the version of the datadog agent
+func (d *DatadogWindowsOperation) RollbackVersion(version string) error {
+	return nil
+}
+
 // DPKGConfigure execute configure dpkg
 func (d *DatadogWindowsOperation) DPKGConfigure() error {
 	// TODO: not implemented windows

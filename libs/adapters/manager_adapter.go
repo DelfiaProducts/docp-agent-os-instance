@@ -226,6 +226,7 @@ func (l *ManagerAdapter) IsLockedEvents() bool {
 
 // ExecuteAuthCall execute call to auth and save access token received
 func (l *ManagerAdapter) ExecuteAuthCall() error {
+	l.logger.Info("execute auth call", "timestamp", time.Now())
 	l.logger.Debug("execute auth call", "timestamp", time.Now())
 	configAgent, err := l.GetConfigAgent()
 	if err != nil {
@@ -315,6 +316,7 @@ func (l *ManagerAdapter) NotifyStatus(status string, typeEvent string, message s
 
 // Collect execute collect the metrics the host
 func (l *ManagerAdapter) Collect() <-chan []byte {
+	l.logger.Info("collect metadata", "timestamp", time.Now().UTC())
 	l.logger.Debug("collect metadata", "trace", "docp-agent-os-instance.manager_adapter.Collect")
 	l.wg.Add(2)
 	go l.firstGetInfos()
@@ -324,6 +326,7 @@ func (l *ManagerAdapter) Collect() <-chan []byte {
 
 // Close closing collect loop
 func (l *ManagerAdapter) Close() error {
+	l.logger.Info("execute close", "timestamp", time.Now().UTC())
 	l.logger.Debug("execute close", "trace", "docp-agent-os-instance.manager_adapter.Close")
 	l.chanClose <- struct{}{}
 	l.wg.Add(1)
@@ -375,12 +378,30 @@ func (l *ManagerAdapter) GetAgentRollbackVersion() (string, error) {
 func (l *ManagerAdapter) GetAgentVersionFromSignalBytes(data []byte) (string, error) {
 	var stateCheckResponse dto.StateCheckResponse
 	var version string
-	if err := l.unmarshaller(data, &stateCheckResponse); err != nil {
-		return version, err
-	}
+	if len(data) > 0 {
+		if err := l.unmarshaller(data, &stateCheckResponse); err != nil {
+			return version, err
+		}
 
-	if len(stateCheckResponse.Signal.Agents.DocpAgent.Version) > 0 {
-		version = stateCheckResponse.Signal.Agents.DocpAgent.Version
+		if len(stateCheckResponse.Signal.Agents.DocpAgent.Version) > 0 {
+			version = stateCheckResponse.Signal.Agents.DocpAgent.Version
+		}
+	}
+	return version, nil
+}
+
+// GetAgentVersionDatadogFromSignalBytes return version the datadog from signal bytes
+func (l *ManagerAdapter) GetAgentVersionDatadogFromSignalBytes(data []byte) (string, error) {
+	var stateCheckResponse dto.StateCheckResponse
+	var version string
+	if len(data) > 0 {
+		if err := l.unmarshaller(data, &stateCheckResponse); err != nil {
+			return version, err
+		}
+
+		if len(stateCheckResponse.Signal.Agents.DatadogAgent.Version) > 0 {
+			version = stateCheckResponse.Signal.Agents.DatadogAgent.Version
+		}
 	}
 	return version, nil
 }
@@ -447,6 +468,7 @@ func (l *ManagerAdapter) SaveAgentRollbackVersion(version string) error {
 
 // Status return status from systemd api
 func (l *ManagerAdapter) Status(serviceName string) (string, error) {
+	l.logger.Info("execute verify status the service", "serviceName", serviceName)
 	l.logger.Debug("execute verify status the service", "trace", "docp-agent-os-instance.manager_adapter.Status", "serviceName", serviceName)
 	output, err := l.osOperation.Status(serviceName)
 	if err != nil {
@@ -459,6 +481,7 @@ func (l *ManagerAdapter) Status(serviceName string) (string, error) {
 
 // AlreadyInstalled return if service already installed
 func (l *ManagerAdapter) AlreadyInstalled(serviceName string) (bool, error) {
+	l.logger.Info("execute verify already installed service", "serviceName", serviceName)
 	l.logger.Debug("execute verify already installed service", "trace", "docp-agent-os-instance.manager_adapter.AlreadyInstalled", "serviceName", serviceName)
 	installed, err := l.osOperation.AlreadyInstalled(serviceName)
 	if err != nil {
@@ -470,6 +493,7 @@ func (l *ManagerAdapter) AlreadyInstalled(serviceName string) (bool, error) {
 
 // DaemonReload execute daemon reload the service in systemd
 func (l *ManagerAdapter) DaemonReload() error {
+	l.logger.Info("daemon reload", "timestamp", time.Now().UTC())
 	l.logger.Debug("daemon reload", "trace", "docp-agent-os-instance.manager_adapter.DaemonReload")
 	if err := l.osOperation.DaemonReload(); err != nil {
 		return err
@@ -479,6 +503,7 @@ func (l *ManagerAdapter) DaemonReload() error {
 
 // RestartService execute restart the service in systemd
 func (l *ManagerAdapter) RestartService(serviceName string) error {
+	l.logger.Info("restart service", "timestamp", time.Now().UTC())
 	l.logger.Debug("restart service", "trace", "docp-agent-os-instance.manager_adapter.RestartService")
 	if err := l.osOperation.RestartService(serviceName); err != nil {
 		return err
@@ -488,6 +513,7 @@ func (l *ManagerAdapter) RestartService(serviceName string) error {
 
 // StopService execute stop the service in systemd
 func (l *ManagerAdapter) StopService(serviceName string) error {
+	l.logger.Info("stop service", "timestamp", time.Now().UTC())
 	l.logger.Debug("stop service", "trace", "docp-agent-os-instance.manager_adapter.StopService")
 	if err := l.osOperation.StopService(serviceName); err != nil {
 		return err
@@ -497,6 +523,7 @@ func (l *ManagerAdapter) StopService(serviceName string) error {
 
 // InstallAgent execute install the agent docp
 func (l *ManagerAdapter) InstallAgent(version string) error {
+	l.logger.Info("install agent", "timestamp", time.Now().UTC(), "version", version)
 	l.logger.Debug("install agent", "trace", "docp-agent-os-instance.manager_adapter.InstallAgent")
 	if err := l.osOperation.InstallAgent(version); err != nil {
 		return err
@@ -506,6 +533,7 @@ func (l *ManagerAdapter) InstallAgent(version string) error {
 
 // UninstallAgent execute uninstall the agent docp
 func (l *ManagerAdapter) UninstallAgent(version string) error {
+	l.logger.Info("uninstall agent", "timestamp", time.Now().UTC(), "version", version)
 	l.logger.Debug("uninstall agent", "trace", "docp-agent-os-instance.manager_adapter.UninstallAgent")
 	if err := l.osOperation.UninstallAgent(version); err != nil {
 		return err
@@ -515,6 +543,7 @@ func (l *ManagerAdapter) UninstallAgent(version string) error {
 
 // UpdateAgent execute update the agent docp
 func (l *ManagerAdapter) UpdateAgent(version string) error {
+	l.logger.Info("update agent", "timestamp", time.Now().UTC(), "version", version)
 	l.logger.Debug("update agent", "trace", "docp-agent-os-instance.manager_adapter.UpdateAgent")
 	if version == "latest" {
 		agentVersions, err := l.FetchAgentVersions()
@@ -531,6 +560,7 @@ func (l *ManagerAdapter) UpdateAgent(version string) error {
 
 // AutoUninstall execute auto uninstall the manager
 func (l *ManagerAdapter) AutoUninstall(version string) error {
+	l.logger.Info("auto uninstall agent", "timestamp", time.Now().UTC(), "version", version)
 	l.logger.Debug("auto uninstall agent", "trace", "docp-agent-os-instance.manager_adapter.AutoUninstall")
 	if err := l.osOperation.AutoUninstall(version); err != nil {
 		return err
@@ -540,6 +570,7 @@ func (l *ManagerAdapter) AutoUninstall(version string) error {
 
 // FetchAgentVersions fetches the available agent versions
 func (l *ManagerAdapter) FetchAgentVersions() (dto.AgentVersions, error) {
+	l.logger.Info("fetch agent versions", "timestamp", time.Now().UTC())
 	l.logger.Debug("fetch agent versions", "trace", "docp-agent-os-instance.manager_adapter.FetchAgentVersions")
 	agentVersions, err := l.utilityService.FetchAgentVersions()
 	if err != nil {
@@ -810,6 +841,40 @@ func (l *ManagerAdapter) DocpAgentApiUpdateConfigurationsDatadog(content []byte)
 	return respBytes, nil
 }
 
+// DocpAgentApiUpdateVersionDatadog execute call to api docp for update datadog version
+func (l *ManagerAdapter) DocpAgentApiUpdateVersionDatadog(version string) ([]byte, error) {
+	l.logger.Debug("execute send request for update version in datadog agent", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateVersionDatadog", "version", version)
+	updateVersion := dto.DatadogUpdateVersionDTO{Version: version}
+	bodyUpdateVersion, err := l.marshaller(updateVersion)
+	if err != nil {
+		return nil, err
+	}
+
+	urlDocpUpdateVersion := fmt.Sprintf("http://127.0.0.1:%s/datadog/update/version", l.docpApiPort)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlDocpUpdateVersion, bytes.NewBuffer(bodyUpdateVersion))
+	if err != nil {
+		l.logger.Error("error in create request", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateVersionDatadog", "error", err.Error())
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	res, err := l.client.Do(req)
+	if err != nil {
+		l.logger.Error("error in execute request", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateVersionDatadog", "error", err.Error())
+		return nil, err
+	}
+
+	defer res.Body.Close()
+	respBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		l.logger.Error("error in read body response", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateVersionDatadog", "error", err.Error())
+		return nil, err
+	}
+
+	return respBytes, nil
+}
+
 // GetStateReceived return state received from state check service
 func (l *ManagerAdapter) GetStateReceived() ([]byte, error) {
 	l.logger.Debug("get state received", "trace", "docp-agent-os-instance.manager_adapter.GetStateReceived")
@@ -1071,6 +1136,7 @@ func (l *ManagerAdapter) prepareAgentDatadogAction(stateCheckSignal dto.StateChe
 				ComponentEnvs: componetEnvVars,
 				Envs:          envVars,
 				Files:         files,
+				Version:       datadogAgent.Version,
 			}
 		}
 	} else if stateCheckSignal.TypeSignal == "uninstall" {
@@ -1112,6 +1178,7 @@ func (l *ManagerAdapter) prepareAgentDatadogUpdateAction(stateCheckSignal dto.St
 				ComponentEnvs: componetEnvVars,
 				Envs:          envVars,
 				Files:         files,
+				Version:       datadogAgent.Version,
 			}
 			action = act
 		}
@@ -1636,6 +1703,7 @@ func (l *ManagerAdapter) ExistTracerLanguage(language string) (bool, error) {
 
 // AddTracerLanguage append tracer language in slice the config file
 func (l *ManagerAdapter) AddTracerLanguage(language string) error {
+	l.logger.Info("add tracer language", "language", language)
 	l.logger.Debug("add tracer language", "trace", "docp-agent-os-instance.manager_adapter.AddTracerLanguage", "language", language)
 	var configAgent dto.ConfigAgent
 	pathConfigFile := filepath.Join(l.agentWorkDir, "config.yml")
@@ -1671,6 +1739,7 @@ func (l *ManagerAdapter) AddTracerLanguage(language string) error {
 
 // ClearTracerLanguage append tracer language in slice the config file
 func (l *ManagerAdapter) ClearTracerLanguage() error {
+	l.logger.Info("clear tracer language", "timestamp", time.Now().UTC())
 	l.logger.Debug("clear tracer language", "trace", "docp-agent-os-instance.manager_adapter.ClearTracerLanguage")
 	var configAgent dto.ConfigAgent
 	pathConfigFile := filepath.Join(l.agentWorkDir, "config.yml")
