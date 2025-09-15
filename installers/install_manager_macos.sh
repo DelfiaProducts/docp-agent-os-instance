@@ -90,13 +90,13 @@ fi
 
 #get binary arm64
 function get_binary_arch64(){
-  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/manager "$BINARY_URL/$VERSION/manager-macos-arm64"
+  sudo curl -s -L -o $DOCP_FILES_PATH/bin/releases/$VERSION/manager "$BINARY_URL/$VERSION/manager-macos-arm64"
   sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/manager
 }
 
 #get binary amd64
 function get_binary_amd64(){
-  sudo curl -s -o $DOCP_FILES_PATH/bin/releases/$VERSION/manager "$BINARY_URL/$VERSION/manager-macos-amd64"
+  sudo curl -s -L -o $DOCP_FILES_PATH/bin/releases/$VERSION/manager "$BINARY_URL/$VERSION/manager-macos-amd64"
   sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/manager
 }
 
