@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-    <Product Id="*" Name="DocpAgent" Language="1033" Version="AGENT_VERSION" Manufacturer="Docp" UpgradeCode="UPGRADE_CODE">
+    <Product Id="PRODUCT_CODE" Name="DocpAgent" Language="1033" Version="AGENT_VERSION" Manufacturer="Docp" UpgradeCode="10A52F78-E52F-488C-A771-EB96C646F24B">
         <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x64"/>
 
         <MajorUpgrade DowngradeErrorMessage="New recent version the [ProductName] already installed" />
