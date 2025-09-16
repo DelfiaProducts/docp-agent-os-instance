@@ -2,6 +2,7 @@ package components
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -130,6 +131,165 @@ func (l *LinuxOperations) UpdateAgent(version string) error {
 		return err
 	}
 
+	return nil
+}
+
+// ExecuteUpdateVersion execute update the version
+func (l *LinuxOperations) ExecuteUpdateVersion(version string) error {
+	var managerUrl string
+	var agentUrl string
+	repoUrl := utils.GetBinariesRepositoryUrl()
+	arch := utils.GetRuntimeArch()
+	osSystem := utils.GetOSSystem()
+	switch osSystem {
+	case "linux":
+		switch arch {
+		case "amd64":
+			managerUrl = fmt.Sprintf("%s/%s/manager-linux-amd64", repoUrl, version)
+			agentUrl = fmt.Sprintf("%s/%s/agent-linux-amd64", repoUrl, version)
+		case "arm64":
+			managerUrl = fmt.Sprintf("%s/%s/manager-linux-arm64", repoUrl, version)
+			agentUrl = fmt.Sprintf("%s/%s/agent-linux-arm64", repoUrl, version)
+		}
+	}
+
+	statusManager, err := l.Status("manager")
+	if err != nil {
+		return err
+	}
+
+	statusAgent, err := l.Status("agent")
+	if err != nil {
+		return err
+	}
+	if statusAgent == "active" {
+		if err := l.StopService("agent"); err != nil {
+			return err
+		}
+	}
+	if statusManager == "active" {
+		if err := l.StopService("manager"); err != nil {
+			return err
+		}
+	}
+
+	respManager, _, err := utils.GetBinary(managerUrl)
+	if err != nil {
+		return err
+	}
+
+	respAgent, _, err := utils.GetBinary(agentUrl)
+	if err != nil {
+		return err
+	}
+
+	workdir, err := utils.GetWorkDirPath()
+	if err != nil {
+		return err
+	}
+
+	//validate path version
+	pathVersion := filepath.Join(workdir, "bin", "releases", version)
+	if err := l.fileSystem.VerifyDirExistAndCreate(pathVersion); err != nil {
+		return err
+	}
+
+	pathCurrent := filepath.Join(workdir, "bin", "current")
+	if err := l.fileSystem.VerifyDirExistAndCreate(pathVersion); err != nil {
+		return err
+	}
+
+	pathManagerBinary := filepath.Join(pathVersion, "manager")
+	pathAgentBinary := filepath.Join(pathVersion, "agent")
+
+	pathCurrentManager := filepath.Join(pathCurrent, "manager")
+	pathCurrentAgent := filepath.Join(pathCurrent, "agent")
+
+	if err := l.fileSystem.WriteBinaryContent(pathManagerBinary, respManager); err != nil {
+		return err
+	}
+	if err := l.fileSystem.WriteBinaryContent(pathAgentBinary, respAgent); err != nil {
+		return err
+	}
+
+	err = os.Chmod(pathManagerBinary, 0755)
+	if err != nil {
+		return err
+	}
+
+	err = os.Chmod(pathAgentBinary, 0755)
+	if err != nil {
+		return err
+	}
+	//create symlink manager
+	if err := l.fileSystem.CreateOrUpdateSymlink(pathManagerBinary, pathCurrentManager); err != nil {
+		return err
+	}
+
+	//create symlink agent
+	if err := l.fileSystem.CreateOrUpdateSymlink(pathAgentBinary, pathCurrentAgent); err != nil {
+		return err
+	}
+
+	if err := l.RestartService("agent"); err != nil {
+		return err
+	}
+
+	if err := l.RestartService("manager"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ExecuteRollbackVersion execute rollback the version
+func (l *LinuxOperations) ExecuteRollbackVersion(version string) error {
+	workdir, err := utils.GetWorkDirPath()
+	if err != nil {
+		return err
+	}
+	//validate path version
+	pathVersion := filepath.Join(workdir, "bin", "releases", version)
+	if err := l.fileSystem.VerifyDirExistAndCreate(pathVersion); err != nil {
+		return err
+	}
+
+	pathCurrent := filepath.Join(workdir, "bin", "current")
+	if err := l.fileSystem.VerifyDirExistAndCreate(pathVersion); err != nil {
+		return err
+	}
+
+	pathManagerBinary := filepath.Join(pathVersion, "manager")
+	pathAgentBinary := filepath.Join(pathVersion, "agent")
+
+	pathCurrentManager := filepath.Join(pathCurrent, "manager")
+	pathCurrentAgent := filepath.Join(pathCurrent, "agent")
+
+	if err := l.fileSystem.CreateOrUpdateSymlink(pathManagerBinary, pathCurrentManager); err != nil {
+		return err
+	}
+
+	if err := l.fileSystem.CreateOrUpdateSymlink(pathAgentBinary, pathCurrentAgent); err != nil {
+		return err
+	}
+
+	if err := l.RestartService("agent"); err != nil {
+		return err
+	}
+
+	if err := l.RestartService("manager"); err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpdaterUninstall execute uninstall the updater agent
+func (l *LinuxOperations) UpdaterUninstall(version string) error {
+	job := fmt.Sprintf("* * * * * %s; crontab -l | grep -v '%s' | crontab -", utils.ChoiceInstallerOrUninstaller("linux", "updater", "uninstall", version), utils.ChoiceInstallerOrUninstaller("linux", "updater", "uninstall", version))
+	command := fmt.Sprintf("(crontab -l 2>/dev/null; echo \"%s\") | crontab -", job)
+	if err := l.program.Execute("bash", []string{}, "-c", command); err != nil {
+		return err
+	}
 	return nil
 }
 
