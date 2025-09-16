@@ -260,7 +260,7 @@ func TestUpdaterAdapterUpdaterUninstall(t *testing.T) {
 				err = updater.Prepare()
 			})
 			s.When("chamo UpdaterUninstall", func() {
-				err = updater.UpdaterUninstall()
+				err = updater.UpdaterUninstall("0.1.0")
 			})
 			s.Then("não deve retornar erro (mock)", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "UpdaterUninstall não deve retornar erro (mock)")
