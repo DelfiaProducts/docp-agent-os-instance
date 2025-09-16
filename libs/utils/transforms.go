@@ -57,6 +57,9 @@ func ChoiceInstallerOrUninstaller(system, mode, action, version string) string {
 		release := fmt.Sprintf("%s/%s/uninstall_manager_linux.sh", pkg.URL_RELEASE, version)
 		return fmt.Sprintf("curl -L %s | bash", release)
 	//windows
+	case system == "windows" && mode == "manager" && action == "install":
+		release := fmt.Sprintf("%s/%s/install_manager_windows.msi", pkg.URL_RELEASE, version)
+		return fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s'`, release)
 	case system == "windows" && mode == "agent" && action == "install":
 		release := fmt.Sprintf("%s/%s/install_agent_windows.msi", pkg.URL_RELEASE, version)
 		return fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s'`, release)
