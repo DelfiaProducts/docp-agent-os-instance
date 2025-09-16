@@ -106,6 +106,24 @@ func (l *MacosOperations) UpdateAgent(version string) error {
 	return nil
 }
 
+// ExecuteUpdateVersion execute update the version
+func (l *MacosOperations) ExecuteUpdateVersion(version string) error {
+	//TODO: add logic for update version macos
+	return nil
+}
+
+// ExecuteRollbackVersion execute rollback the version
+func (l *MacosOperations) ExecuteRollbackVersion(version string) error {
+	//TODO: add logic for rollback version macos
+	return nil
+}
+
+// UninstallUpdater execute uninstall the updater agent
+func (l *MacosOperations) UpdaterUninstall(version string) error {
+	//TODO: add logic for uninstall updater agent macos
+	return nil
+}
+
 // UninstallAgent execute uninstall the agent docp
 func (l *MacosOperations) UninstallAgent(version string) error {
 	if err := l.program.Execute("bash", []string{}, "-c", utils.ChoiceInstallerOrUninstaller("macos", "agent", "uninstall", version)); err != nil {
