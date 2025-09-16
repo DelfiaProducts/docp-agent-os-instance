@@ -83,6 +83,20 @@ func (l *WindowsOperations) UpdateAgent(version string) error {
 	return nil
 }
 
+// ExecuteUpdateVersion execute update version the agent docp
+func (l *WindowsOperations) ExecuteUpdateVersion(version string) error {
+	return nil
+}
+
+// ExecuteRollbackVersion execute rollback the version
+func (l *WindowsOperations) ExecuteRollbackVersion(version string) error {
+	return nil
+}
+
+func (l *WindowsOperations) UpdaterUninstall(version string) error {
+	return nil
+}
+
 // UninstallAgent execute uninstall the agent docp
 func (l *WindowsOperations) UninstallAgent(version string) error {
 	return nil
