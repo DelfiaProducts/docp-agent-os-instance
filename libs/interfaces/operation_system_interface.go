@@ -18,5 +18,8 @@ type IOSOperation interface {
 	UpdateAgent(version string) error
 	UninstallAgent(version string) error
 	AutoUninstall(version string) error
+	ExecuteUpdateVersion(version string) error
+	ExecuteRollbackVersion(version string) error
+	UpdaterUninstall(version string) error
 	DaemonReload() error
 }
