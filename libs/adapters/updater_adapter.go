@@ -2,9 +2,7 @@ package adapters
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -16,10 +14,6 @@ import (
 	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
 	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
 	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
-)
-
-var (
-	CURL_UPDATER_LINUX_UNINSTALL_SH = "curl -L https://test-docp-agent-data.s3.amazonaws.com/installer/uninstall_updater_linux.sh | bash"
 )
 
 // UpdaterAdapter is struct for updater adapter
@@ -157,117 +151,10 @@ func (l *UpdaterAdapter) FetchAgentVersions() (dto.AgentVersions, error) {
 // ExecuteUpdateVersion execute update the version
 func (l *UpdaterAdapter) ExecuteUpdateVersion(version string) error {
 	l.logger.Info("execute update version", "version", version)
-	l.logger.Debug("fetch agent versions", "trace", "docp-agent-os-instance.updater_adapter.ExecuteUpdateVersion", "version", version)
+	l.logger.Debug("execute update version", "trace", "docp-agent-os-instance.updater_adapter.ExecuteUpdateVersion", "version", version)
 
-	var managerUrl string
-	var agentUrl string
-	repoUrl := utils.GetBinariesRepositoryUrl()
-	arch := utils.GetRuntimeArch()
-	osSystem := utils.GetOSSystem()
-	switch osSystem {
-	case "linux":
-		switch arch {
-		case "amd64":
-			managerUrl = fmt.Sprintf("%s/%s/manager-linux-amd64", repoUrl, version)
-			agentUrl = fmt.Sprintf("%s/%s/agent-linux-amd64", repoUrl, version)
-		case "arm64":
-			managerUrl = fmt.Sprintf("%s/%s/manager-linux-arm64", repoUrl, version)
-			agentUrl = fmt.Sprintf("%s/%s/agent-linux-arm64", repoUrl, version)
-		}
-	case "darwin":
-		switch arch {
-		case "amd64":
-			managerUrl = fmt.Sprintf("%s/%s/manager-macos-amd64", repoUrl, version)
-			agentUrl = fmt.Sprintf("%s/%s/agent-macos-amd64", repoUrl, version)
-		case "arm64":
-			managerUrl = fmt.Sprintf("%s/%s/manager-macos-arm64", repoUrl, version)
-			agentUrl = fmt.Sprintf("%s/%s/agent-macos-arm64", repoUrl, version)
-		}
-	}
-
-	statusManager, err := l.Status("manager")
-	if err != nil {
-		return err
-	}
-
-	statusAgent, err := l.Status("agent")
-	if err != nil {
-		return err
-	}
-	if statusAgent == "active" {
-		if err := l.StopService("agent"); err != nil {
-			return err
-		}
-	}
-	if statusManager == "active" {
-		if err := l.StopService("manager"); err != nil {
-			return err
-		}
-	}
-
-	respManager, _, err := utils.GetBinary(managerUrl)
-	if err != nil {
-		return err
-	}
-
-	respAgent, _, err := utils.GetBinary(agentUrl)
-	if err != nil {
-		return err
-	}
-
-	workdir, err := utils.GetWorkDirPath()
-	if err != nil {
-		return err
-	}
-
-	//validate path version
-	pathVersion := filepath.Join(workdir, "bin", "releases", version)
-	if err := l.fileSystem.VerifyDirExistAndCreate(pathVersion); err != nil {
-		return err
-	}
-
-	pathCurrent := filepath.Join(workdir, "bin", "current")
-	if err := l.fileSystem.VerifyDirExistAndCreate(pathVersion); err != nil {
-		return err
-	}
-
-	pathManagerBinary := filepath.Join(pathVersion, "manager")
-	pathAgentBinary := filepath.Join(pathVersion, "agent")
-
-	pathCurrentManager := filepath.Join(pathCurrent, "manager")
-	pathCurrentAgent := filepath.Join(pathCurrent, "agent")
-
-	if err := l.fileSystem.WriteBinaryContent(pathManagerBinary, respManager); err != nil {
-		return err
-	}
-	if err := l.fileSystem.WriteBinaryContent(pathAgentBinary, respAgent); err != nil {
-		return err
-	}
-
-	err = os.Chmod(pathManagerBinary, 0755)
-	if err != nil {
-		return err
-	}
-
-	err = os.Chmod(pathAgentBinary, 0755)
-	if err != nil {
-		return err
-	}
-	//create symlink manager
-	if err := l.fileSystem.CreateOrUpdateSymlink(pathManagerBinary, pathCurrentManager); err != nil {
-		return err
-	}
-
-	//create symlink agent
-	if err := l.fileSystem.CreateOrUpdateSymlink(pathAgentBinary, pathCurrentAgent); err != nil {
-		return err
-	}
-
-	if err := l.RestartService("agent"); err != nil {
-		return err
-	}
-
-	if err := l.RestartService("manager"); err != nil {
+	// Call the OS operation to execute the update
+	if err := l.osOperation.ExecuteUpdateVersion(version); err != nil {
 		return err
 	}
 
@@ -359,52 +246,17 @@ func (l *UpdaterAdapter) ValidateSuccessUpdated() (bool, error) {
 // ExecuteRollbackVersion execute rollback to previous version
 func (l *UpdaterAdapter) ExecuteRollbackVersion(version string) error {
 	l.logger.Debug("execute rollback version", "trace", "docp-agent-os-instance.updater_adapter.ExecuteRollbackVersion", "version", version)
-	workdir, err := utils.GetWorkDirPath()
-	if err != nil {
+	if err := l.osOperation.ExecuteRollbackVersion(version); err != nil {
 		return err
 	}
-	//validate path version
-	pathVersion := filepath.Join(workdir, "bin", "releases", version)
-	if err := l.fileSystem.VerifyDirExistAndCreate(pathVersion); err != nil {
-		return err
-	}
-
-	pathCurrent := filepath.Join(workdir, "bin", "current")
-	if err := l.fileSystem.VerifyDirExistAndCreate(pathVersion); err != nil {
-		return err
-	}
-
-	pathManagerBinary := filepath.Join(pathVersion, "manager")
-	pathAgentBinary := filepath.Join(pathVersion, "agent")
-
-	pathCurrentManager := filepath.Join(pathCurrent, "manager")
-	pathCurrentAgent := filepath.Join(pathCurrent, "agent")
-
-	if err := l.fileSystem.CreateOrUpdateSymlink(pathManagerBinary, pathCurrentManager); err != nil {
-		return err
-	}
-
-	if err := l.fileSystem.CreateOrUpdateSymlink(pathAgentBinary, pathCurrentAgent); err != nil {
-		return err
-	}
-
-	if err := l.RestartService("agent"); err != nil {
-		return err
-	}
-
-	if err := l.RestartService("manager"); err != nil {
-		return err
-	}
-
 	return nil
 }
 
 // UpdaterUninstall execute uninstall the updater
-func (l *UpdaterAdapter) UpdaterUninstall() error {
+func (l *UpdaterAdapter) UpdaterUninstall(version string) error {
 	l.logger.Debug("uninstall updater", "trace", "docp-agent-os-instance.updater_adapter.UpdaterUninstall")
-	job := fmt.Sprintf("* * * * * %s; crontab -l | grep -v '%s' | crontab -", CURL_UPDATER_LINUX_UNINSTALL_SH, CURL_UPDATER_LINUX_UNINSTALL_SH)
-	command := fmt.Sprintf("(crontab -l 2>/dev/null; echo \"%s\") | crontab -", job)
-	if err := l.program.Execute("bash", []string{}, "-c", command); err != nil {
+	//call update uninstall
+	if err := l.osOperation.UpdaterUninstall(version); err != nil {
 		return err
 	}
 	return nil
