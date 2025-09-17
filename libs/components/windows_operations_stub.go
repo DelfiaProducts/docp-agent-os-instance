@@ -102,6 +102,10 @@ func (l *WindowsOperations) UninstallAgent(version string) error {
 	return nil
 }
 
+func (l *WindowsOperations) UninstallUpdater(version string) error {
+	return nil
+}
+
 // AutoUninstall execute auto uninstall the manager
 func (l *WindowsOperations) AutoUninstall(version string) error {
 	return nil
