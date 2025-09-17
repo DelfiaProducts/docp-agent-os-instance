@@ -15,6 +15,7 @@ type IOSOperation interface {
 	StopService(serviceName string) error
 	InstallAgent(version string) error
 	InstallUpdater(version string) error
+	UninstallUpdater(version string) error
 	UpdateAgent(version string) error
 	UninstallAgent(version string) error
 	AutoUninstall(version string) error
