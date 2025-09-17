@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -174,7 +175,50 @@ func (l *WindowsOperations) InstallAgent(version string) error {
 
 // InstallUpdater execute install the updater docp
 func (l *WindowsOperations) InstallUpdater(version string) error {
-	//TODO: add logic for install updater windows
+	repoUrl := utils.GetBinariesRepositoryUrl()
+	updaterUrl := fmt.Sprintf("%s/%s/updater-windows-amd64.exe", repoUrl, version)
+	statusManager, err := l.Status("manager")
+	if err != nil {
+		return err
+	}
+
+	statusAgent, err := l.Status("agent")
+	if err != nil {
+		return err
+	}
+	if statusAgent == "active" {
+		if err := l.StopService("agent"); err != nil {
+			return err
+		}
+	}
+	if statusManager == "active" {
+		if err := l.StopService("manager"); err != nil {
+			return err
+		}
+	}
+
+	respUpdater, _, err := utils.GetBinary(updaterUrl)
+	if err != nil {
+		return err
+	}
+
+	workdir, err := utils.GetWorkDirPath()
+	if err != nil {
+		return err
+	}
+	pathUpdater := filepath.Join(workdir, "bin", "releases", version)
+	if err := l.filesystem.VerifyDirExistAndCreate(pathUpdater); err != nil {
+		return err
+	}
+	pathUpdaterExe := filepath.Join(pathUpdater, "updater.exe")
+	if err := l.filesystem.WriteBinaryContent(pathUpdaterExe, respUpdater); err != nil {
+		return err
+	}
+	//run updater
+	return nil
+}
+
+func (l *WindowsOperations) UninstallUpdater(version string) error {
 	return nil
 }
 
