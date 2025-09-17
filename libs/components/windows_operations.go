@@ -214,7 +214,17 @@ func (l *WindowsOperations) InstallUpdater(version string) error {
 	if err := l.filesystem.WriteBinaryContent(pathUpdaterExe, respUpdater); err != nil {
 		return err
 	}
-	//run updater
+	pathLogOut := filepath.Join(workdir, "logs", "updater.out.txt")
+	pathLogErr := filepath.Join(workdir, "logs", "updater.err.txt")
+	envVersion := fmt.Sprintf("$env:VERSION ='%s'", version)
+	command := fmt.Sprintf(`%s; Start-Process -FilePath "%s" -RedirectStandardOutput "%s" -RedirectStandardError "%s" -NoNewWindow`, envVersion, pathUpdaterExe, pathLogOut, pathLogErr)
+	out, err := l.program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
+	if err != nil {
+		l.logger.Error("error in get wmi docp agent", "error", err)
+		return err
+	}
+
+	l.logger.Debug("output wmi docp agent", "output", out)
 	return nil
 }
 
