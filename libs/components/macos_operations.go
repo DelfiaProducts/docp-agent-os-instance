@@ -100,6 +100,12 @@ func (l *MacosOperations) InstallUpdater(version string) error {
 	return nil
 }
 
+// UninstallUpdater execute uninstall the updater docp
+func (l *MacosOperations) UninstallUpdater(version string) error {
+	//TODO: add logic for uninstall updater macos
+	return nil
+}
+
 // UpdateAgent execute update the agent docp
 func (l *MacosOperations) UpdateAgent(version string) error {
 	//TODO: add logic for update agent macos
