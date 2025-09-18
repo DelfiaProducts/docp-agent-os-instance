@@ -156,7 +156,7 @@ func TestWindowsOperationsInstallAgent(t *testing.T) {
 				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
 			})
 			s.When("chamo InstallAgent", func() {
-				err = ops.InstallAgent("0.1.1")
+				err = ops.InstallAgent("0.1.0")
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "InstallAgent não deve retornar erro")
@@ -306,7 +306,7 @@ func TestWindowsOperationsAutoUninstall(t *testing.T) {
 
 func TestWindowsOperationsExecute(t *testing.T) {
 	bdd.Feature(t, "WindowsOperations", func(t *testing.T, scenario func(description string, steps func(s *bdd.Scenario))) {
-		scenario("Execute executa sem erro (mock)", func(s *bdd.Scenario) {
+		scenario("Execute sem erro (mock)", func(s *bdd.Scenario) {
 			var ops *components.WindowsOperations
 			var logger interfaces.ILogger
 			var err error
@@ -326,6 +326,33 @@ func TestWindowsOperationsExecute(t *testing.T) {
 			})
 			s.Then("não deve retornar erro (mock)", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "Execute não deve retornar erro (mock)")
+			})
+		})
+	})
+}
+
+func TestWindowsOperationsExecuteUpdateVersion(t *testing.T) {
+	bdd.Feature(t, "WindowsOperations", func(t *testing.T, scenario func(description string, steps func(s *bdd.Scenario))) {
+		scenario("ExecuteUpdateVersion executa (mock)", func(s *bdd.Scenario) {
+			var ops *components.WindowsOperations
+			var logger interfaces.ILogger
+			var err error
+			s.Given("Cria logger", func() {
+				logger = utils.NewDocpLoggerText(os.Stdout)
+				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
+			})
+			s.Given("WindowsOperations criado", func() {
+				ops = components.NewWindowsOperations(logger)
+			})
+			s.Given("Configurar o operation", func() {
+				err = ops.Setup()
+				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
+			})
+			s.When("chamo ExecuteUpdateVersion", func() {
+				err = ops.ExecuteUpdateVersion("0.1.0")
+			})
+			s.Then("não deve retornar erro (mock)", func(t *testing.T) {
+				bdd.AssertNoError(t, err, "ExecuteUpdateVersion não deve retornar erro (mock)")
 			})
 		})
 	})
