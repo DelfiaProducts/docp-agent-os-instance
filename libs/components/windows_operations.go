@@ -117,10 +117,28 @@ func (l *WindowsOperations) RestartService(serviceName string) error {
 		return err
 	}
 	defer s.Close()
-	_, err = s.Control(svc.Stop)
+	status, err := s.Query()
 	if err != nil {
 		return err
 	}
+	if status.State == svc.Running {
+		_, err := s.Control(svc.Stop)
+		if err != nil {
+			return err
+		}
+		for {
+			time.Sleep(time.Second * 1)
+			status, err = s.Query()
+			if err != nil {
+				return err
+			}
+
+			if status.State == svc.Stopped {
+				break
+			}
+		}
+	}
+
 	if err := s.Start(); err != nil {
 		return err
 	}
@@ -141,21 +159,39 @@ func (l *WindowsOperations) StopService(serviceName string) error {
 		return err
 	}
 	defer s.Close()
-	_, err = s.Control(svc.Stop)
+	status, err := s.Query()
 	if err != nil {
 		return err
+	}
+	if status.State == svc.Running {
+		_, err = s.Control(svc.Stop)
+		if err != nil {
+			return err
+		}
+		for {
+			time.Sleep(time.Second * 1)
+			status, err = s.Query()
+			if err != nil {
+				return err
+			}
+
+			if status.State == svc.Stopped {
+				break
+			}
+		}
 	}
 	return nil
 }
 
 // InstallAgent execute install the agent docp
 func (l *WindowsOperations) InstallAgent(version string) error {
+	name := utils.ChoiceNameServiceWindows("agent")
 	m, err := mgr.Connect()
 	if err != nil {
 		return err
 	}
 	defer m.Disconnect()
-	s, err := m.OpenService("DocpAgent")
+	s, err := m.OpenService(name)
 	if err != nil {
 		if errors.Is(err, windows.ERROR_SERVICE_DOES_NOT_EXIST) {
 			command := utils.ChoiceInstallerOrUninstaller("windows", "agent", "install", version)
@@ -234,13 +270,41 @@ func (l *WindowsOperations) UninstallUpdater(version string) error {
 
 // UpdateAgent execute update the agent docp
 func (l *WindowsOperations) UpdateAgent(version string) error {
-	//TODO: add logic for update agent windows
+	if err := l.InstallUpdater(version); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // ExecuteUpdateVersion execute update version the agent docp
 func (l *WindowsOperations) ExecuteUpdateVersion(version string) error {
-	//TODO: add logic for update version windows
+	if err := l.StopService("agent"); err != nil {
+		return err
+	}
+	envVersion := fmt.Sprintf("$env:VERSION ='%s'", version)
+	commandAgent := utils.ChoiceInstallerOrUninstaller("windows", "agent", "install", version)
+	l.logger.Debug("commandAgent", "commandAgent", commandAgent)
+	outAgent, err := l.program.ExecuteWithOutput("powershell", []string{envVersion}, "-Command", commandAgent)
+	if err != nil {
+		l.logger.Error("error in update agent start process", "error", err)
+		return err
+	}
+	l.logger.Debug("update agent", "output", outAgent)
+
+	if err := l.StopService("manager"); err != nil {
+		return err
+	}
+
+	commandManager := utils.ChoiceInstallerOrUninstaller("windows", "manager", "install", version)
+	l.logger.Debug("commandManager", "commandManager", commandManager)
+	outManager, err := l.program.ExecuteWithOutput("powershell", []string{envVersion}, "-Command", commandManager)
+	if err != nil {
+		l.logger.Error("error in update manager start process", "error", err)
+		return err
+	}
+	l.logger.Debug("update manager", "output", outManager)
+
 	return nil
 }
 
