@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"time"
@@ -392,8 +393,46 @@ func (l *WindowsOperations) ExecuteRollbackVersion(version string) error {
 	return nil
 }
 
+// UpdaterUninstall execute uninstall the updater docp
 func (l *WindowsOperations) UpdaterUninstall(version string) error {
-	//TODO: add logic for uninstall updater agent windows
+	workdir, err := utils.GetWorkDirPath()
+	if err != nil {
+		return err
+	}
+	// Nome do executável atual
+	pathVersion := filepath.Join(workdir, "bin", "releases", version)
+	pathUpdaterExe := filepath.Join(pathVersion, "updater.exe")
+
+	// Caminho do diretório
+	dir := filepath.Dir(pathUpdaterExe)
+	l.logger.Debug("diretório do executável", "dir", dir)
+	// Nome do arquivo de script temporário
+	batFileName := fmt.Sprintf("del_%d.bat", time.Now().Unix())
+	batPath := filepath.Join(dir, batFileName)
+	l.logger.Debug("caminho do script .bat", "batPath", batPath)
+
+	batContent := fmt.Sprintf(
+		"@echo off\n"+
+			"timeout /t 5 /nobreak > nul\n"+ // Espera 5 segundos para o processo principal sair
+			"taskkill /f /im updater.exe > nul 2>&1\n"+ // Tenta matar o processo updater.exe, caso ainda esteja rodando
+			"del /f /q \"%s\"\n"+ // Apaga o seu executável
+			"del /f /q \"%s\"", // Apaga o próprio script .bat
+		pathUpdaterExe,
+		batPath,
+	)
+
+	// Cria o arquivo de script
+	err = os.WriteFile(batPath, []byte(batContent), 0644)
+	if err != nil {
+		return err
+	}
+
+	// Executa o script e sai imediatamente
+	// O uso de "cmd /C" garante que o script seja executado em um novo shell e não bloqueie o programa atual
+	cmd := exec.Command("cmd", "/C", batPath)
+	if err := cmd.Start(); err != nil {
+		return err
+	}
 	return nil
 }
 
