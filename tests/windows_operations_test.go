@@ -267,7 +267,7 @@ func TestWindowsOperationsUpdateAgent(t *testing.T) {
 				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
 			})
 			s.When("chamo UpdateAgent", func() {
-				err = ops.UpdateAgent("0.1.0")
+				err = ops.UpdateAgent("0.1.1")
 			})
 			s.Then("não deve retornar erro (mock)", func(t *testing.T) {
 				// Em ambiente real, seria necessário mockar os utilitários do SO
