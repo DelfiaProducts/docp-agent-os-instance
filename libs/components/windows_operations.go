@@ -186,13 +186,13 @@ func (l *WindowsOperations) StopService(serviceName string) error {
 				break
 			}
 		}
+		out, err := l.program.ExecuteWithOutput("taskkill", []string{}, "/f", "/im", fmt.Sprintf("%s.exe", serviceName))
+		if err != nil {
+			l.logger.Error("error in taskkill process", "error", err)
+			return err
+		}
+		l.logger.Debug("output taskkill process", "output", out)
 	}
-	out, err := l.program.ExecuteWithOutput("taskkill", []string{}, "/f", "/im", fmt.Sprintf("%s.exe", serviceName))
-	if err != nil {
-		l.logger.Error("error in taskkill process", "error", err)
-		return err
-	}
-	l.logger.Debug("output taskkill process", "output", out)
 	return nil
 }
 
