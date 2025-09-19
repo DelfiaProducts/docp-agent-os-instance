@@ -156,7 +156,7 @@ func TestWindowsOperationsInstallAgent(t *testing.T) {
 				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
 			})
 			s.When("chamo InstallAgent", func() {
-				err = ops.InstallAgent("0.1.0")
+				err = ops.InstallAgent("0.1.1")
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "InstallAgent não deve retornar erro")
@@ -349,7 +349,7 @@ func TestWindowsOperationsExecuteUpdateVersion(t *testing.T) {
 				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
 			})
 			s.When("chamo ExecuteUpdateVersion", func() {
-				err = ops.ExecuteUpdateVersion("0.1.0")
+				err = ops.ExecuteUpdateVersion("0.1.1")
 			})
 			s.Then("não deve retornar erro (mock)", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "ExecuteUpdateVersion não deve retornar erro (mock)")
