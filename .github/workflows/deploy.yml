@@ -173,6 +173,12 @@ jobs:
           $env:SCM = "agent"
           go build -o config_agent.exe agent/install_agent_windows.go
           echo "Built config_agent.exe"
+
+          # Build installer windows executable  
+          $env:GOOS = "windows"
+          $env:GOARCH = "amd64"
+          go build -o installer_windows.exe windows/installer_windows.go
+          echo "Built installer_windows.exe"
           
           # List files to verify
           echo "=== Files in installers directory ==="
@@ -221,6 +227,7 @@ jobs:
           name: windows-installers
           path: |
             installers/*.msi
+            installers/installer_windows.exe
 
   organize-and-release:
     runs-on: ubuntu-latest
@@ -302,6 +309,7 @@ jobs:
 
           # Copy Windows installers
           cp windows-installers/*.msi release/installer/
+          cp windows-installers/installer_windows.exe release/installer/
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -336,6 +344,7 @@ jobs:
             release/installer/uninstall_updater_macos.sh
             release/installer/install_manager_windows.msi
             release/installer/install_agent_windows.msi
+            release/installer/installer_windows.exe
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           draft: false
