@@ -186,7 +186,7 @@ func (l *WindowsOperations) StopService(serviceName string) error {
 			}
 		}
 	}
-out, err := l.program.ExecuteWithOutput("taskkill", []string{}, "/f", "/im", fmt.Sprintf("%s.exe", serviceName))
+	out, err := l.program.ExecuteWithOutput("taskkill", []string{}, "/f", "/im", fmt.Sprintf("%s.exe", serviceName))
 	if err != nil {
 		l.logger.Error("error in taskkill process", "error", err)
 		return err
@@ -291,11 +291,63 @@ func (l *WindowsOperations) UpdateAgent(version string) error {
 
 // ExecuteUpdateVersion execute update version the agent docp
 func (l *WindowsOperations) ExecuteUpdateVersion(version string) error {
+
+	//get msi agent and manager
+	repoUrl := utils.GetBinariesRepositoryUrl()
+	managerUrl := fmt.Sprintf("%s/%s/install_manager_windows.msi", repoUrl, version)
+	agentUrl := fmt.Sprintf("%s/%s/install_agent_windows.msi", repoUrl, version)
+	respManager, _, err := utils.GetBinary(managerUrl)
+	if err != nil {
+		return err
+	}
+
+	respAgent, _, err := utils.GetBinary(agentUrl)
+	if err != nil {
+		return err
+	}
+
+	workdir, err := utils.GetWorkDirPath()
+	if err != nil {
+		return err
+	}
+
+	//validate path version
+	pathVersion := filepath.Join(workdir, "bin", "releases", version)
+	if err := l.filesystem.VerifyDirExistAndCreate(pathVersion); err != nil {
+		return err
+	}
+
+	pathManagerMsi := filepath.Join(pathVersion, "manager.msi")
+	pathAgentMsi := filepath.Join(pathVersion, "agent.msi")
+
+	if err := l.filesystem.WriteBinaryContent(pathManagerMsi, respManager); err != nil {
+		return err
+	}
+	if err := l.filesystem.WriteBinaryContent(pathAgentMsi, respAgent); err != nil {
+		return err
+	}
+
 	if err := l.StopService("agent"); err != nil {
 		return err
 	}
+
+	if err := l.StopService("manager"); err != nil {
+		return err
+	}
+
+	commandManager := fmt.Sprintf(`start-process -Wait msiexec -ArgumentList '/qn /i "%s"'`, pathManagerMsi)
+	commandAgent := fmt.Sprintf(`start-process -Wait msiexec -ArgumentList '/qn /i "%s"'`, pathAgentMsi)
+
 	envVersion := fmt.Sprintf("$env:VERSION ='%s'", version)
-	commandAgent := utils.ChoiceInstallerOrUninstaller("windows", "agent", "install", version)
+
+	l.logger.Debug("commandManager", "commandManager", commandManager)
+	outManager, err := l.program.ExecuteWithOutput("powershell", []string{envVersion}, "-Command", commandManager)
+	if err != nil {
+		l.logger.Error("error in update manager start process", "error", err)
+		return err
+	}
+	l.logger.Debug("update manager", "output", outManager)
+
 	l.logger.Debug("commandAgent", "commandAgent", commandAgent)
 	outAgent, err := l.program.ExecuteWithOutput("powershell", []string{envVersion}, "-Command", commandAgent)
 	if err != nil {
@@ -304,18 +356,14 @@ func (l *WindowsOperations) ExecuteUpdateVersion(version string) error {
 	}
 	l.logger.Debug("update agent", "output", outAgent)
 
-	if err := l.StopService("manager"); err != nil {
+	//restart service agent and manager
+	if err := l.RestartService("agent"); err != nil {
 		return err
 	}
 
-	commandManager := utils.ChoiceInstallerOrUninstaller("windows", "manager", "install", version)
-	l.logger.Debug("commandManager", "commandManager", commandManager)
-	outManager, err := l.program.ExecuteWithOutput("powershell", []string{envVersion}, "-Command", commandManager)
-	if err != nil {
-		l.logger.Error("error in update manager start process", "error", err)
+	if err := l.RestartService("manager"); err != nil {
 		return err
 	}
-	l.logger.Debug("update manager", "output", outManager)
 
 	return nil
 }
