@@ -357,3 +357,30 @@ func TestWindowsOperationsExecuteUpdateVersion(t *testing.T) {
 		})
 	})
 }
+
+func TestWindowsOperationsExecuteRollbackVersion(t *testing.T) {
+	bdd.Feature(t, "WindowsOperations", func(t *testing.T, scenario func(description string, steps func(s *bdd.Scenario))) {
+		scenario("ExecuteRollbackVersion executa (mock)", func(s *bdd.Scenario) {
+			var ops *components.WindowsOperations
+			var logger interfaces.ILogger
+			var err error
+			s.Given("Cria logger", func() {
+				logger = utils.NewDocpLoggerText(os.Stdout)
+				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
+			})
+			s.Given("WindowsOperations criado", func() {
+				ops = components.NewWindowsOperations(logger)
+			})
+			s.Given("Configurar o operation", func() {
+				err = ops.Setup()
+				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
+			})
+			s.When("chamo ExecuteRollbackVersion", func() {
+				err = ops.ExecuteRollbackVersion("0.1.1")
+			})
+			s.Then("não deve retornar erro (mock)", func(t *testing.T) {
+				bdd.AssertNoError(t, err, "ExecuteRollbackVersion não deve retornar erro (mock)")
+			})
+		})
+	})
+}
