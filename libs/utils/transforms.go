@@ -63,7 +63,6 @@ func ChoiceInstallerOrUninstaller(system, mode, action, version string) string {
 	case system == "windows" && mode == "agent" && action == "install":
 		release := fmt.Sprintf("%s/%s/install_agent_windows.msi", pkg.URL_RELEASE, version)
 		return fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s'`, release)
-
 	//macos
 	case system == "macos" && mode == "agent" && action == "install":
 		release := fmt.Sprintf("%s/%s/install_agent_macos.sh", pkg.URL_RELEASE, version)
