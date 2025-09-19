@@ -137,6 +137,12 @@ func (l *WindowsOperations) RestartService(serviceName string) error {
 				break
 			}
 		}
+		out, err := l.program.ExecuteWithOutput("taskkill", []string{}, "/f", "/im", fmt.Sprintf("%s.exe", serviceName))
+		if err != nil {
+			l.logger.Error("error in taskkill process", "error", err)
+			return err
+		}
+		l.logger.Debug("output taskkill process", "output", out)
 	}
 
 	if err := s.Start(); err != nil {
