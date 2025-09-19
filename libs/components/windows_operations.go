@@ -348,7 +348,7 @@ func (l *WindowsOperations) ExecuteUpdateVersion(version string) error {
 		return err
 	}
 	l.logger.Debug("update manager", "output", outManager)
-
+	time.Sleep(10 * time.Second)
 	l.logger.Debug("commandAgent", "commandAgent", commandAgent)
 	outAgent, err := l.program.ExecuteWithOutput("powershell", []string{envVersion}, "-Command", commandAgent)
 	if err != nil {
