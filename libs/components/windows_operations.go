@@ -370,7 +370,25 @@ func (l *WindowsOperations) ExecuteUpdateVersion(version string) error {
 
 // ExecuteRollbackVersion execute rollback the version
 func (l *WindowsOperations) ExecuteRollbackVersion(version string) error {
-	//TODO: add logic for rollback version windows
+	statusManager, err := l.Status("manager")
+	if err != nil {
+		return err
+	}
+
+	statusAgent, err := l.Status("agent")
+	if err != nil {
+		return err
+	}
+	if statusAgent != "active" {
+		if err := l.RestartService("agent"); err != nil {
+			return err
+		}
+	}
+	if statusManager != "active" {
+		if err := l.RestartService("manager"); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
