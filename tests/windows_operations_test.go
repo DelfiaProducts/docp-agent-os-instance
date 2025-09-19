@@ -384,3 +384,30 @@ func TestWindowsOperationsExecuteRollbackVersion(t *testing.T) {
 		})
 	})
 }
+
+func TestWindowsOperationsUpdaterUninstall(t *testing.T) {
+	bdd.Feature(t, "WindowsOperations", func(t *testing.T, scenario func(description string, steps func(s *bdd.Scenario))) {
+		scenario("UpdaterUninstall executa (mock)", func(s *bdd.Scenario) {
+			var ops *components.WindowsOperations
+			var logger interfaces.ILogger
+			var err error
+			s.Given("Cria logger", func() {
+				logger = utils.NewDocpLoggerText(os.Stdout)
+				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
+			})
+			s.Given("WindowsOperations criado", func() {
+				ops = components.NewWindowsOperations(logger)
+			})
+			s.Given("Configurar o operation", func() {
+				err = ops.Setup()
+				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
+			})
+			s.When("chamo UpdaterUninstall", func() {
+				err = ops.UpdaterUninstall("0.1.1")
+			})
+			s.Then("não deve retornar erro (mock)", func(t *testing.T) {
+				bdd.AssertNoError(t, err, "UpdaterUninstall não deve retornar erro (mock)")
+			})
+		})
+	})
+}
