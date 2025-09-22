@@ -21,13 +21,12 @@ import (
 
 // WindowsOperations is instance of windows operations
 type WindowsOperations struct {
-	serviceName            string
-	logger                 interfaces.ILogger
-	filesystem             *pkg.FileSystem
-	program                *pkg.ExecProgram
-	ymlClient              *pkg.YmlClient
-	scmManager             *SCMManager
-	isProcessAutoUninstall bool
+	serviceName string
+	logger      interfaces.ILogger
+	filesystem  *pkg.FileSystem
+	program     *pkg.ExecProgram
+	ymlClient   *pkg.YmlClient
+	scmManager  *SCMManager
 }
 
 // NewWindowsOperations return instance of windows operations
@@ -39,12 +38,11 @@ func NewWindowsOperations(logger interfaces.ILogger) *WindowsOperations {
 		srvName = "DocpManager"
 	}
 	return &WindowsOperations{
-		logger:                 logger,
-		program:                pkg.NewExecProgram(),
-		filesystem:             pkg.NewFileSystem(),
-		ymlClient:              pkg.NewYmlClient(),
-		serviceName:            srvName,
-		isProcessAutoUninstall: false,
+		logger:      logger,
+		program:     pkg.NewExecProgram(),
+		filesystem:  pkg.NewFileSystem(),
+		ymlClient:   pkg.NewYmlClient(),
+		serviceName: srvName,
 	}
 }
 
@@ -264,10 +262,7 @@ func (l *WindowsOperations) UninstallUpdater(version string) error {
 
 // UpdateAgent execute update the agent docp
 func (l *WindowsOperations) UpdateAgent(version string) error {
-	if err := l.InstallUpdater(version); err != nil {
-		return err
-	}
-
+	go l.InstallUpdater(version)
 	return nil
 }
 
@@ -419,21 +414,12 @@ func (l *WindowsOperations) UpdaterUninstall(version string) error {
 
 // UninstallAgent execute uninstall the agent docp
 func (l *WindowsOperations) UninstallAgent(version string) error {
-	wmiCmd := `(Get-Package -Name "DocpAgent").Metadata['ProductCode']`
-	out, err := l.program.ExecuteWithOutput("powershell", []string{}, "-Command", wmiCmd)
+	identifier, err := l.GetIdentifierService("DocpAgent")
 	if err != nil {
-		l.logger.Error("error in get wmi docp agent", "error", err)
 		return err
 	}
-	l.logger.Debug("output wmi docp agent", "output", out)
-	re := regexp.MustCompile(`\{[A-Fa-f0-9\-]+\}`)
-	identifyingNumber := re.FindString(string(out))
 
-	if identifyingNumber == "" {
-		return fmt.Errorf("not found identify number for docp agent")
-	}
-
-	outUnistall, err := l.program.ExecuteWithOutput("powershell", []string{}, "-Command", fmt.Sprintf(`start-process msiexec -Wait -ArgumentList ('/log', 'C:\uninst.log', '/norestart', '/q', '/x', '%s')`, identifyingNumber))
+	outUnistall, err := l.program.ExecuteWithOutput("powershell", []string{}, "-Command", fmt.Sprintf(`start-process msiexec -Wait -ArgumentList ('/log', 'C:\uninst.log', '/norestart', '/q', '/x', '%s')`, identifier))
 	if err != nil {
 		l.logger.Error("error in uninstall docp agent", "error", err)
 		return err
@@ -442,66 +428,73 @@ func (l *WindowsOperations) UninstallAgent(version string) error {
 	return nil
 }
 
-// schedulerStopDocpManager execute stop the docp manager
-func (l *WindowsOperations) schedulerStopDocpManager() error {
-	taskNameStop := "DocpManagerStop"
-	runAtStop := time.Now().Add(time.Duration(1) * time.Minute)
-	runStopTime := runAtStop.Format("15:04")
-
-	cmdStop := fmt.Sprintf(`"sc.exe stop DocpManager"`)
-
-	outputStop, err := l.program.ExecuteWithOutput("powershell", []string{}, "-Command", fmt.Sprintf(`start-process schtasks -Wait -ArgumentList ('/Create', '/SC', 'ONCE', '/TN','%s', '/TR', '%s','/ST','%s','/RU','SYSTEM','/RL','HIGHEST','/F')`, taskNameStop, cmdStop, runStopTime))
-	if err != nil {
-		l.logger.Error("auto uninstall manager create scheduler stop error", "error", err.Error())
-		return err
-	}
-	l.logger.Debug("auto uninstall manager stop", "outputStop", outputStop)
-	return nil
-}
-
-// schedulerAutoUninstall execute scheduler for auto remove manager
-func (l *WindowsOperations) schedulerAutoUninstall() error {
-	wmiCmd := `(Get-Package -Name "DocpManager").Metadata['ProductCode']`
+// GetIdentifierService return the identifier number of service
+func (l *WindowsOperations) GetIdentifierService(name string) (string, error) {
+	wmiCmd := fmt.Sprintf(`(Get-Package -Name "%s").Metadata['ProductCode']`, name)
 	out, err := l.program.ExecuteWithOutput("powershell", []string{}, "-Command", wmiCmd)
 	if err != nil {
 		l.logger.Error("error in get wmi docp agent", "error", err)
-		return err
+		return "", err
 	}
 	l.logger.Debug("output wmi docp manager", "output", out)
 	re := regexp.MustCompile(`\{[A-Fa-f0-9\-]+\}`)
 	identifyingNumber := re.FindString(string(out))
 
 	if identifyingNumber == "" {
-		return fmt.Errorf("not found identify number for docp agent")
+		return "", fmt.Errorf("not found identify number for docp agent")
 	}
-
-	taskName := "DocpManagerAutoRemove"
-	runAt := time.Now().Add(time.Duration(3) * time.Minute)
-	runTime := runAt.Format("15:04")
-
-	cmd := fmt.Sprintf(`"msiexec /x %s /quiet /norestart"`, identifyingNumber)
-
-	outputAutoRemove, err := l.program.ExecuteWithOutput("powershell", []string{}, "-Command", fmt.Sprintf(`start-process schtasks -Wait -ArgumentList ('/Create', '/SC', 'ONCE', '/TN','%s', '/TR', '%s','/ST','%s','/RU','SYSTEM','/RL','HIGHEST','/F')`, taskName, cmd, runTime))
-	if err != nil {
-		l.logger.Error("auto uninstall manager create scheduler uninstall error", "error", err.Error())
-		return err
-	}
-	l.logger.Debug("auto uninstall manager", "outputAutoRemove", outputAutoRemove)
-	return nil
+	return identifyingNumber, nil
 }
 
 // AutoUninstall execute auto uninstall the manager
 func (l *WindowsOperations) AutoUninstall(version string) error {
-	if !l.isProcessAutoUninstall {
-		if err := l.schedulerAutoUninstall(); err != nil {
-			return err
-		}
-		if err := l.schedulerStopDocpManager(); err != nil {
-			return err
-		}
+	workdir, err := utils.GetWorkDirPath()
+	if err != nil {
+		return err
 	}
-	l.isProcessAutoUninstall = true
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+
+	}
+
+	batPath := filepath.Join(homeDir, "autouninstall.bat")
+
+	identifierAgent, err := l.GetIdentifierService("DocpAgent")
+	if err != nil {
+		return err
+	}
+	identifierManager, err := l.GetIdentifierService("DocpManager")
+	if err != nil {
+		return err
+	}
+	batContent := fmt.Sprintf(
+		"@echo off\n"+
+			"timeout /t 5 /nobreak > nul\n"+
+			"taskkill /f /im agent.exe > nul 2>&1\n"+
+			"taskkill /f /im manager.exe > nul 2>&1\n"+
+			"msiexec /x %s /quiet /norestart\n"+
+			"msiexec /x %s /quiet /norestart\n"+
+			"sc.exe delete DocpAgent > nul 2>&1\n"+
+			"sc.exe delete DocpManager > nul 2>&1\n"+
+			"del /f /q \"%s\"\n"+
+			"rmdir /s /q \"%s\"",
+		identifierAgent,
+		identifierManager,
+		batPath,
+		workdir,
+	)
+
+	err = os.WriteFile(batPath, []byte(batContent), 0644)
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command("cmd", "/C", batPath)
+	if err := cmd.Start(); err != nil {
+		return err
+	}
 	return nil
+
 }
 
 // Execute run handler functions the operation
