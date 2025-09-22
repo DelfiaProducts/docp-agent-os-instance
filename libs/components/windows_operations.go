@@ -226,25 +226,6 @@ func (l *WindowsOperations) InstallAgent(version string) error {
 func (l *WindowsOperations) InstallUpdater(version string) error {
 	repoUrl := utils.GetBinariesRepositoryUrl()
 	updaterUrl := fmt.Sprintf("%s/%s/updater-windows-amd64.exe", repoUrl, version)
-	statusManager, err := l.Status("manager")
-	if err != nil {
-		return err
-	}
-
-	statusAgent, err := l.Status("agent")
-	if err != nil {
-		return err
-	}
-	if statusAgent == "active" {
-		if err := l.StopService("agent"); err != nil {
-			return err
-		}
-	}
-	if statusManager == "active" {
-		if err := l.StopService("manager"); err != nil {
-			return err
-		}
-	}
 
 	respUpdater, _, err := utils.GetBinary(updaterUrl)
 	if err != nil {
