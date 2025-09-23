@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"unsafe"
 
 	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
 	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
@@ -224,7 +225,72 @@ func (d *DatadogWindowsOperation) UpdateRepository() error {
 
 // GetVersion return the version of the datadog agent
 func (d *DatadogWindowsOperation) GetVersion() (string, error) {
-	return "", nil
+	m, err := mgr.Connect()
+	if err != nil {
+		return "", err
+	}
+	defer m.Disconnect()
+
+	s, err := m.OpenService("DatadogAgent")
+	if err != nil {
+		if errors.Is(err, windows.ERROR_SERVICE_DOES_NOT_EXIST) {
+			return "inactive", nil
+		}
+		return "", err
+	}
+	defer s.Close()
+
+	config, err := s.Config()
+	if err != nil {
+		return "", err
+	}
+
+	binaryPath := config.BinaryPathName
+	path := strings.Trim(binaryPath, "\"")
+
+	// Se o caminho for relativo, tornamo-lo absoluto
+	if !strings.Contains(path, ":") {
+		exe, err := os.Executable()
+		if err != nil {
+			return "", err
+		}
+		dir := os.Args[0]
+		if len(exe) > 0 {
+			dir = exe
+		}
+		path = fmt.Sprintf("%s\\%s", dir, path)
+	}
+	d.logger.Debug("binary path absolute", "path", path)
+	// Normaliza o caminho
+	pathp, err := windows.UTF16PtrFromString(path)
+	if err != nil {
+		return "", err
+	}
+	handler := windows.Handle(*pathp)
+
+	// Obtém o tamanho da informacao da versao do arquivo
+	size, err := windows.GetFileVersionInfoSize(path, &handler)
+	if size == 0 {
+		return "", err
+	}
+	d.logger.Debug("size file version info", "size", size)
+
+	// Aloca um buffer para a informacao da versao
+	buf := make([]byte, size)
+	sizeofBuf := uint32(len(buf))
+	// Obtem a informacao da versao do arquivo
+	err = windows.GetFileVersionInfo(path, uint32(handler), size, unsafe.Pointer(&buf[0]))
+	if err != nil {
+		return "", err
+	}
+
+	// Faz uma query na informacao da versao para obter o ProductVersion
+	var fixedInfo *[56]byte
+	windows.VerQueryValue(unsafe.Pointer(&buf[0]), "\\", unsafe.Pointer(&fixedInfo), &sizeofBuf)
+	d.logger.Debug("fixed info", "info", fixedInfo)
+	version := fmt.Sprintf("%d.%d.%d.%d",
+		fixedInfo[18], fixedInfo[16], fixedInfo[14], fixedInfo[12])
+	return version, nil
 }
 
 // GetLatestVersion return the latest version of the datadog agent
