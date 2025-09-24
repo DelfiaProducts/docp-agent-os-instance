@@ -852,7 +852,7 @@ func (l *ManagerOperator) installAgent() {
 
 // installAgentDatadog execute call to api docp agent
 // to install datadog agent
-func (l *ManagerOperator) installAgentDatadog(ddApiKey, ddSite string) {
+func (l *ManagerOperator) installAgentDatadog(ddApiKey, ddSite, version string) {
 	l.logger.Debug("install agent datadog", "trace", "docp-agent-os-instance.manager_operator.installAgentDatadog", "ddApiKey", ddApiKey, "ddSite", ddSite)
 	defer l.wg.Done()
 	status, err := l.adapter.Status("datadog")
@@ -861,7 +861,7 @@ func (l *ManagerOperator) installAgentDatadog(ddApiKey, ddSite string) {
 		return
 	}
 	if status != "active" {
-		result, err := l.adapter.DocpAgentApiInstallDatadog(ddApiKey, ddSite)
+		result, err := l.adapter.DocpAgentApiInstallDatadog(ddApiKey, ddSite, version)
 		if err != nil {
 			l.chanErrors <- dto.CommonChanErrors{From: "installAgentDatadog", Priority: dto.ErrLevelHigh, Err: err}
 			return
@@ -922,7 +922,7 @@ loopinstalldatadog:
 	}
 }
 
-func (l *ManagerOperator) handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries string) {
+func (l *ManagerOperator) handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries string) {
 	l.logger.Debug("handle install datadog agent with APM single step", "trace", "docp-agent-os-instance.manager_operator.handlerInstallDatadogWithApmSingleStep", "ddApiKey", ddApiKey, "ddSite", ddSite, "ddApmInstrumentationEnabled", ddApmInstrumentationEnabled, "ddEnv", ddEnv, "ddApmInstrumentationLibraries", ddApmInstrumentationLibraries)
 	defer l.wg.Done()
 
@@ -954,7 +954,7 @@ func (l *ManagerOperator) handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSit
 
 			if !alreadyInstalled {
 				result, err := l.adapter.DocpAgentApiInstallDatadogWithApmSingleStep(
-					ddApiKey, ddSite, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries,
+					ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries,
 				)
 				if err != nil {
 					l.logger.Error("Failed to install Datadog agent with APM single step", "error", err)
@@ -974,7 +974,7 @@ func (l *ManagerOperator) handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSit
 
 // installAgentDatadog execute call to api docp agent
 // to install datadog agent
-func (l *ManagerOperator) installAgentDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries string) {
+func (l *ManagerOperator) installAgentDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries string) {
 	l.logger.Debug("install agent datadog with apm single step", "trace", "docp-agent-os-instance.manager_operator.installAgentDatadogWithApmSingleStep", "ddApiKey", ddApiKey, "ddSite", ddSite, "ddApmInstrumentationEnabled", ddApmInstrumentationEnabled, "ddEnv", ddEnv, "ddApmInstrumentationLibraries", ddApmInstrumentationLibraries)
 	defer l.wg.Done()
 	status, err := l.adapter.Status("datadog")
@@ -989,7 +989,7 @@ func (l *ManagerOperator) installAgentDatadogWithApmSingleStep(ddApiKey, ddSite,
 	}
 	l.logger.Debug("install agent datadog with apm single step", "trace", "docp-agent-os-instance.manager_operator.installAgentDatadogWithApmSingleStep", "docpStatus", status, "alreadyTracer", alreadyTracer)
 	if status != "active" {
-		result, err := l.adapter.DocpAgentApiInstallDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
+		result, err := l.adapter.DocpAgentApiInstallDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
 		if err != nil {
 			l.chanErrors <- dto.CommonChanErrors{From: "installAgentDatadogWithApmSingleStep", Priority: dto.ErrLevelMedium, Err: err}
 			return
@@ -998,7 +998,7 @@ func (l *ManagerOperator) installAgentDatadogWithApmSingleStep(ddApiKey, ddSite,
 		return
 	} else if status == "active" && !alreadyTracer {
 		l.wg.Add(1)
-		go l.handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
+		go l.handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
 		return
 	}
 }
@@ -1295,6 +1295,7 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 			l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
 		}
 		if act.Action == "install" {
+			version := act.Version
 			ddApiKey, ddSite, err := l.extractDDApiKeyAndDDSiteFromEnvs(act.Envs)
 			if err != nil {
 				l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
@@ -1309,7 +1310,7 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 							return
 						}
 						l.wg.Add(1)
-						go l.handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
+						go l.handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
 					} else {
 						l.wg.Add(1)
 						ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries, err := l.extractApmSingleStepEnvs(act.ComponentEnvs)
@@ -1317,7 +1318,7 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 							l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
 							return
 						}
-						go l.installAgentDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
+						go l.installAgentDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
 					}
 				} else if act.Mode == "tracing_library" {
 					if datadogAlreadyInstalled {
@@ -1334,11 +1335,11 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 				if !datadogAlreadyInstalled {
 					if len(act.Files) > 0 {
 						l.wg.Add(2)
-						go l.installAgentDatadog(ddApiKey, ddSite)
+						go l.installAgentDatadog(ddApiKey, ddSite, version)
 						go l.handlerUpdateAgentDatadogAfterInstall(act.Files)
 					} else {
 						l.wg.Add(1)
-						go l.installAgentDatadog(ddApiKey, ddSite)
+						go l.installAgentDatadog(ddApiKey, ddSite, version)
 					}
 				}
 			}
