@@ -605,7 +605,7 @@ func (l *ManagerAdapter) requestForAgentInstallDatadog(url string, method string
 }
 
 // DocpAgentApiInstallDatadog execute call to api docp for install datadog agent
-func (l *ManagerAdapter) DocpAgentApiInstallDatadog(ddApiKey, ddSite string) ([]byte, error) {
+func (l *ManagerAdapter) DocpAgentApiInstallDatadog(ddApiKey, ddSite, version string) ([]byte, error) {
 	l.logger.Debug("execute send request for install datadog agent", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiInstallDatadog", "ddApiKey", ddApiKey, "ddSite", ddSite)
 
 	transaction := utils.NewTransactionStatus()
@@ -617,6 +617,7 @@ func (l *ManagerAdapter) DocpAgentApiInstallDatadog(ddApiKey, ddSite string) ([]
 	datadogDto := dto.DatadogInstallDTO{
 		DDSite:   ddSite,
 		DDApiKey: ddApiKey,
+		Version:  version,
 	}
 	bDatadogDto, err := l.marshaller(&datadogDto)
 	if err != nil {
@@ -639,7 +640,7 @@ func (l *ManagerAdapter) DocpAgentApiInstallDatadog(ddApiKey, ddSite string) ([]
 }
 
 // DocpAgentApiInstallDatadog execute call to api docp for install datadog agent
-func (l *ManagerAdapter) DocpAgentApiInstallDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries string) ([]byte, error) {
+func (l *ManagerAdapter) DocpAgentApiInstallDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries string) ([]byte, error) {
 	l.logger.Debug("execute send request for install datadog agent with apm single step", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiInstallDatadogWithApmSingleStep", "ddApiKey", ddApiKey, "ddSite", ddSite, "ddEnv", ddEnv, "ddApmInstrumentationEnabled", ddApmInstrumentationEnabled, "ddApmInstrumentationLibraries", ddApmInstrumentationLibraries)
 
 	transaction := utils.NewTransactionStatus()
@@ -652,6 +653,7 @@ func (l *ManagerAdapter) DocpAgentApiInstallDatadogWithApmSingleStep(ddApiKey, d
 		DDSite:    ddSite,
 		DDApiKey:  ddApiKey,
 		Component: "tracer",
+		Version:   version,
 		Mode:      "single_step",
 		EnvVars: []dto.DatadogEnvVars{
 			{
@@ -1009,6 +1011,7 @@ func (l *ManagerAdapter) prepareTracerDatadogSingleStepAction(stateCheckSignal d
 	if stateCheckSignal.TypeSignal == "update" {
 		if len(stateCheckSignal.Agents.DatadogTracerSingleStep.Version) > 0 && len(stateCheckSignal.Agents.DatadogTracerLibrary.Version) == 0 {
 			tracerSingleStep := stateCheckSignal.Agents.DatadogTracerSingleStep
+			var version string
 			var files []dto.StateActionFiles
 			var componetEnvVars []dto.StateActionEnvs
 
@@ -1030,6 +1033,7 @@ func (l *ManagerAdapter) prepareTracerDatadogSingleStepAction(stateCheckSignal d
 					Value: l.parseSiteDatadog(datadogAgent.Site),
 				})
 				files = l.getActionsFiles(datadogAgent.Configurations)
+				version = datadogAgent.Version
 			}
 
 			action = dto.StateAction{
@@ -1037,6 +1041,7 @@ func (l *ManagerAdapter) prepareTracerDatadogSingleStepAction(stateCheckSignal d
 				Action:        "install",
 				Mode:          "single_step",
 				Component:     "tracer",
+				Version:       version,
 				ComponentEnvs: componetEnvVars,
 				Envs:          envVars,
 				Files:         files,
@@ -1109,6 +1114,7 @@ func (l *ManagerAdapter) prepareAgentDatadogAction(stateCheckSignal dto.StateChe
 	var envVars []dto.StateActionEnvs
 	var componetEnvVars []dto.StateActionEnvs
 	var files []dto.StateActionFiles
+	var version string
 
 	if stateCheckSignal.TypeSignal == "update" {
 		if len(stateCheckSignal.Agents.DatadogAgent.Version) > 0 {
@@ -1127,6 +1133,7 @@ func (l *ManagerAdapter) prepareAgentDatadogAction(stateCheckSignal dto.StateChe
 				Value: l.parseSiteDatadog(datadogAgent.Site),
 			})
 			files = l.getActionsFiles(datadogAgent.Configurations)
+			version = datadogAgent.Version
 			l.logger.Debug("prepare agent datadog action", "files", files)
 			return dto.StateAction{
 				Type:          "datadog",
@@ -1136,7 +1143,7 @@ func (l *ManagerAdapter) prepareAgentDatadogAction(stateCheckSignal dto.StateChe
 				ComponentEnvs: componetEnvVars,
 				Envs:          envVars,
 				Files:         files,
-				Version:       datadogAgent.Version,
+				Version:       version,
 			}
 		}
 	} else if stateCheckSignal.TypeSignal == "uninstall" {
