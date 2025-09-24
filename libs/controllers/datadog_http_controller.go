@@ -76,7 +76,7 @@ func (d *DatadogHttpController) InstallAgent(w http.ResponseWriter, r *http.Requ
 	if datadogInstallDto.Component == "tracer" {
 		if datadogInstallDto.Mode == "single_step" {
 			d.logger.Debug("install agent", "trace", "docp-agent-os-instance.datadog_http_controller.InstallAgent", "datadogInstallDto - single_step", datadogInstallDto)
-			go d.adapter.InstallAgentApmSingleStep(datadogInstallDto.DDSite, datadogInstallDto.DDApiKey, datadogInstallDto.EnvVars)
+			go d.adapter.InstallAgentApmSingleStep(datadogInstallDto.DDSite, datadogInstallDto.DDApiKey, datadogInstallDto.Version, datadogInstallDto.EnvVars)
 		}
 		if datadogInstallDto.Mode == "tracing_library" {
 			d.logger.Debug("install agent", "trace", "docp-agent-os-instance.datadog_http_controller.InstallAgent", "datadogInstallDto - tracing_library", datadogInstallDto)
@@ -85,7 +85,7 @@ func (d *DatadogHttpController) InstallAgent(w http.ResponseWriter, r *http.Requ
 		}
 	} else {
 		d.logger.Debug("install agent", "trace", "docp-agent-os-instance.datadog_http_controller.InstallAgent", "datadogInstallDto", datadogInstallDto)
-		go d.adapter.InstallAgent(datadogInstallDto.DDSite, datadogInstallDto.DDApiKey)
+		go d.adapter.InstallAgent(datadogInstallDto.DDSite, datadogInstallDto.DDApiKey, datadogInstallDto.Version)
 	}
 	w.WriteHeader(http.StatusAccepted)
 	if err := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "accepted", Code: "DATADOG_INSTALL_ACCEPTED", Message: "accepted install"}); err != nil {
