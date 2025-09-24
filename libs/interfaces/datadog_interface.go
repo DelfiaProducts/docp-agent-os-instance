@@ -6,8 +6,8 @@ import (
 
 type IDatadogOperation interface {
 	Setup() error
-	InstallAgent(ddSite, ddApiKey string) error
-	InstallAgentApmSingleStep(ddSite string, ddApiKey string, datadogEnvVars []dto.DatadogEnvVars) error
+	InstallAgent(ddSite, ddApiKey, version string) error
+	InstallAgentApmSingleStep(ddSite string, ddApiKey string, version string, datadogEnvVars []dto.DatadogEnvVars) error
 	InstallAgentApmTracingLibrary(languageName, pathTracer, version string) error
 	UninstallAgent() error
 	DiscoverDatadogConfigPath() (string, error)
