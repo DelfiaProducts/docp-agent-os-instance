@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/adapters"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/adapters"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
 )
 
 // DatadogHttpController is struct the datadog controller for
@@ -37,86 +37,86 @@ func (d *DatadogHttpController) Setup() error {
 
 // InstallTracer execute install the tracer datadog
 func (d *DatadogHttpController) InstallTracer(w http.ResponseWriter, r *http.Request) {
-	d.logger.Debug("install tracer", "trace", "docp-agent-os-instance.datadog_http_controller.InstallTracer")
+	d.logger.Debug("install tracer", "trace", "agent-os-instance.datadog_http_controller.InstallTracer")
 	var datadogInstallDto dto.DatadogInstallDTO
 	defer r.Body.Close()
 	if err := json.NewDecoder(r.Body).Decode(&datadogInstallDto); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		if errMarshal := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "error", Code: "DATADOG_INSTALL_ERR", Message: err.Error()}); errMarshal != nil {
-			d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.InstallTracer", "error", errMarshal.Error())
+			d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.InstallTracer", "error", errMarshal.Error())
 			return
 		}
 	}
 	if datadogInstallDto.Component == "tracer" {
 		if datadogInstallDto.Mode == "tracing_library" {
-			d.logger.Debug("install tracer", "trace", "docp-agent-os-instance.datadog_http_controller.InstallTracer", "datadogInstallDto", datadogInstallDto)
+			d.logger.Debug("install tracer", "trace", "agent-os-instance.datadog_http_controller.InstallTracer", "datadogInstallDto", datadogInstallDto)
 			language, pathTracer, version := d.adapter.GetApmEnvVarsTracingLibrary(datadogInstallDto.EnvVars)
 			go d.adapter.InstallAgentApmTracingLibrary(language, pathTracer, version)
 		}
 	}
 	w.WriteHeader(http.StatusAccepted)
 	if err := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "accepted", Code: "DATADOG_INSTALL_TRACER_ACCEPTED", Message: "accepted install"}); err != nil {
-		d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.InstallTracer", "error", err.Error())
+		d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.InstallTracer", "error", err.Error())
 		return
 	}
 }
 
 // InstallAgent execute install the agent datadog
 func (d *DatadogHttpController) InstallAgent(w http.ResponseWriter, r *http.Request) {
-	d.logger.Debug("install agent", "trace", "docp-agent-os-instance.datadog_http_controller.InstallAgent")
+	d.logger.Debug("install agent", "trace", "agent-os-instance.datadog_http_controller.InstallAgent")
 	var datadogInstallDto dto.DatadogInstallDTO
 	defer r.Body.Close()
 	if err := json.NewDecoder(r.Body).Decode(&datadogInstallDto); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		if errMarshal := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "error", Code: "DATADOG_INSTALL_ERR", Message: err.Error()}); errMarshal != nil {
-			d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.InstallAgent", "error", errMarshal.Error())
+			d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.InstallAgent", "error", errMarshal.Error())
 			return
 		}
 	}
 	if datadogInstallDto.Component == "tracer" {
 		if datadogInstallDto.Mode == "single_step" {
-			d.logger.Debug("install agent", "trace", "docp-agent-os-instance.datadog_http_controller.InstallAgent", "datadogInstallDto - single_step", datadogInstallDto)
+			d.logger.Debug("install agent", "trace", "agent-os-instance.datadog_http_controller.InstallAgent", "datadogInstallDto - single_step", datadogInstallDto)
 			go d.adapter.InstallAgentApmSingleStep(datadogInstallDto.DDSite, datadogInstallDto.DDApiKey, datadogInstallDto.Version, datadogInstallDto.EnvVars)
 		}
 		if datadogInstallDto.Mode == "tracing_library" {
-			d.logger.Debug("install agent", "trace", "docp-agent-os-instance.datadog_http_controller.InstallAgent", "datadogInstallDto - tracing_library", datadogInstallDto)
+			d.logger.Debug("install agent", "trace", "agent-os-instance.datadog_http_controller.InstallAgent", "datadogInstallDto - tracing_library", datadogInstallDto)
 			language, pathTracer, version := d.adapter.GetApmEnvVarsTracingLibrary(datadogInstallDto.EnvVars)
 			go d.adapter.InstallAgentApmTracingLibrary(language, pathTracer, version)
 		}
 	} else {
-		d.logger.Debug("install agent", "trace", "docp-agent-os-instance.datadog_http_controller.InstallAgent", "datadogInstallDto", datadogInstallDto)
+		d.logger.Debug("install agent", "trace", "agent-os-instance.datadog_http_controller.InstallAgent", "datadogInstallDto", datadogInstallDto)
 		go d.adapter.InstallAgent(datadogInstallDto.DDSite, datadogInstallDto.DDApiKey, datadogInstallDto.Version)
 	}
 	w.WriteHeader(http.StatusAccepted)
 	if err := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "accepted", Code: "DATADOG_INSTALL_ACCEPTED", Message: "accepted install"}); err != nil {
-		d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.InstallAgent", "error", err.Error())
+		d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.InstallAgent", "error", err.Error())
 		return
 	}
 }
 
 // UninstallAgent execute uninstall agent datadog
 func (d *DatadogHttpController) UninstallAgent(w http.ResponseWriter, r *http.Request) {
-	d.logger.Debug("uninstall agent", "trace", "docp-agent-os-instance.datadog_http_controller.UninstallAgent")
+	d.logger.Debug("uninstall agent", "trace", "agent-os-instance.datadog_http_controller.UninstallAgent")
 	go d.adapter.DPKGConfigure()
 	time.Sleep(5 * time.Second)
 	go d.adapter.UninstallAgent()
 	w.WriteHeader(http.StatusAccepted)
 	if err := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "accepted", Code: "DATADOG_UNINSTALL_ACCEPTED", Message: "accepted uninstall"}); err != nil {
-		d.logger.Error("error in marshal response datadog", "unistall", "docp-agent-os-instance.datadog_http_controller.UninstallAgent", "error", err.Error())
+		d.logger.Error("error in marshal response datadog", "unistall", "agent-os-instance.datadog_http_controller.UninstallAgent", "error", err.Error())
 		return
 	}
 }
 
 // UpdateAgentConfigurations execute update the agent configurations datadog
 func (d *DatadogHttpController) UpdateAgentConfigurations(w http.ResponseWriter, r *http.Request) {
-	d.logger.Debug("update agent configurations", "trace", "docp-agent-os-instance.datadog_http_controller.UpdateAgentConfigurations")
+	d.logger.Debug("update agent configurations", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentConfigurations")
 	var datadogActionsFile dto.StateActionFiles
 
 	defer r.Body.Close()
 	if err := json.NewDecoder(r.Body).Decode(&datadogActionsFile); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		if errMarshal := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "error", Code: "DATADOG_UPDATE_CONFIGURATION_ERR", Message: err.Error()}); errMarshal != nil {
-			d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.UpdateAgentConfigurations", "error", errMarshal.Error())
+			d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentConfigurations", "error", errMarshal.Error())
 			return
 		}
 		return
@@ -127,7 +127,7 @@ func (d *DatadogHttpController) UpdateAgentConfigurations(w http.ResponseWriter,
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		if errMarshal := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "error", Code: "DATADOG_UPDATE_CONFIGURATION_ERR", Message: err.Error()}); errMarshal != nil {
-			d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.UpdateAgentConfigurations", "error", errMarshal.Error())
+			d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentConfigurations", "error", errMarshal.Error())
 			return
 		}
 		return
@@ -137,7 +137,7 @@ func (d *DatadogHttpController) UpdateAgentConfigurations(w http.ResponseWriter,
 	if err := d.adapter.BackupConfigFileDatadog(configPath, []byte(datadogActionsFile.Content)); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		if errMarshal := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "error", Code: "DATADOG_UPDATE_CONFIGURATION_ERR", Message: err.Error()}); errMarshal != nil {
-			d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.UpdateAgentConfigurations", "error", errMarshal.Error())
+			d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentConfigurations", "error", errMarshal.Error())
 			return
 		}
 		return
@@ -146,7 +146,7 @@ func (d *DatadogHttpController) UpdateAgentConfigurations(w http.ResponseWriter,
 	if err := d.adapter.UpdateConfigFileDatadog(configPath); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		if errMarshal := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "error", Code: "DATADOG_UPDATE_CONFIGURATION_ERR", Message: err.Error()}); errMarshal != nil {
-			d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.UpdateAgentConfigurations", "error", errMarshal.Error())
+			d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentConfigurations", "error", errMarshal.Error())
 			return
 		}
 		return
@@ -154,21 +154,21 @@ func (d *DatadogHttpController) UpdateAgentConfigurations(w http.ResponseWriter,
 
 	w.WriteHeader(http.StatusAccepted)
 	if err := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "accepted", Code: "DATADOG_UPDATED_CONFIGURATION_ACCEPTED", Message: "accepted update configurations"}); err != nil {
-		d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.UpdateAgentConfigurations", "error", err.Error())
+		d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentConfigurations", "error", err.Error())
 		return
 	}
 }
 
 // UpdateAgentVersion execute update the agent version datadog
 func (d *DatadogHttpController) UpdateAgentVersion(w http.ResponseWriter, r *http.Request) {
-	d.logger.Debug("update agent version", "trace", "docp-agent-os-instance.datadog_http_controller.UpdateAgentVersion")
+	d.logger.Debug("update agent version", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentVersion")
 	var datadogUpdateVersionDto dto.DatadogUpdateVersionDTO
 
 	defer r.Body.Close()
 	if err := json.NewDecoder(r.Body).Decode(&datadogUpdateVersionDto); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		if errMarshal := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "error", Code: "DATADOG_UPDATE_VERSION_ERR", Message: err.Error()}); errMarshal != nil {
-			d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.UpdateAgentVersion", "error", errMarshal.Error())
+			d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentVersion", "error", errMarshal.Error())
 			return
 		}
 		return
@@ -177,7 +177,7 @@ func (d *DatadogHttpController) UpdateAgentVersion(w http.ResponseWriter, r *htt
 	if err := d.adapter.UpdateRepository(); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		if errMarshal := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "error", Code: "DATADOG_UPDATE_VERSION_ERR", Message: err.Error()}); errMarshal != nil {
-			d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.UpdateAgentVersion", "error", errMarshal.Error())
+			d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentVersion", "error", errMarshal.Error())
 			return
 		}
 		return
@@ -186,7 +186,7 @@ func (d *DatadogHttpController) UpdateAgentVersion(w http.ResponseWriter, r *htt
 	if err := d.adapter.UpdateVersion(datadogUpdateVersionDto.Version); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		if errMarshal := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "error", Code: "DATADOG_UPDATE_VERSION_ERR", Message: err.Error()}); errMarshal != nil {
-			d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.UpdateAgentVersion", "error", errMarshal.Error())
+			d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentVersion", "error", errMarshal.Error())
 			return
 		}
 		return
@@ -194,7 +194,7 @@ func (d *DatadogHttpController) UpdateAgentVersion(w http.ResponseWriter, r *htt
 
 	w.WriteHeader(http.StatusAccepted)
 	if err := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "accepted", Code: "DATADOG_UPDATED_VERSION_ACCEPTED", Message: "accepted update version"}); err != nil {
-		d.logger.Error("error in marshal response datadog", "trace", "docp-agent-os-instance.datadog_http_controller.UpdateAgentVersion", "error", err.Error())
+		d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentVersion", "error", err.Error())
 		return
 	}
 }

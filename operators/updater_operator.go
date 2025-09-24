@@ -7,11 +7,11 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 
-	adapters "github.com/DelfiaProducts/docp-agent-os-instance/libs/adapters"
-	libinterfaces "github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	libutils "github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	adapters "github.com/OryaHub/agent-os-instance/libs/adapters"
+	libinterfaces "github.com/OryaHub/agent-os-instance/libs/interfaces"
+	libutils "github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 // UpdaterOperator is struct for updater the operator

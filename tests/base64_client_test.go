@@ -4,7 +4,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
 )
 
 func TestNewBase64Client(t *testing.T) {

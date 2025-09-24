@@ -3,8 +3,8 @@
 package components
 
 import (
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
 )
 
 type DatadogWindowsOperation struct{}

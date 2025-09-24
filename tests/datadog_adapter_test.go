@@ -5,10 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/adapters"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/adapters"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 func TestNewDatadogAdapter(t *testing.T) {

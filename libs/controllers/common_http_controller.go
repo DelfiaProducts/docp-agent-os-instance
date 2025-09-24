@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
 )
 
 // CommonHttpController is struct the common controller for
@@ -28,10 +28,10 @@ func (c *CommonHttpController) Setup() error {
 
 // Health execute verify if api is running
 func (c *CommonHttpController) Health(w http.ResponseWriter, r *http.Request) {
-	c.logger.Debug("health", "trace", "docp-agent-os-instance.common_http_controller.Health")
+	c.logger.Debug("health", "trace", "agent-os-instance.common_http_controller.Health")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "success", Code: "HEALTH_OK", Message: "api is running"}); err != nil {
-		c.logger.Error("error in marshal response health", "trace", "docp-agent-os-instance.common_http_controller.Health", "error", err.Error())
+		c.logger.Error("error in marshal response health", "trace", "agent-os-instance.common_http_controller.Health", "error", err.Error())
 		return
 	}
 }

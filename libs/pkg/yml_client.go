@@ -1,7 +1,7 @@
 package pkg
 
 import (
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
 	"gopkg.in/yaml.v2"
 )
 

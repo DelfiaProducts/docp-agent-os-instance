@@ -8,9 +8,9 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 // UtilityService provides utility functions for the application.

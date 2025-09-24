@@ -10,9 +10,9 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/services"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 // parseParams parse params
@@ -74,7 +74,7 @@ func main() {
 	var version string
 	var noGroupAssociation string
 	parseParams(&apiKey, &tags, &version, &noGroupAssociation)
-	baseUrl := "https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
+	baseUrl := "https://github.com/OryaHub/agent-os-instance/releases/download"
 	fileName := "install_manager_windows.msi"
 	//verify if version latest
 	if version == "latest" {

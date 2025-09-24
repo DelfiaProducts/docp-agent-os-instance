@@ -7,9 +7,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/services"
 )
 
 func TestNewAgentRegisterService(t *testing.T) {

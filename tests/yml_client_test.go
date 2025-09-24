@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
 )
 
 func TestNewYmlClient(t *testing.T) {

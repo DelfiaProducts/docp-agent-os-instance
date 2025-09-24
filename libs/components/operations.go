@@ -4,7 +4,7 @@ import (
 	"errors"
 	"runtime"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
 )
 
 // SystemOperation return os operations for manager

@@ -8,9 +8,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 	"golang.org/x/sys/windows/registry"
 )
 
@@ -96,7 +96,7 @@ func (d *DatadogWindowsAPMTracer) setEnvVars(version string) error {
 
 // installLibraryNetCoreWindows install dotnet core
 func (d *DatadogWindowsAPMTracer) installLibraryNetCoreWindows(languageName, pathTracer, version string) error {
-	d.logger.Debug("install library net core windows", "trace", "docp-agent-os-instance.datadog_windows_apm_tracer.installLibraryNetCore", "language", languageName, "pathTracer", pathTracer, "version", version)
+	d.logger.Debug("install library net core windows", "trace", "agent-os-instance.datadog_windows_apm_tracer.installLibraryNetCore", "language", languageName, "pathTracer", pathTracer, "version", version)
 	url, _ := d.prepareDotNetNameInstallerWindows(version)
 	command := fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s'`, url)
 	out, err := d.program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
@@ -104,7 +104,7 @@ func (d *DatadogWindowsAPMTracer) installLibraryNetCoreWindows(languageName, pat
 		d.logger.Error("error in install datadog agent start process", "error", err)
 		return err
 	}
-	d.logger.Debug("install library net core windows", "trace", "docp-agent-os-instance.datadog_windows_apm_tracer.installLibraryNetCore", "output", out)
+	d.logger.Debug("install library net core windows", "trace", "agent-os-instance.datadog_windows_apm_tracer.installLibraryNetCore", "output", out)
 	if err := d.setEnvVars(version); err != nil {
 		d.logger.Error("error in set envs datadog tracing library dot net windows", "error", err)
 		return err
@@ -160,7 +160,7 @@ func (d *DatadogWindowsAPMTracer) UpdateConfiApmTracer(path string, enable bool)
 
 // InstallLibrary execute install the library of language
 func (d *DatadogWindowsAPMTracer) InstallLibrary(languageName, pathTracer, version string) error {
-	d.logger.Debug("install library", "trace", "docp-agent-os-instance.datadog_windows_apm_tracer.InstallLibrary", "language", languageName, "pathTracer", pathTracer, "version", version)
+	d.logger.Debug("install library", "trace", "agent-os-instance.datadog_windows_apm_tracer.InstallLibrary", "language", languageName, "pathTracer", pathTracer, "version", version)
 	switch languageName {
 	case "net_core":
 		return d.installLibraryNetCoreWindows(languageName, pathTracer, version)

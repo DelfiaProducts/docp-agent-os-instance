@@ -4,10 +4,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/adapters"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/adapters"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 func TestNewUpdaterAdapter(t *testing.T) {

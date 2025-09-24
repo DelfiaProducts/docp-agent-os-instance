@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 // MacosOperations is instance of macos operations

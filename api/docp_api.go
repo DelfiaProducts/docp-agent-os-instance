@@ -7,7 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	libinterfaces "github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
+	libinterfaces "github.com/OryaHub/agent-os-instance/libs/interfaces"
 )
 
 // DocpApi is struct for api docp

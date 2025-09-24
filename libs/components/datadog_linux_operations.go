@@ -10,11 +10,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/services"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 const (
@@ -123,12 +123,12 @@ func (d *DatadogLinuxOperation) InstallAgent(ddSite, ddApiKey, version string) e
 		return err
 	}
 	if !aptOrDpkgIsRunning {
-		d.logger.Debug("install agent", "trace", "docp-agent-os-instance.datadog_linux_operations.InstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
+		d.logger.Debug("install agent", "trace", "agent-os-instance.datadog_linux_operations.InstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
 		if err := d.program.Execute("bash", envs, "-c", fmt.Sprintf("export DD_API_KEY=%s;export DD_SITE=%s;%s", ddApiKey, ddSite, CURL_INSTALL_SH)); err != nil {
 			return err
 		}
 	} else {
-		d.logger.Debug("install agent", "trace", "docp-agent-os-instance.datadog_linux_operations.InstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
+		d.logger.Debug("install agent", "trace", "agent-os-instance.datadog_linux_operations.InstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
 	}
 
 	return nil
@@ -143,12 +143,12 @@ func (d *DatadogLinuxOperation) InstallAgentApmSingleStep(ddSite string, ddApiKe
 	}
 	ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries := d.getApmEnvVarsSingleStep(datadogEnvVars)
 	if !aptOrDpkgIsRunning {
-		d.logger.Debug("install agent apm single step", "trace", "docp-agent-os-instance.datadog_linux_operations.InstallAgentApmSingleStep", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
+		d.logger.Debug("install agent apm single step", "trace", "agent-os-instance.datadog_linux_operations.InstallAgentApmSingleStep", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
 		if err := d.program.Execute("bash", envs, "-c", fmt.Sprintf("export DD_API_KEY=%s;export DD_SITE=%s;export DD_APM_INSTRUMENTATION_ENABLED=%s;export DD_ENV=%s;export DD_APM_INSTRUMENTATION_LIBRARIES=%s;%s", ddApiKey, ddSite, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries, CURL_INSTALL_SH)); err != nil {
 			return err
 		}
 	} else {
-		d.logger.Debug("install agent apm single step", "trace", "docp-agent-os-instance.datadog_linux_operations.InstallAgentApmSingleStep", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
+		d.logger.Debug("install agent apm single step", "trace", "agent-os-instance.datadog_linux_operations.InstallAgentApmSingleStep", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
 	}
 
 	return nil
@@ -170,7 +170,7 @@ func (d *DatadogLinuxOperation) UninstallAgent() error {
 		return err
 	}
 	if !aptOrDpkgIsRunning {
-		d.logger.Debug("uninstall agent", "trace", "docp-agent-os-instance.datadog_linux_operations.UninstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
+		d.logger.Debug("uninstall agent", "trace", "agent-os-instance.datadog_linux_operations.UninstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
 		if err := d.program.Execute("bash", []string{}, "-c", UNINSTALL_AGENT_COMMAND); err != nil {
 			return err
 		}
@@ -181,7 +181,7 @@ func (d *DatadogLinuxOperation) UninstallAgent() error {
 			return err
 		}
 	} else {
-		d.logger.Debug("uninstall agent", "trace", "docp-agent-os-instance.datadog_linux_operations.UninstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
+		d.logger.Debug("uninstall agent", "trace", "agent-os-instance.datadog_linux_operations.UninstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
 	}
 
 	return nil

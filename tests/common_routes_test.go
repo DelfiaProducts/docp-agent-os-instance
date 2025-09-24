@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/api"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	libutils "github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/api"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	libutils "github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 func TestNewCommonRoutes(t *testing.T) {

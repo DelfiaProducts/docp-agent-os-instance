@@ -4,8 +4,8 @@ import (
 	"log"
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 func TestTransformMapToSlice(t *testing.T) {

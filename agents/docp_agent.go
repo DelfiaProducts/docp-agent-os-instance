@@ -1,7 +1,7 @@
 package agents
 
 import (
-	libinterfaces "github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
+	libinterfaces "github.com/OryaHub/agent-os-instance/libs/interfaces"
 )
 
 // DocpAgent is struct for agent docp

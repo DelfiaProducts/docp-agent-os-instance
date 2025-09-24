@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/services"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 // parseParams parse params
@@ -67,7 +67,7 @@ func notifyError(title, message string) {
 func main() {
 	var version string
 	parseParams(&version)
-	baseUrl := "https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
+	baseUrl := "https://github.com/OryaHub/agent-os-instance/releases/download"
 	fileName := "agent-windows-amd64.exe"
 	//verify if version latest
 	if version == "latest" {

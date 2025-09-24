@@ -3,7 +3,7 @@ package utils
 import (
 	"runtime"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
 )
 
 // ChoiceNameService return name os service

@@ -3,10 +3,10 @@ package adapters
 import (
 	"strings"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/components"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/components"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
 )
 
 // DatadogAdapter is struct for adapter the datadog
@@ -48,7 +48,7 @@ func (d *DatadogAdapter) Setup() error {
 
 // IsActive execute install the agent in linux
 func (d *DatadogAdapter) IsActive() (bool, error) {
-	d.logger.Debug("is active", "trace", "docp-agent-os-instance.datadog_linux_adapter.IsActive")
+	d.logger.Debug("is active", "trace", "agent-os-instance.datadog_linux_adapter.IsActive")
 	output, err := d.osOperation.Status("datadog")
 	if err != nil {
 		return false, err
@@ -62,7 +62,7 @@ func (d *DatadogAdapter) IsActive() (bool, error) {
 
 // InstallAgent execute install the agent in linux
 func (d *DatadogAdapter) InstallAgent(ddSite, ddApiKey, version string) error {
-	d.logger.Debug("install agent", "trace", "docp-agent-os-instance.datadog_linux_adapter.InstallAgent", "ddSite", ddSite, "ddApiKey", ddApiKey, "version", version)
+	d.logger.Debug("install agent", "trace", "agent-os-instance.datadog_linux_adapter.InstallAgent", "ddSite", ddSite, "ddApiKey", ddApiKey, "version", version)
 	if err := d.datadogOperation.InstallAgent(ddSite, ddApiKey, version); err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (d *DatadogAdapter) InstallAgent(ddSite, ddApiKey, version string) error {
 
 // GetApmEnvVarsTracingLibrary get envs apm datadog in mode tracing library
 func (d *DatadogAdapter) GetApmEnvVarsTracingLibrary(envs []dto.DatadogEnvVars) (string, string, string) {
-	d.logger.Debug("get apm envs vars tracing library", "trace", "docp-agent-os-instance.datadog_linux_adapter.GetApmEnvVarsTracingLibrary", "envs", envs)
+	d.logger.Debug("get apm envs vars tracing library", "trace", "agent-os-instance.datadog_linux_adapter.GetApmEnvVarsTracingLibrary", "envs", envs)
 	var language, pathTracer, version string
 	for _, env := range envs {
 		if env.Name == "language" {
@@ -90,7 +90,7 @@ func (d *DatadogAdapter) GetApmEnvVarsTracingLibrary(envs []dto.DatadogEnvVars) 
 
 // InstallAgentApmSingleStep execute install the agent in linux with apm tracer on mode single step
 func (d *DatadogAdapter) InstallAgentApmSingleStep(ddSite string, ddApiKey string, version string, datadogEnvVars []dto.DatadogEnvVars) error {
-	d.logger.Debug("install agent apm single step", "trace", "docp-agent-os-instance.datadog_linux_adapter.InstallAgentApmSingleStep", "ddSite", ddSite, "ddApiKey", ddApiKey, "version", version, "datadogEnvVars", datadogEnvVars)
+	d.logger.Debug("install agent apm single step", "trace", "agent-os-instance.datadog_linux_adapter.InstallAgentApmSingleStep", "ddSite", ddSite, "ddApiKey", ddApiKey, "version", version, "datadogEnvVars", datadogEnvVars)
 	if err := d.datadogOperation.InstallAgentApmSingleStep(ddSite, ddApiKey, version, datadogEnvVars); err != nil {
 		return err
 	}
@@ -99,7 +99,7 @@ func (d *DatadogAdapter) InstallAgentApmSingleStep(ddSite string, ddApiKey strin
 
 // InstallAgentApmTracingLibrary execute install the agent in linux with apm tracer on mode tracing library
 func (d *DatadogAdapter) InstallAgentApmTracingLibrary(languageName, pathTracer, version string) error {
-	d.logger.Debug("install agent apm tracing library", "trace", "docp-agent-os-instance.datadog_linux_adapter.InstallAgentApmTracingLibrary", "languageName", languageName, "pathTracer", pathTracer, "version", version)
+	d.logger.Debug("install agent apm tracing library", "trace", "agent-os-instance.datadog_linux_adapter.InstallAgentApmTracingLibrary", "languageName", languageName, "pathTracer", pathTracer, "version", version)
 	if err := d.datadogOperation.InstallAgentApmTracingLibrary(languageName, pathTracer, version); err != nil {
 		return err
 	}
@@ -109,7 +109,7 @@ func (d *DatadogAdapter) InstallAgentApmTracingLibrary(languageName, pathTracer,
 
 // UninstallAgent execute uninstall the agent in linux
 func (d *DatadogAdapter) UninstallAgent() error {
-	d.logger.Debug("uninstall agent", "trace", "docp-agent-os-instance.datadog_linux_adapter.UninstallAgent")
+	d.logger.Debug("uninstall agent", "trace", "agent-os-instance.datadog_linux_adapter.UninstallAgent")
 	if err := d.datadogOperation.UninstallAgent(); err != nil {
 		return err
 	}
@@ -118,14 +118,14 @@ func (d *DatadogAdapter) UninstallAgent() error {
 
 // DiscoverDatadogConfigPath return file path the datadog config
 func (d *DatadogAdapter) DiscoverDatadogConfigPath() (string, error) {
-	d.logger.Debug("discover datadog config path", "trace", "docp-agent-os-instance.datadog_linux_adapter.DiscoverDatadogConfigPath")
+	d.logger.Debug("discover datadog config path", "trace", "agent-os-instance.datadog_linux_adapter.DiscoverDatadogConfigPath")
 	datadogPath, err := d.datadogOperation.DiscoverDatadogConfigPath()
 	return datadogPath, err
 }
 
 // DecodeBase64 decode base64 content
 func (d *DatadogAdapter) DecodeBase64(base64Content string) ([]byte, error) {
-	d.logger.Debug("decode base64", "trace", "docp-agent-os-instance.datadog_linux_adapter.DecodeBase64", "base64Content", base64Content)
+	d.logger.Debug("decode base64", "trace", "agent-os-instance.datadog_linux_adapter.DecodeBase64", "base64Content", base64Content)
 	content, err := d.base64Client.Decode(base64Content)
 	if err != nil {
 		return nil, err
@@ -135,7 +135,7 @@ func (d *DatadogAdapter) DecodeBase64(base64Content string) ([]byte, error) {
 
 // DatadogAddPermitionGroupFilePath add permition for file path the datadog
 func (d *DatadogAdapter) DatadogAddPermitionGroupFilePath(filePath string) error {
-	d.logger.Debug("datadog add permition group file path", "trace", "docp-agent-os-instance.datadog_linux_adapter.DatadogAddPermitionGroupFilePath")
+	d.logger.Debug("datadog add permition group file path", "trace", "agent-os-instance.datadog_linux_adapter.DatadogAddPermitionGroupFilePath")
 	if err := d.datadogOperation.DatadogAddPermitionGroupFilePath(filePath); err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func (d *DatadogAdapter) DatadogAddPermitionGroupFilePath(filePath string) error
 
 // DatadogAddPermitionUser add permition for directory the datadog
 func (d *DatadogAdapter) DatadogAddPermitionUser() error {
-	d.logger.Debug("datadog add permition user", "trace", "docp-agent-os-instance.datadog_linux_adapter.DatadogAddPermitionUser")
+	d.logger.Debug("datadog add permition user", "trace", "agent-os-instance.datadog_linux_adapter.DatadogAddPermitionUser")
 	if err := d.datadogOperation.DatadogAddPermitionUser(); err != nil {
 		return err
 	}
@@ -153,7 +153,7 @@ func (d *DatadogAdapter) DatadogAddPermitionUser() error {
 
 // BackupConfigFileDatadog execute backup the current config file datadog
 func (d *DatadogAdapter) BackupConfigFileDatadog(filePath string, content []byte) error {
-	d.logger.Debug("backup config file datadog", "trace", "docp-agent-os-instance.datadog_linux_adapter.BackupConfigFileDatadog", "filePath", filePath, "content", string(content))
+	d.logger.Debug("backup config file datadog", "trace", "agent-os-instance.datadog_linux_adapter.BackupConfigFileDatadog", "filePath", filePath, "content", string(content))
 	if err := d.datadogOperation.BackupConfigFileDatadog(filePath, content); err != nil {
 		return err
 	}
@@ -162,7 +162,7 @@ func (d *DatadogAdapter) BackupConfigFileDatadog(filePath string, content []byte
 
 // UpdateConfigFileDatadog execute update the config file datadog
 func (d *DatadogAdapter) UpdateConfigFileDatadog(filePath string) error {
-	d.logger.Debug("update config file datadog", "trace", "docp-agent-os-instance.datadog_linux_adapter.UpdateConfigFileDatadog", "filePath", filePath)
+	d.logger.Debug("update config file datadog", "trace", "agent-os-instance.datadog_linux_adapter.UpdateConfigFileDatadog", "filePath", filePath)
 	if err := d.datadogOperation.UpdateConfigFileDatadog(filePath); err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func (d *DatadogAdapter) UpdateConfigFileDatadog(filePath string) error {
 
 // UpdateRepository execute update repository local
 func (d *DatadogAdapter) UpdateRepository() error {
-	d.logger.Debug("update repository", "trace", "docp-agent-os-instance.datadog_linux_adapter.UpdateRepository")
+	d.logger.Debug("update repository", "trace", "agent-os-instance.datadog_linux_adapter.UpdateRepository")
 	if err := d.datadogOperation.UpdateRepository(); err != nil {
 		return err
 	}
@@ -180,7 +180,7 @@ func (d *DatadogAdapter) UpdateRepository() error {
 
 // GetVersion return version installed datadog
 func (d *DatadogAdapter) GetVersion() (string, error) {
-	d.logger.Debug("get version", "trace", "docp-agent-os-instance.datadog_linux_adapter.GetVersion")
+	d.logger.Debug("get version", "trace", "agent-os-instance.datadog_linux_adapter.GetVersion")
 	version, err := d.datadogOperation.GetVersion()
 	if err != nil {
 		return "", err
@@ -190,7 +190,7 @@ func (d *DatadogAdapter) GetVersion() (string, error) {
 
 // GetLatestVersion return latest version datadog
 func (d *DatadogAdapter) GetLatestVersion() (string, error) {
-	d.logger.Debug("get latest version", "trace", "docp-agent-os-instance.datadog_linux_adapter.GetLatestVersion")
+	d.logger.Debug("get latest version", "trace", "agent-os-instance.datadog_linux_adapter.GetLatestVersion")
 	version, err := d.datadogOperation.GetLatestVersion()
 	if err != nil {
 		return "", err
@@ -200,7 +200,7 @@ func (d *DatadogAdapter) GetLatestVersion() (string, error) {
 
 // UpdateVersion execute update the version of the datadog agent
 func (d *DatadogAdapter) UpdateVersion(version string) error {
-	d.logger.Debug("update version", "trace", "docp-agent-os-instance.datadog_linux_adapter.UpdateVersion", "version", version)
+	d.logger.Debug("update version", "trace", "agent-os-instance.datadog_linux_adapter.UpdateVersion", "version", version)
 	if err := d.datadogOperation.UpdateVersion(version); err != nil {
 		return err
 	}
@@ -209,7 +209,7 @@ func (d *DatadogAdapter) UpdateVersion(version string) error {
 
 // RollbackVersion execute rollback the version of the datadog agent
 func (d *DatadogAdapter) RollbackVersion(version string) error {
-	d.logger.Debug("rollback version", "trace", "docp-agent-os-instance.datadog_linux_adapter.RollbackVersion", "version", version)
+	d.logger.Debug("rollback version", "trace", "agent-os-instance.datadog_linux_adapter.RollbackVersion", "version", version)
 	if err := d.datadogOperation.RollbackVersion(version); err != nil {
 		return err
 	}
@@ -218,7 +218,7 @@ func (d *DatadogAdapter) RollbackVersion(version string) error {
 
 // DPKGConfigure execute configure dpkg
 func (d *DatadogAdapter) DPKGConfigure() error {
-	d.logger.Debug("dpkg configure", "trace", "docp-agent-os-instance.datadog_linux_adapter.DPKGConfigure")
+	d.logger.Debug("dpkg configure", "trace", "agent-os-instance.datadog_linux_adapter.DPKGConfigure")
 	if err := d.datadogOperation.DPKGConfigure(); err != nil {
 		return err
 	}

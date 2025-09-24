@@ -2,7 +2,7 @@
 
 package components
 
-import "github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
+import "github.com/OryaHub/agent-os-instance/libs/interfaces"
 
 // WindowsOperations is instance of windows operations
 type WindowsOperations struct{}

@@ -3,7 +3,7 @@ package pkg
 import (
 	"strings"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/disk"
 	"github.com/shirou/gopsutil/v4/host"

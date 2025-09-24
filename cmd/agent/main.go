@@ -1,6 +1,6 @@
 package main
 
-import "github.com/DelfiaProducts/docp-agent-os-instance/builders"
+import "github.com/OryaHub/agent-os-instance/builders"
 
 func main() {
 	agent := builders.AgentBuilder()

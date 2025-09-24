@@ -12,11 +12,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/services"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc/mgr"
 )
@@ -107,7 +107,7 @@ func (d *DatadogWindowsOperation) InstallAgent(ddSite, ddApiKey, version string)
 
 // InstallAgentApmSingleStep execute install the agent in linux with apm tracer on mode single step
 func (d *DatadogWindowsOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, version string, datadogEnvVars []dto.DatadogEnvVars) error {
-	d.logger.Debug("install agent apm single step", "trace", "docp-agent-os-instance.datadog_windows_operations.InstallAgentApmSingleStep")
+	d.logger.Debug("install agent apm single step", "trace", "agent-os-instance.datadog_windows_operations.InstallAgentApmSingleStep")
 	return nil
 }
 

@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/services"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 	"gopkg.in/yaml.v2"
 )
 
@@ -157,7 +157,7 @@ func main() {
 	var version string
 	var noGroupAssociation string
 	parseParams(&apiKey, &tags, &version, &noGroupAssociation)
-	baseUrl := "https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
+	baseUrl := "https://github.com/OryaHub/agent-os-instance/releases/download"
 	fileName := "manager-windows-amd64.exe"
 	//verify if version latest
 	if version == "latest" {

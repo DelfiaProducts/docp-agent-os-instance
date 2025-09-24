@@ -6,7 +6,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
 )
 
 // GetDomainUrl return domain url

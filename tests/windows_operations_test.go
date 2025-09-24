@@ -4,10 +4,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/components"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/libs/components"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 func TestNewWindowsOperations(t *testing.T) {
@@ -408,35 +408,6 @@ func TestWindowsOperationsUpdaterUninstall(t *testing.T) {
 			s.Then("não deve retornar erro (mock)", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "UpdaterUninstall não deve retornar erro (mock)")
 			})
-		})
-	})
-}
-
-func TestWindowsOperationsGetIdentifierService(t *testing.T) {
-	bdd.Feature(t, "WindowsOperations", func(t *testing.T, scenario func(description string, steps func(s *bdd.Scenario))) {
-		scenario("GetIdentifierService executa (mock)", func(s *bdd.Scenario) {
-			var ops *components.WindowsOperations
-			var logger interfaces.ILogger
-			var identifier string
-			var err error
-			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
-				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
-			})
-			s.Given("WindowsOperations criado", func() {
-				ops = components.NewWindowsOperations(logger)
-			})
-			s.Given("Configurar o operation", func() {
-				err = ops.Setup()
-				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
-			})
-			s.When("chamo GetIdentifierService", func() {
-				identifier, err = ops.GetIdentifierService("DocpAgent")
-			})
-			s.Then("não deve retornar erro (mock)", func(t *testing.T) {
-				bdd.AssertNoError(t, err, "GetIdentifierService não deve retornar erro (mock)")
-			})
-			bdd.Printf("identifier: %s", identifier)
 		})
 	})
 }

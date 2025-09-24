@@ -1,4 +1,4 @@
-# docp-agent-os-instance
+# agent-os-instance
 
 Este projeto é um agente para gerenciamento de provedores de monitoramento para instâncias do sistema operacional.
 
@@ -17,7 +17,7 @@ Este projeto é um agente para gerenciamento de provedores de monitoramento para
 ## Instalação
 
 ```bash
-git clone https://github.com/DelfiaProducts/docp-agent-os-instance.git
-cd docp-agent-os-instance
+git clone https://github.com/OryaHub/agent-os-instance.git
+cd agent-os-instance
 make build
 ```

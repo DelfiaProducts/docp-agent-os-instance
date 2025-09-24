@@ -3,9 +3,9 @@ package tests
 import (
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/agents"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/operators"
+	"github.com/OryaHub/agent-os-instance/agents"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/operators"
 )
 
 func TestManagerAgentStart(t *testing.T) {
