@@ -3,13 +3,14 @@
 package components
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
-	"unsafe"
 
 	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
 	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
@@ -18,10 +19,6 @@ import (
 	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc/mgr"
-)
-
-const (
-	URL_DATADOG_AGENT = "https://s3.amazonaws.com/ddagent-windows-stable/datadog-agent-7-latest.amd64.msi"
 )
 
 type DatadogWindowsOperation struct {
@@ -90,9 +87,10 @@ func (d *DatadogWindowsOperation) InstallAgent(ddSite, ddApiKey string) error {
 	defer m.Disconnect()
 	s, err := m.OpenService("DatadogAgent")
 	if err != nil {
-		d.logger.Error("error in install datadog agent", "error", err)
+		d.logger.Warn("error in install datadog agent", "error", err)
 		if errors.Is(err, windows.ERROR_SERVICE_DOES_NOT_EXIST) {
-			command := fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s APIKEY="%s" SITE="%s"'`, URL_DATADOG_AGENT, ddApiKey, ddSite)
+			urlVersion := fmt.Sprintf("%s/%s", utils.GetDatadogAgentUrlWindows(), "datadog-agent-7-latest.amd64.msi")
+			command := fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s APIKEY="%s" SITE="%s"'`, urlVersion, ddApiKey, ddSite)
 			out, err := d.program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
 			if err != nil {
 				d.logger.Error("error in install datadog agent start process", "error", err)
@@ -247,49 +245,20 @@ func (d *DatadogWindowsOperation) GetVersion() (string, error) {
 
 	binaryPath := config.BinaryPathName
 	path := strings.Trim(binaryPath, "\"")
-
-	// Se o caminho for relativo, tornamo-lo absoluto
-	if !strings.Contains(path, ":") {
-		exe, err := os.Executable()
-		if err != nil {
-			return "", err
-		}
-		dir := os.Args[0]
-		if len(exe) > 0 {
-			dir = exe
-		}
-		path = fmt.Sprintf("%s\\%s", dir, path)
-	}
-	d.logger.Debug("binary path absolute", "path", path)
-	// Normaliza o caminho
-	pathp, err := windows.UTF16PtrFromString(path)
-	if err != nil {
+	var version string
+	buf := new(bytes.Buffer)
+	agentExe := filepath.Join(filepath.Dir(path), "agent.exe")
+	execCmd := exec.Command(agentExe, "version")
+	execCmd.Stdout = buf
+	execCmd.Stderr = buf
+	if err := execCmd.Run(); err != nil {
 		return "", err
 	}
-	handler := windows.Handle(*pathp)
-
-	// Obtém o tamanho da informacao da versao do arquivo
-	size, err := windows.GetFileVersionInfoSize(path, &handler)
-	if size == 0 {
-		return "", err
+	re := regexp.MustCompile(`\d+\.\d+\.\d+`)
+	version = re.FindString(buf.String())
+	if version == "" {
+		return "", utils.ErrDatadogVersionNotFound()
 	}
-	d.logger.Debug("size file version info", "size", size)
-
-	// Aloca um buffer para a informacao da versao
-	buf := make([]byte, size)
-	sizeofBuf := uint32(len(buf))
-	// Obtem a informacao da versao do arquivo
-	err = windows.GetFileVersionInfo(path, uint32(handler), size, unsafe.Pointer(&buf[0]))
-	if err != nil {
-		return "", err
-	}
-
-	// Faz uma query na informacao da versao para obter o ProductVersion
-	var fixedInfo *[56]byte
-	windows.VerQueryValue(unsafe.Pointer(&buf[0]), "\\", unsafe.Pointer(&fixedInfo), &sizeofBuf)
-	d.logger.Debug("fixed info", "info", fixedInfo)
-	version := fmt.Sprintf("%d.%d.%d.%d",
-		fixedInfo[18], fixedInfo[16], fixedInfo[14], fixedInfo[12])
 	return version, nil
 }
 
