@@ -28,7 +28,7 @@ type DatadogWindowsAPMTracer struct {
 
 // NewDatadogWindowsAPMTracer return new instance of datadog windows apm tracer
 func NewDatadogWindowsAPMTracer() *DatadogWindowsAPMTracer {
-	logger := utils.NewDocpLoggerJSON(os.Stdout)
+	logger := utils.NewOryaLoggerJSON(os.Stdout)
 	return &DatadogWindowsAPMTracer{
 		logger:     logger,
 		program:    pkg.NewExecProgram(),

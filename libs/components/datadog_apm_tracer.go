@@ -32,7 +32,7 @@ type DatadogAPMTracer struct {
 
 // NewDatadogAPMTracer return new instance of datadog apm tracer
 func NewDatadogAPMTracer() *DatadogAPMTracer {
-	logger := utils.NewDocpLoggerJSON(os.Stdout)
+	logger := utils.NewOryaLoggerJSON(os.Stdout)
 	return &DatadogAPMTracer{
 		logger:     logger,
 		program:    pkg.NewExecProgram(),

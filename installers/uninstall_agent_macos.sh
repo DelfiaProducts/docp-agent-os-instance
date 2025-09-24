@@ -17,13 +17,13 @@ fi
 
 #stop and disable launchd
 function stop_and_disable() {
-  launchctl bootout gui/$(id -u)/com.docp.agent 
-  launchctl unload ~/Library/LaunchAgents/com.docp.agent.plist
+  launchctl bootout gui/$(id -u)/com.orya.agent 
+  launchctl unload ~/Library/LaunchAgents/com.orya.agent.plist
 }
 
 #remove file service
 function remove_file_service(){
-  $sudo_cmd rm ~/Library/LaunchAgents/com.docp.agent.plist
+  $sudo_cmd rm ~/Library/LaunchAgents/com.orya.agent.plist
 }
 
 #setup configure e verify machine

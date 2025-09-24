@@ -10,24 +10,24 @@ import (
 	libinterfaces "github.com/OryaHub/agent-os-instance/libs/interfaces"
 )
 
-// DocpApi is struct for api docp
-type DocpApi struct {
+// OryaApi is struct for api orya
+type OryaApi struct {
 	port   string
 	router *mux.Router
 	srv    *http.Server
 	logger libinterfaces.ILogger
 }
 
-// NewDocpApi return instance of docp api
-func NewDocpApi(port string, logger libinterfaces.ILogger) *DocpApi {
-	return &DocpApi{
+// NewOryaApi return instance of orya api
+func NewOryaApi(port string, logger libinterfaces.ILogger) *OryaApi {
+	return &OryaApi{
 		port:   port,
 		logger: logger,
 	}
 }
 
 // setupCommonRoutes execute configuration the common routes
-func (d *DocpApi) setupCommonRoutes() error {
+func (d *OryaApi) setupCommonRoutes() error {
 	commonRoutes := NewCommonRoutes(d.logger)
 	if err := commonRoutes.Setup(); err != nil {
 		return err
@@ -39,7 +39,7 @@ func (d *DocpApi) setupCommonRoutes() error {
 }
 
 // setupDatadogRoutes execute configuration the routes datadog
-func (d *DocpApi) setupDatadogRoutes() error {
+func (d *OryaApi) setupDatadogRoutes() error {
 	datadogRoutes := NewDatadogRoutes(d.logger)
 	if err := datadogRoutes.Setup(); err != nil {
 		return err
@@ -51,7 +51,7 @@ func (d *DocpApi) setupDatadogRoutes() error {
 }
 
 // Setup execute configuration for api
-func (d *DocpApi) Setup() error {
+func (d *OryaApi) Setup() error {
 	router := mux.NewRouter()
 	d.router = router
 	srv := &http.Server{
@@ -71,7 +71,7 @@ func (d *DocpApi) Setup() error {
 }
 
 // Run execute running the api
-func (d *DocpApi) Run() error {
+func (d *OryaApi) Run() error {
 	if err := d.srv.ListenAndServe(); err != nil {
 		return err
 	}

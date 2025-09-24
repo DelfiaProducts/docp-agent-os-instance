@@ -126,7 +126,7 @@ function setup(){
   add_perm_sudoers_file
 }
 
-#create directories for docp agent
+#create directories for orya agent
 function create_workdir(){
   [[ ! -d $ORYA_FILES_PATH ]] && $sudo_cmd mkdir $ORYA_FILES_PATH 
   [[ ! -d $ORYA_FILES_PATH/bin ]] && $sudo_cmd mkdir $ORYA_FILES_PATH/bin 
@@ -179,7 +179,7 @@ function create_link_simbolic(){
 
 #set content service
 function set_content_service() {
-  printf "[Unit]\nDescription=Docp Manager\nAfter=network.target\n\n[Service]\nType=simple\nPIDFile=/opt/orya-agent/run/manager.pid\nUser=orya-agent\nRestart=on-failure\nEnvironmentFile=-/opt/orya-agent/environments\nRuntimeDirectory=docp\nExecStart=/opt/orya-agent/bin/current/manager run -p /opt/orya-agent/run/manager.pid\nStartLimitInterval=10\nStartLimitBurst=5\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target\n" | sudo tee /etc/systemd/system/orya-manager.service > /dev/null
+  printf "[Unit]\nDescription=Orya Manager\nAfter=network.target\n\n[Service]\nType=simple\nPIDFile=/opt/orya-agent/run/manager.pid\nUser=orya-agent\nRestart=on-failure\nEnvironmentFile=-/opt/orya-agent/environments\nRuntimeDirectory=orya\nExecStart=/opt/orya-agent/bin/current/manager run -p /opt/orya-agent/run/manager.pid\nStartLimitInterval=10\nStartLimitBurst=5\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target\n" | sudo tee /etc/systemd/system/orya-manager.service > /dev/null
 }
 
 #prepare systemd
@@ -221,7 +221,7 @@ function add_content_config_yml(){
   version="$3"
   noGroupAssociation="$4"
 $sudo_cmd tee $ORYA_FILES_PATH/config.yml > /dev/null <<EOF  
-# Docp file for agent configuration that contains
+# Orya file for agent configuration that contains
 # information used to perform configuration and service.
 
 no_group_association: $noGroupAssociation

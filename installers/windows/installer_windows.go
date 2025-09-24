@@ -17,9 +17,9 @@ import (
 
 // parseParams parse params
 func parseParams(apiKey, tags, version, noGroupAssociation *string) {
-	flag.StringVar(apiKey, "API_KEY", "", "docp api key")
-	flag.StringVar(tags, "TAGS", "", "docp tags")
-	flag.StringVar(version, "VERSION", "latest", "docp version")
+	flag.StringVar(apiKey, "API_KEY", "", "orya api key")
+	flag.StringVar(tags, "TAGS", "", "orya tags")
+	flag.StringVar(version, "VERSION", "latest", "orya version")
 	flag.StringVar(noGroupAssociation, "NO_GROUP_ASSOCIATION", "true", "no group association")
 	flag.Parse()
 }
@@ -78,7 +78,7 @@ func main() {
 	fileName := "install_manager_windows.msi"
 	//verify if version latest
 	if version == "latest" {
-		logger := utils.NewDocpLoggerText(os.Stdout)
+		logger := utils.NewOryaLoggerText(os.Stdout)
 		utilityService := services.NewUtilityService(logger)
 		if err := utilityService.Setup(); err != nil {
 			notifyError("Installer Windows", err.Error())

@@ -32,7 +32,7 @@ type ConfigAgent struct {
 	Agent              Agent    `yaml:"agent"`
 	AccessToken        string   `json:"access_token"`
 	ComputeId          string   `json:"compute_id"`
-	DocpOrgId          int      `json:"ORYA_org_id"`
+	OryaOrgId          int      `json:"docp_org_id"`
 }
 
 // Agent is struct for config file agent
@@ -67,7 +67,7 @@ type StateActionFiles struct {
 
 // AuthTokenClaims is struct for auth token claims
 type AuthTokenClaims struct {
-	DocpOrgId int    `json:"ORYA_org_id"`
+	OryaOrgId int    `json:"docp_org_id"`
 	ComputeId string `json:"compute_id"`
 }
 

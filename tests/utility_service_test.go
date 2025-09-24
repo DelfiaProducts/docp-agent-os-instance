@@ -17,7 +17,7 @@ func TestNewUtilityService(t *testing.T) {
 			var logger interfaces.ILogger
 			var utilityService *services.UtilityService
 			s.Given("que eu tenho um logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.When("eu instancio o serviço de utilitário", func() {
 				utilityService = services.NewUtilityService(logger)
@@ -36,7 +36,7 @@ func TestUtilityServiceSetup(t *testing.T) {
 			var logger interfaces.ILogger
 			var utilityService *services.UtilityService
 			s.Given("eu crio o utility service", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				utilityService = services.NewUtilityService(logger)
 			})
 			s.When("eu configuro o utility service", func() {
@@ -57,7 +57,7 @@ func TestUtilityServiceFetchAgentVersions(t *testing.T) {
 			var utilityService *services.UtilityService
 			var versions dto.AgentVersions
 			s.Given("eu crio o utility service", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				utilityService = services.NewUtilityService(logger)
 			})
 			s.When("eu configuro o utility service", func() {

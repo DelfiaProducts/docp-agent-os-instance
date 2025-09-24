@@ -81,7 +81,7 @@ func (l *LinuxOperations) StopService(serviceName string) error {
 	return nil
 }
 
-// InstallAgent execute install the agent docp
+// InstallAgent execute install the agent orya
 func (l *LinuxOperations) InstallAgent(version string) error {
 	if err := l.program.Execute("bash", []string{fmt.Sprintf("VERSION=%s", version)}, "-c", utils.ChoiceInstallerOrUninstaller("linux", "agent", "install", version)); err != nil {
 		return err
@@ -89,7 +89,7 @@ func (l *LinuxOperations) InstallAgent(version string) error {
 	return nil
 }
 
-// InstallUpdater execute install the updater docp
+// InstallUpdater execute install the updater orya
 func (l *LinuxOperations) InstallUpdater(version string) error {
 	workdir, err := utils.GetWorkDirPath()
 	if err != nil {
@@ -108,7 +108,7 @@ func (l *LinuxOperations) InstallUpdater(version string) error {
 	return nil
 }
 
-// UninstallAgent execute uninstall the agent docp
+// UninstallAgent execute uninstall the agent orya
 func (l *LinuxOperations) UninstallAgent(version string) error {
 	if err := l.program.Execute("bash", []string{}, "-c", utils.ChoiceInstallerOrUninstaller("linux", "agent", "uninstall", version)); err != nil {
 		return err
@@ -116,7 +116,7 @@ func (l *LinuxOperations) UninstallAgent(version string) error {
 	return nil
 }
 
-// UninstallUpdater execute uninstall the updater docp
+// UninstallUpdater execute uninstall the updater orya
 func (l *LinuxOperations) UninstallUpdater(version string) error {
 	if err := l.program.Execute("bash", []string{}, "-c", utils.ChoiceInstallerOrUninstaller("linux", "updater", "uninstall", version)); err != nil {
 		return err
@@ -124,7 +124,7 @@ func (l *LinuxOperations) UninstallUpdater(version string) error {
 	return nil
 }
 
-// UpdateAgent execute update the agent docp
+// UpdateAgent execute update the agent orya
 func (l *LinuxOperations) UpdateAgent(version string) error {
 	//install updater
 	if err := l.InstallUpdater(version); err != nil {

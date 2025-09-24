@@ -12,7 +12,7 @@ import (
 )
 
 // DatadogHttpController is struct the datadog controller for
-// api docp
+// api orya
 type DatadogHttpController struct {
 	logger  interfaces.ILogger
 	adapter *adapters.DatadogAdapter

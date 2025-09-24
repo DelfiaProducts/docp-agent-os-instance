@@ -4,18 +4,18 @@ import (
 	libinterfaces "github.com/OryaHub/agent-os-instance/libs/interfaces"
 )
 
-// DocpAgent is struct for agent docp
-type DocpAgent struct {
+// OryaAgent is struct for agent orya
+type OryaAgent struct {
 	operator libinterfaces.IOperator
 }
 
-// NewDocpAgent return instance of docp agent
-func NewDocpAgent(operator libinterfaces.IOperator) *DocpAgent {
-	return &DocpAgent{operator: operator}
+// NewOryaAgent return instance of orya agent
+func NewOryaAgent(operator libinterfaces.IOperator) *OryaAgent {
+	return &OryaAgent{operator: operator}
 }
 
 // Start execute running the agent
-func (d *DocpAgent) Start() error {
+func (d *OryaAgent) Start() error {
 	if err := d.operator.Run(); err != nil {
 		return err
 	}

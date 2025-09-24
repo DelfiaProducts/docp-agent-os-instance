@@ -68,22 +68,22 @@ func (l *WindowsOperations) StopService(serviceName string) error {
 	return nil
 }
 
-// InstallAgent execute install the agent docp
+// InstallAgent execute install the agent orya
 func (l *WindowsOperations) InstallAgent(version string) error {
 	return nil
 }
 
-// InstallUpdater execute install the updater docp
+// InstallUpdater execute install the updater orya
 func (l *WindowsOperations) InstallUpdater(version string) error {
 	return nil
 }
 
-// UpdateAgent execute update the agent docp
+// UpdateAgent execute update the agent orya
 func (l *WindowsOperations) UpdateAgent(version string) error {
 	return nil
 }
 
-// ExecuteUpdateVersion execute update version the agent docp
+// ExecuteUpdateVersion execute update version the agent orya
 func (l *WindowsOperations) ExecuteUpdateVersion(version string) error {
 	return nil
 }
@@ -97,7 +97,7 @@ func (l *WindowsOperations) UpdaterUninstall(version string) error {
 	return nil
 }
 
-// UninstallAgent execute uninstall the agent docp
+// UninstallAgent execute uninstall the agent orya
 func (l *WindowsOperations) UninstallAgent(version string) error {
 	return nil
 }

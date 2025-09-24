@@ -8,20 +8,20 @@ import (
 	"golang.org/x/sys/windows/svc/eventlog"
 )
 
-// DocpLoggerEventViewer is struct for logger the docp for windows
-type DocpLoggerEventViewer struct {
+// OryaLoggerEventViewer is struct for logger the orya for windows
+type OryaLoggerEventViewer struct {
 	serviceName string
 }
 
-// NewDocpLoggerEventViewer return instance of docp logger event viewer
-func NewDocpLoggerEventViewer(serviceName string) *DocpLoggerEventViewer {
-	return &DocpLoggerEventViewer{
+// NewOryaLoggerEventViewer return instance of orya logger event viewer
+func NewOryaLoggerEventViewer(serviceName string) *OryaLoggerEventViewer {
+	return &OryaLoggerEventViewer{
 		serviceName: serviceName,
 	}
 }
 
 // RegisterEventViewer execute register event viewer
-func (d *DocpLoggerEventViewer) RegisterEventViewer() error {
+func (d *OryaLoggerEventViewer) RegisterEventViewer() error {
 	err := eventlog.InstallAsEventCreate(d.serviceName, eventlog.Info|eventlog.Warning|eventlog.Error)
 	if err != nil {
 		return err
@@ -30,7 +30,7 @@ func (d *DocpLoggerEventViewer) RegisterEventViewer() error {
 }
 
 // Debug execute logging the debug
-func (d *DocpLoggerEventViewer) Debug(msg string, args ...any) {
+func (d *OryaLoggerEventViewer) Debug(msg string, args ...any) {
 	elog, _ := eventlog.Open(d.serviceName)
 	defer elog.Close()
 	var formattedArgs string
@@ -43,7 +43,7 @@ func (d *DocpLoggerEventViewer) Debug(msg string, args ...any) {
 }
 
 // Info execute logging the info
-func (d *DocpLoggerEventViewer) Info(msg string, args ...any) {
+func (d *OryaLoggerEventViewer) Info(msg string, args ...any) {
 	elog, _ := eventlog.Open(d.serviceName)
 	defer elog.Close()
 	var formattedArgs string
@@ -56,7 +56,7 @@ func (d *DocpLoggerEventViewer) Info(msg string, args ...any) {
 }
 
 // Warn execute logging the warning
-func (d *DocpLoggerEventViewer) Warn(msg string, args ...any) {
+func (d *OryaLoggerEventViewer) Warn(msg string, args ...any) {
 	elog, _ := eventlog.Open(d.serviceName)
 	defer elog.Close()
 	var formattedArgs string
@@ -69,7 +69,7 @@ func (d *DocpLoggerEventViewer) Warn(msg string, args ...any) {
 }
 
 // Error execut logging the error
-func (d *DocpLoggerEventViewer) Error(msg string, args ...any) {
+func (d *OryaLoggerEventViewer) Error(msg string, args ...any) {
 	elog, _ := eventlog.Open(d.serviceName)
 	defer elog.Close()
 	var formattedArgs string
@@ -82,6 +82,6 @@ func (d *DocpLoggerEventViewer) Error(msg string, args ...any) {
 }
 
 // Close close viewer event
-func (d *DocpLoggerEventViewer) Close() error {
+func (d *OryaLoggerEventViewer) Close() error {
 	return nil
 }

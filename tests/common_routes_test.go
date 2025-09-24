@@ -15,7 +15,7 @@ func TestNewCommonRoutes(t *testing.T) {
 			var commonRouter any
 			s.Given("um logger válido", func() {})
 			s.When("NewCommonRoutes é chamado", func() {
-				logger := libutils.NewDocpLoggerJSON(os.Stdout)
+				logger := libutils.NewOryaLoggerJSON(os.Stdout)
 				commonRouter = api.NewCommonRoutes(logger)
 			})
 			s.Then("CommonRoutes não deve ser nil", func(t *testing.T) {
@@ -32,7 +32,7 @@ func TestCommonRoutesSetup(t *testing.T) {
 			var err error
 			s.Given("um logger válido", func() {})
 			s.When("NewCommonRoutes é chamado", func() {
-				logger := libutils.NewDocpLoggerJSON(os.Stdout)
+				logger := libutils.NewOryaLoggerJSON(os.Stdout)
 				commonRouter = api.NewCommonRoutes(logger)
 			})
 			s.When("Setup é chamado", func() {

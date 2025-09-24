@@ -1,7 +1,7 @@
 package dto
 
-// DocpData is struct for data docp
-type DocpData struct {
+// OryaData is struct for data orya
+type OryaData struct {
 	ClientInfo  ClientInfo  `json:"client_info"`
 	MetricsInfo MetricsInfo `json:"metrics_info"`
 }

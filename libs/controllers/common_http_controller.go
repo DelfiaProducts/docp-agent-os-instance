@@ -9,7 +9,7 @@ import (
 )
 
 // CommonHttpController is struct the common controller for
-// api docp
+// api orya
 type CommonHttpController struct {
 	logger interfaces.ILogger
 }

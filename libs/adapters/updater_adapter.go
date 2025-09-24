@@ -180,7 +180,7 @@ func (l *UpdaterAdapter) GetAgentVersionFromSignal(response []byte) (string, err
 	if err := json.Unmarshal(response, &signal); err != nil {
 		return "", err
 	}
-	agent := signal.Signal.Agents.DocpAgent
+	agent := signal.Signal.Agents.OryaAgent
 	if len(agent.Version) > 0 {
 		return agent.Version, nil
 	}

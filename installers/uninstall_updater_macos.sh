@@ -17,13 +17,13 @@ fi
 
 #stop and disable launchd
 function stop_and_disable() {
-  launchctl bootout gui/$(id -u)/com.docp.updater 
-  launchctl unload ~/Library/LaunchAgents/com.docp.updater.plist
+  launchctl bootout gui/$(id -u)/com.orya.updater 
+  launchctl unload ~/Library/LaunchAgents/com.orya.updater.plist
 }
 
 #remove file service
 function remove_file_service(){
-  $sudo_cmd rm ~/Library/LaunchAgents/com.docp.updater.plist
+  $sudo_cmd rm ~/Library/LaunchAgents/com.orya.updater.plist
 }
 
 

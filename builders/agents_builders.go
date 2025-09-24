@@ -8,5 +8,5 @@ import (
 
 // AgentBuilder return agent by distro
 func AgentBuilder() libinterfaces.IAgent {
-	return agents.NewDocpAgent(AgentOperatorBuilder())
+	return agents.NewOryaAgent(AgentOperatorBuilder())
 }

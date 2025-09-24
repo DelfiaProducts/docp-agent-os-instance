@@ -37,8 +37,8 @@ type ManagerOperator struct {
 	chanErrors           chan dto.CommonChanErrors
 	chanMetadata         chan []byte
 	chanResultsApi       chan []byte
-	chanDocpAgent        chan dto.StateAction
-	chanDocpAgentDatadog chan dto.StateAction
+	chanOryaAgent        chan dto.StateAction
+	chanOryaAgentDatadog chan dto.StateAction
 	validateIsComplete   bool
 	retryRegister        int
 	maxRetry             int
@@ -53,8 +53,8 @@ func NewManagerOperator() *ManagerOperator {
 		chanErrors:           make(chan dto.CommonChanErrors, 1),
 		chanMetadata:         make(chan []byte, 1),
 		chanResultsApi:       make(chan []byte, 1),
-		chanDocpAgent:        make(chan dto.StateAction, 1),
-		chanDocpAgentDatadog: make(chan dto.StateAction, 1),
+		chanOryaAgent:        make(chan dto.StateAction, 1),
+		chanOryaAgentDatadog: make(chan dto.StateAction, 1),
 		validateIsComplete:   false,
 		retryRegister:        0,
 		maxRetry:             10,
@@ -71,10 +71,10 @@ func (l *ManagerOperator) Setup() error {
 			return err
 		}
 		logPath := filepath.Join(workdir, "logs", "manager.log")
-		loggerFile := libutils.NewDocpLoggerWindowsFileText(logPath)
+		loggerFile := libutils.NewOryaLoggerWindowsFileText(logPath)
 		logger = loggerFile
 	} else {
-		logger = libutils.NewDocpLoggerJSON(os.Stdout)
+		logger = libutils.NewOryaLoggerJSON(os.Stdout)
 	}
 	l.logger = logger
 	adapterManager := adapters.NewManagerAdapter(l.logger)
@@ -162,10 +162,10 @@ func (l *ManagerOperator) GetSignalFromStateCheck() error {
 	return nil
 }
 
-// UpdateAgent execute update the agent docp
+// UpdateAgent execute update the agent orya
 func (l *ManagerOperator) UpdateAgent(version string) error {
 	l.logger.Info("update the agent", "timestamp", time.Now().UTC(), "version", version)
-	l.logger.Debug("update the agent docp", "trace", "agent-os-instance.manager_operator.updateAgent")
+	l.logger.Debug("update the agent orya", "trace", "agent-os-instance.manager_operator.updateAgent")
 	defer l.wg.Done()
 	statusManager, err := l.adapter.Status("manager")
 	if err != nil {
@@ -196,10 +196,10 @@ func (l *ManagerOperator) UpdateAgent(version string) error {
 			transaction := libutils.NewTransactionStatus()
 			ctx := context.WithValue(context.Background(), libdto.ContextTransactionStatus, transaction)
 
-			go l.adapter.NotifyStatus("update_ORYA_received", pkg.TransactionEventOpen, "update docp received", ctx)
+			go l.adapter.NotifyStatus("update_ORYA_received", pkg.TransactionEventOpen, "update orya received", ctx)
 			time.Sleep(l.delay)
 
-			go l.adapter.NotifyStatus("update_ORYA_initiate", pkg.TransactionEventUpdate, "update docp initialized", ctx)
+			go l.adapter.NotifyStatus("update_ORYA_initiate", pkg.TransactionEventUpdate, "update orya initialized", ctx)
 			time.Sleep(l.delay)
 
 			if err := l.adapter.UpdateAgent(version); err != nil {
@@ -222,7 +222,7 @@ func (l *ManagerOperator) UpdateAgent(version string) error {
 				return err
 			}
 
-			go l.adapter.NotifyStatus("update_ORYA_completed", pkg.TransactionEventClose, "update docp completed", ctx)
+			go l.adapter.NotifyStatus("update_ORYA_completed", pkg.TransactionEventClose, "update orya completed", ctx)
 			return nil
 		}
 	}
@@ -306,7 +306,7 @@ func (l *ManagerOperator) UpdateAgentVersionDatadog(version string) error {
 	time.Sleep(l.delay)
 
 	//send request for update version datadog
-	_, err = l.adapter.DocpAgentApiUpdateVersionDatadog(version)
+	_, err = l.adapter.OryaAgentApiUpdateVersionDatadog(version)
 	if err != nil {
 		go l.adapter.NotifyStatus("update_vendor_version_error", pkg.TransactionEventClose, "failed update vendor version", ctxTransaction)
 		l.chanErrors <- dto.CommonChanErrors{From: "updateAgentVersionDatadog", Priority: dto.ErrLevelMedium, Err: err}
@@ -430,7 +430,7 @@ func (l *ManagerOperator) Run() error {
 	go l.Profiling()
 	go l.Start()
 	go l.consumerErrors()
-	go l.consumerResultsFromApiDocpAgent()
+	go l.consumerResultsFromApiOryaAgent()
 	go l.collectGetState()
 	go l.collectGetActions()
 	go l.consumeAllActions()
@@ -459,7 +459,7 @@ func (l *ManagerOperator) Start() {
 		case <-ticker.C:
 			l.wg.Add(4)
 			go l.collectGetState()
-			go l.validateDocpAgentInstalled()
+			go l.validateOryaAgentInstalled()
 			go l.validateDatadogAgentInstalled()
 			go l.validateDatadogAgentUpdateConfigs()
 
@@ -825,9 +825,9 @@ func (l *ManagerOperator) extractApmTracingLibrayEnvs(envs []dto.StateActionEnvs
 	return language, pathTracer, version, nil
 }
 
-// installAgent execute install the agent docp
+// installAgent execute install the agent orya
 func (l *ManagerOperator) installAgent() {
-	l.logger.Debug("install the agent docp", "trace", "agent-os-instance.manager_operator.installAgent")
+	l.logger.Debug("install the agent orya", "trace", "agent-os-instance.manager_operator.installAgent")
 	defer l.wg.Done()
 	status, err := l.adapter.Status("agent")
 	if err != nil {
@@ -850,7 +850,7 @@ func (l *ManagerOperator) installAgent() {
 	return
 }
 
-// installAgentDatadog execute call to api docp agent
+// installAgentDatadog execute call to api orya agent
 // to install datadog agent
 func (l *ManagerOperator) installAgentDatadog(ddApiKey, ddSite, version string) {
 	l.logger.Debug("install agent datadog", "trace", "agent-os-instance.manager_operator.installAgentDatadog", "ddApiKey", ddApiKey, "ddSite", ddSite)
@@ -861,7 +861,7 @@ func (l *ManagerOperator) installAgentDatadog(ddApiKey, ddSite, version string) 
 		return
 	}
 	if status != "active" {
-		result, err := l.adapter.DocpAgentApiInstallDatadog(ddApiKey, ddSite, version)
+		result, err := l.adapter.OryaAgentApiInstallDatadog(ddApiKey, ddSite, version)
 		if err != nil {
 			l.chanErrors <- dto.CommonChanErrors{From: "installAgentDatadog", Priority: dto.ErrLevelHigh, Err: err}
 			return
@@ -953,7 +953,7 @@ func (l *ManagerOperator) handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSit
 			l.logger.Info("Datadog agent service alreadyInstalled", "alreadyInstalled", alreadyInstalled)
 
 			if !alreadyInstalled {
-				result, err := l.adapter.DocpAgentApiInstallDatadogWithApmSingleStep(
+				result, err := l.adapter.OryaAgentApiInstallDatadogWithApmSingleStep(
 					ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries,
 				)
 				if err != nil {
@@ -972,7 +972,7 @@ func (l *ManagerOperator) handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSit
 	}
 }
 
-// installAgentDatadog execute call to api docp agent
+// installAgentDatadog execute call to api orya agent
 // to install datadog agent
 func (l *ManagerOperator) installAgentDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries string) {
 	l.logger.Debug("install agent datadog with apm single step", "trace", "agent-os-instance.manager_operator.installAgentDatadogWithApmSingleStep", "ddApiKey", ddApiKey, "ddSite", ddSite, "ddApmInstrumentationEnabled", ddApmInstrumentationEnabled, "ddEnv", ddEnv, "ddApmInstrumentationLibraries", ddApmInstrumentationLibraries)
@@ -989,7 +989,7 @@ func (l *ManagerOperator) installAgentDatadogWithApmSingleStep(ddApiKey, ddSite,
 	}
 	l.logger.Debug("install agent datadog with apm single step", "trace", "agent-os-instance.manager_operator.installAgentDatadogWithApmSingleStep", "docpStatus", status, "alreadyTracer", alreadyTracer)
 	if status != "active" {
-		result, err := l.adapter.DocpAgentApiInstallDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
+		result, err := l.adapter.OryaAgentApiInstallDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
 		if err != nil {
 			l.chanErrors <- dto.CommonChanErrors{From: "installAgentDatadogWithApmSingleStep", Priority: dto.ErrLevelMedium, Err: err}
 			return
@@ -1003,7 +1003,7 @@ func (l *ManagerOperator) installAgentDatadogWithApmSingleStep(ddApiKey, ddSite,
 	}
 }
 
-// installDatadogTracerWithTracingLibrary execute call to api docp agent
+// installDatadogTracerWithTracingLibrary execute call to api orya agent
 // to install datadog tracer with tracing library
 func (l *ManagerOperator) installDatadogTracerWithTracingLibrary(ddApiKey, ddSite, language, pathTracer, version string) {
 	l.logger.Debug("install datadog tracer", "trace", "agent-os-instance.manager_operator.installDatadogTracerWithTracingLibrary", "ddApiKey", ddApiKey, "ddSite", ddSite, "language", language, "pathTracer", pathTracer, "version", version)
@@ -1030,18 +1030,18 @@ func (l *ManagerOperator) installDatadogTracerWithTracingLibrary(ddApiKey, ddSit
 			return
 		}
 		l.wg.Add(1)
-		go l.adapter.DocpAgentApiInstallDatadogWithApmTracingLibrary(ddApiKey, ddSite, language, pathTracer, version)
+		go l.adapter.OryaAgentApiInstallDatadogWithApmTracingLibrary(ddApiKey, ddSite, language, pathTracer, version)
 		return
 	}
 }
 
-// uninstallAgentDatadog exeuct call to api docp agent
+// uninstallAgentDatadog exeuct call to api orya agent
 // to uninstall datadog agent
 func (l *ManagerOperator) uninstallAgentDatadog() {
 	l.logger.Debug("uninstall agent datadog", "trace", "agent-os-instance.manager_operator.uninstallAgentDatadog")
 	defer l.wg.Done()
 
-	result, err := l.adapter.DocpAgentApiUninstallDatadog()
+	result, err := l.adapter.OryaAgentApiUninstallDatadog()
 	if err != nil {
 		l.chanErrors <- dto.CommonChanErrors{From: "uninstallAgentDatadog", Priority: dto.ErrLevelMedium, Err: err}
 		return
@@ -1054,7 +1054,7 @@ func (l *ManagerOperator) uninstallAgentDatadog() {
 	return
 }
 
-// updateAgentDatadog execute call to api docp agent
+// updateAgentDatadog execute call to api orya agent
 // to update datadog agent
 func (l *ManagerOperator) updateAgentDatadog(content []byte) {
 	l.logger.Debug("update agent datadog", "trace", "agent-os-instance.manager_operator.updateAgentDatadog", "content", string(content))
@@ -1064,7 +1064,7 @@ func (l *ManagerOperator) updateAgentDatadog(content []byte) {
 	existsDatadogHash := l.adapter.GetStore("update.datadog.hash")
 
 	if existsDatadogHash == nil {
-		result, err := l.adapter.DocpAgentApiUpdateConfigurationsDatadog(content)
+		result, err := l.adapter.OryaAgentApiUpdateConfigurationsDatadog(content)
 		if err != nil {
 			l.chanErrors <- dto.CommonChanErrors{From: "updateAgentDatadog", Priority: dto.ErrLevelMedium, Err: err}
 			return
@@ -1149,30 +1149,30 @@ loopuninstall:
 		}
 	}
 
-	// execute autouninstall for docp agent
+	// execute autouninstall for orya agent
 	transaction := libutils.NewTransactionStatus()
 	ctx := context.WithValue(context.Background(), libdto.ContextTransactionStatus, transaction)
 
-	go l.adapter.NotifyStatus("uninstall_ORYA_received", pkg.TransactionEventOpen, "uninstall docp received", ctx)
+	go l.adapter.NotifyStatus("uninstall_ORYA_received", pkg.TransactionEventOpen, "uninstall orya received", ctx)
 	time.Sleep(l.delay)
 
-	go l.adapter.NotifyStatus("uninstall_ORYA_processing", pkg.TransactionEventUpdate, "uninstall docp processing", ctx)
+	go l.adapter.NotifyStatus("uninstall_ORYA_processing", pkg.TransactionEventUpdate, "uninstall orya processing", ctx)
 	time.Sleep(l.delay)
 
 	//get version installed
 	version, err := l.resolveAgentVersion()
 	if err != nil {
-		go l.adapter.NotifyStatus("uninstall_ORYA_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
+		go l.adapter.NotifyStatus("uninstall_ORYA_error", pkg.TransactionEventClose, "failed uninstall orya", ctx)
 		l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 		return
 	}
 
 	if err := l.adapter.AutoUninstall(version); err != nil {
-		go l.adapter.NotifyStatus("uninstall_ORYA_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
+		go l.adapter.NotifyStatus("uninstall_ORYA_error", pkg.TransactionEventClose, "failed uninstall orya", ctx)
 		l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 		return
 	}
-	go l.adapter.NotifyStatus("uninstall_ORYA_completed", pkg.TransactionEventClose, "uninstall docp completed", ctx)
+	go l.adapter.NotifyStatus("uninstall_ORYA_completed", pkg.TransactionEventClose, "uninstall orya completed", ctx)
 
 	return
 }
@@ -1193,48 +1193,48 @@ func (l *ManagerOperator) autoUninstall() {
 		transaction := libutils.NewTransactionStatus()
 		ctx := context.WithValue(context.Background(), libdto.ContextTransactionStatus, transaction)
 
-		go l.adapter.NotifyStatus("uninstall_ORYA_received", pkg.TransactionEventOpen, "uninstall docp received", ctx)
+		go l.adapter.NotifyStatus("uninstall_ORYA_received", pkg.TransactionEventOpen, "uninstall orya received", ctx)
 		time.Sleep(l.delay)
 
 		defer l.wg.Done()
 
-		go l.adapter.NotifyStatus("uninstall_ORYA_processing", pkg.TransactionEventUpdate, "uninstall docp processing", ctx)
+		go l.adapter.NotifyStatus("uninstall_ORYA_processing", pkg.TransactionEventUpdate, "uninstall orya processing", ctx)
 		time.Sleep(l.delay)
 
 		//get version
 		version, err := l.resolveAgentVersion()
 		if err != nil {
-			go l.adapter.NotifyStatus("uninstall_ORYA_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
+			go l.adapter.NotifyStatus("uninstall_ORYA_error", pkg.TransactionEventClose, "failed uninstall orya", ctx)
 			l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 			return
 		}
 
 		if err := l.adapter.AutoUninstall(version); err != nil {
-			go l.adapter.NotifyStatus("uninstall_ORYA_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
+			go l.adapter.NotifyStatus("uninstall_ORYA_error", pkg.TransactionEventClose, "failed uninstall orya", ctx)
 			l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 			return
 		}
 
-		go l.adapter.NotifyStatus("uninstall_ORYA_completed", pkg.TransactionEventClose, "uninstall docp completed", ctx)
+		go l.adapter.NotifyStatus("uninstall_ORYA_completed", pkg.TransactionEventClose, "uninstall orya completed", ctx)
 	}
 	return
 }
 
-// consumerResultsFromApiDocpAgent execute consume the result
-// from api docp agent
-func (l *ManagerOperator) consumerResultsFromApiDocpAgent() {
-	l.logger.Debug("consumer results from api docp agent", "trace", "agent-os-instance.manager_operator.consumerResultsFromApiDocpAgent")
+// consumerResultsFromApiOryaAgent execute consume the result
+// from api orya agent
+func (l *ManagerOperator) consumerResultsFromApiOryaAgent() {
+	l.logger.Debug("consumer results from api orya agent", "trace", "agent-os-instance.manager_operator.consumerResultsFromApiOryaAgent")
 	defer l.wg.Done()
 	for res := range l.chanResultsApi {
-		l.logger.Debug("consumer results from api docp agent", "trace", "agent-os-instance.manager_operator.consumerResultsFromApiDocpAgent", "result", string(res))
+		l.logger.Debug("consumer results from api orya agent", "trace", "agent-os-instance.manager_operator.consumerResultsFromApiOryaAgent", "result", string(res))
 	}
 }
 
-// consumeActionsDocpAgent execute consume the actions the agent
-func (l *ManagerOperator) consumeActionsDocpAgent() {
-	l.logger.Debug("consume actions docp agent", "trace", "agent-os-instance.manager_operator.consumeActionsDocpAgent")
+// consumeActionsOryaAgent execute consume the actions the agent
+func (l *ManagerOperator) consumeActionsOryaAgent() {
+	l.logger.Debug("consume actions orya agent", "trace", "agent-os-instance.manager_operator.consumeActionsOryaAgent")
 	defer l.wg.Done()
-	for act := range l.chanDocpAgent {
+	for act := range l.chanOryaAgent {
 		if act.Action == "update" {
 			l.wg.Add(1)
 			go l.UpdateAgent(act.Version)
@@ -1254,7 +1254,7 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 	defer l.wg.Done()
 
 	// get actions for datadog
-	for act := range l.chanDocpAgentDatadog {
+	for act := range l.chanOryaAgentDatadog {
 		// verify if datadog already installed
 		datadogAlreadyInstalled, err := l.adapter.AlreadyInstalled("datadog")
 		if err != nil {
@@ -1359,7 +1359,7 @@ func (l *ManagerOperator) consumeAllActions() {
 	l.logger.Debug("consume all actions", "trace", "agent-os-instance.manager_operator.consumeAllActions")
 	defer l.wg.Done()
 	l.wg.Add(2)
-	go l.consumeActionsDocpAgent()
+	go l.consumeActionsOryaAgent()
 	go l.consumerActionsDatadog()
 }
 
@@ -1369,9 +1369,9 @@ func (l *ManagerOperator) managerActions(arrActions []dto.StateAction) {
 	for _, act := range arrActions {
 		switch act.Type {
 		case "orya-agent":
-			l.chanDocpAgent <- act
+			l.chanOryaAgent <- act
 		case "datadog":
-			l.chanDocpAgentDatadog <- act
+			l.chanOryaAgentDatadog <- act
 		}
 	}
 	defer l.wg.Done()
@@ -1428,20 +1428,20 @@ func (l *ManagerOperator) validateState() {
 	return
 }
 
-// validateDocpAgentInstalled execute validation for docp agent if installed
-func (l *ManagerOperator) validateDocpAgentInstalled() {
-	l.logger.Debug("validate if docp agent is installed", "trace", "agent-os-instance.manager_operator.validateDocpAgentInstalled")
+// validateOryaAgentInstalled execute validation for orya agent if installed
+func (l *ManagerOperator) validateOryaAgentInstalled() {
+	l.logger.Debug("validate if orya agent is installed", "trace", "agent-os-instance.manager_operator.validateOryaAgentInstalled")
 	defer l.wg.Done()
-	installed, err := l.adapter.ValidateDocpInstalled()
+	installed, err := l.adapter.ValidateOryaInstalled()
 	if err != nil {
-		l.chanErrors <- dto.CommonChanErrors{From: "validateDocpAgentInstalled", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "validateOryaAgentInstalled", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	if installed {
 	}
-	notInstalled, err := l.adapter.ValidateDocpNotInstalled()
+	notInstalled, err := l.adapter.ValidateOryaNotInstalled()
 	if err != nil {
-		l.chanErrors <- dto.CommonChanErrors{From: "validateDocpAgentInstalled", Priority: dto.ErrLevelMedium, Err: err}
+		l.chanErrors <- dto.CommonChanErrors{From: "validateOryaAgentInstalled", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
 	if notInstalled {

@@ -16,7 +16,7 @@ func TestNewWindowsOperations(t *testing.T) {
 			var ops *components.WindowsOperations
 			var logger interfaces.ILogger
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 
@@ -38,7 +38,7 @@ func TestWindowsOperationsSetup(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 
@@ -62,7 +62,7 @@ func TestWindowsOperationsStatus(t *testing.T) {
 			var status string
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 
@@ -91,7 +91,7 @@ func TestWindowsOperationsRestartService(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("WindowsOperations criado", func() {
@@ -118,7 +118,7 @@ func TestWindowsOperationsStopService(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("WindowsOperations criado", func() {
@@ -145,7 +145,7 @@ func TestWindowsOperationsInstallAgent(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("WindowsOperations criado", func() {
@@ -172,7 +172,7 @@ func TestWindowsOperationsUninstallAgent(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("WindowsOperations criado", func() {
@@ -199,7 +199,7 @@ func TestWindowsOperationsInstallUpdater(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("WindowsOperations criado", func() {
@@ -226,7 +226,7 @@ func TestWindowsOperationsUninstallUpdater(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("WindowsOperations criado", func() {
@@ -256,7 +256,7 @@ func TestWindowsOperationsUpdateAgent(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("WindowsOperations criado", func() {
@@ -284,7 +284,7 @@ func TestWindowsOperationsAutoUninstall(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("WindowsOperations criado", func() {
@@ -311,7 +311,7 @@ func TestWindowsOperationsExecute(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("WindowsOperations criado", func() {
@@ -338,7 +338,7 @@ func TestWindowsOperationsExecuteUpdateVersion(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("WindowsOperations criado", func() {
@@ -365,7 +365,7 @@ func TestWindowsOperationsExecuteRollbackVersion(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("WindowsOperations criado", func() {
@@ -392,7 +392,7 @@ func TestWindowsOperationsUpdaterUninstall(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("WindowsOperations criado", func() {

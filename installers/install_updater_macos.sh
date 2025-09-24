@@ -98,7 +98,7 @@ function set_content_service() {
             <false/>
         </dict>
         <key>Label</key>
-        <string>com.docp.manager</string>
+        <string>com.orya.manager</string>
         <key>EnvironmentVariables</key>
         <dict>
             <key>ORYA_AGENT_PORT</key>
@@ -119,14 +119,14 @@ function set_content_service() {
         <key>ExitTimeOut</key>
         <integer>10</integer>
     </dict>
-    </plist>' | sudo tee ~/Library/LaunchAgents/com.docp.updater.plist > /dev/null
+    </plist>' | sudo tee ~/Library/LaunchAgents/com.orya.updater.plist > /dev/null
 
 }
 
 #prepare launchd
 function prepare_launchd() {
-  launchctl load ~/Library/LaunchAgents/com.docp.updater.plist
-  launchctl start gui/$(id -u)/com.docp.updater
+  launchctl load ~/Library/LaunchAgents/com.orya.updater.plist
+  launchctl start gui/$(id -u)/com.orya.updater
 }
 #actions
 VERSION=$(resolve_version "$VERSION")

@@ -41,10 +41,10 @@ func (l *UpdaterOperator) Setup() error {
 			return err
 		}
 		logPath := filepath.Join(workdir, "logs", "manager.log")
-		loggerFile := libutils.NewDocpLoggerWindowsFileText(logPath)
+		loggerFile := libutils.NewOryaLoggerWindowsFileText(logPath)
 		logger = loggerFile
 	} else {
-		logger = libutils.NewDocpLoggerJSON(os.Stdout)
+		logger = libutils.NewOryaLoggerJSON(os.Stdout)
 	}
 	l.logger = logger
 	adapterUpdater := adapters.NewUpdaterAdapter(l.logger)

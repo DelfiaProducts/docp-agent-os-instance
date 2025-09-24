@@ -226,7 +226,7 @@ func (ag *AgentRegisterService) SendMetadataCreate(data []byte) ([]byte, int, er
 		return nil, 0, err
 	}
 
-	urlMetadataCreate := fmt.Sprintf("%s/compute/v1/docp", ag.urlRegister)
+	urlMetadataCreate := fmt.Sprintf("%s/compute/v1/orya", ag.urlRegister)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
 
@@ -267,7 +267,7 @@ func (ag *AgentRegisterService) SendMetadataUpdate(data []byte) ([]byte, int, er
 		return nil, 0, err
 	}
 
-	urlMetadataUpdate := fmt.Sprintf("%s/compute/v1/docp", ag.urlRegister)
+	urlMetadataUpdate := fmt.Sprintf("%s/compute/v1/orya", ag.urlRegister)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, urlMetadataUpdate, bytes.NewBuffer(injectedMetadata))

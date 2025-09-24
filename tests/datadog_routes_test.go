@@ -18,7 +18,7 @@ func TestNewDatadogRoutes(t *testing.T) {
 			var datadogRouter *api.DatadogRoutes
 			var logger interfaces.ILogger
 			s.When("logger é criado", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.When("NewDatadogRoutes é chamado", func() {
 				datadogRouter = api.NewDatadogRoutes(logger)
@@ -37,7 +37,7 @@ func TestDatadogRoutesSetup(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.When("logger é criado", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.Given("DatadogRoutes válido", func() {
 				datadogRouter = api.NewDatadogRoutes(logger)

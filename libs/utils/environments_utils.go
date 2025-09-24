@@ -38,7 +38,7 @@ func GetConfigFilePath() (string, error) {
 	if len(ORYA_config_file_path_env) == 0 {
 		if runtime.GOOS == "windows" {
 			programFiles := os.Getenv("ProgramFiles")
-			return filepath.Join(programFiles, "DocpAgent", "config.yml"), nil
+			return filepath.Join(programFiles, "OryaAgent", "config.yml"), nil
 		} else {
 
 			return filepath.Join(string(filepath.Separator), "opt", "orya-agent", "config.yml"), nil
@@ -51,7 +51,7 @@ func GetConfigFilePath() (string, error) {
 func GetLogFilePath() (string, error) {
 	if runtime.GOOS == "windows" {
 		programFiles := os.Getenv("ProgramFiles")
-		return filepath.Join(programFiles, "DocpAgent", "logs", "log.txt"), nil
+		return filepath.Join(programFiles, "OryaAgent", "logs", "log.txt"), nil
 	} else {
 		return filepath.Join(string(filepath.Separator), "opt", "orya-agent", "logs", "log.txt"), nil
 	}
@@ -63,7 +63,7 @@ func GetWorkDirPath() (string, error) {
 	if len(ORYA_workdir_path_env) == 0 {
 		if runtime.GOOS == "windows" {
 			programFiles := os.Getenv("ProgramFiles")
-			return filepath.Join(programFiles, "DocpAgent"), nil
+			return filepath.Join(programFiles, "OryaAgent"), nil
 		} else {
 			return filepath.Join(string(filepath.Separator), "opt", "orya-agent"), nil
 		}

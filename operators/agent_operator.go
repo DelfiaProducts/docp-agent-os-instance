@@ -18,7 +18,7 @@ type AgentOperator struct {
 	chanErrors   chan error
 	adapter      *adapters.AgentAdapter
 	logger       libinterfaces.ILogger
-	api          *api.DocpApi
+	api          *api.OryaApi
 	wg           *sync.WaitGroup
 }
 
@@ -44,13 +44,13 @@ func (l *AgentOperator) Setup() error {
 			return err
 		}
 		logPath := filepath.Join(workdir, "logs", "agent.log")
-		loggerFile := libutils.NewDocpLoggerWindowsFileText(logPath)
+		loggerFile := libutils.NewOryaLoggerWindowsFileText(logPath)
 		logger = loggerFile
 	} else {
-		logger = libutils.NewDocpLoggerJSON(os.Stdout)
+		logger = libutils.NewOryaLoggerJSON(os.Stdout)
 	}
 	l.logger = logger
-	api := api.NewDocpApi(port, l.logger)
+	api := api.NewOryaApi(port, l.logger)
 	if err := api.Setup(); err != nil {
 		return err
 	}

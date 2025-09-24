@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-    <Product Id="PRODUCT_CODE" Name="DocpAgent" Language="1033" Version="AGENT_VERSION" Manufacturer="Docp" UpgradeCode="10A52F78-E52F-488C-A771-EB96C646F24B">
+    <Product Id="PRODUCT_CODE" Name="OryaAgent" Language="1033" Version="AGENT_VERSION" Manufacturer="Orya" UpgradeCode="10A52F78-E52F-488C-A771-EB96C646F24B">
         <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x64"/>
 
         <MajorUpgrade DowngradeErrorMessage="New recent version the [ProductName] already installed" />
@@ -8,7 +8,7 @@
 
         
 
-        <Feature Id="ProductFeature" Title="DocpAgent Feature" Level="1">
+        <Feature Id="ProductFeature" Title="OryaAgent Feature" Level="1">
             <Component Id="ConfigComponent" Directory="INSTALLFOLDER" Win64="yes" Guid="07718FDD-B06C-47E8-8D17-ABCCFF7D01D7">
                         <File Id="ConfigExeFile" Name="config_agent.exe" Source="config_agent.exe" KeyPath="yes" />
             </Component>
@@ -19,13 +19,13 @@
             <Component Id="AgentBinary" Directory="bindir" Win64="yes" Guid="EF3FEC1A-FDCD-4B8B-AFBF-2AD58A3AC042">
                 <File Id="AgentExe" Name="agent.exe" Source="agent.exe" KeyPath="yes" />
                 <ServiceInstall Id="ServiceInstall"
-                                Name="DocpAgent"
-                                DisplayName="DocpAgent Service"
-                                Description="Service to agent DocpAgent"
+                                Name="OryaAgent"
+                                DisplayName="OryaAgent Service"
+                                Description="Service to agent OryaAgent"
                                 Start="auto"
                                 Type="ownProcess"
                                 ErrorControl="normal" />
-                <ServiceControl Id="ServiceControl" Start="install" Stop="both" Remove="uninstall" Name="DocpAgent" Wait="yes"/>
+                <ServiceControl Id="ServiceControl" Start="install" Stop="both" Remove="uninstall" Name="OryaAgent" Wait="yes"/>
             </Component>
         </ComponentGroup>
 
@@ -34,7 +34,7 @@
                 <Directory Id="System64Folder" Name="System32" />
             </Directory>
             <Directory Id="ProgramFiles64Folder">
-                <Directory Id="INSTALLFOLDER" Name="DocpAgent">
+                <Directory Id="INSTALLFOLDER" Name="OryaAgent">
                     <Directory Id="bindir" Name="bin" />
                 </Directory>
             </Directory>

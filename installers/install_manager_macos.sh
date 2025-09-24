@@ -118,7 +118,7 @@ function setup(){
   already_running
 }
 
-#create directories for docp agent
+#create directories for orya agent
 function create_workdir(){
   [[ ! -d $ORYA_FILES_PATH ]] && $sudo_cmd mkdir $ORYA_FILES_PATH 
   [[ ! -d $ORYA_FILES_PATH/bin ]] && $sudo_cmd mkdir $ORYA_FILES_PATH/bin 
@@ -162,7 +162,7 @@ function set_content_service() {
             <false/>
         </dict>
         <key>Label</key>
-        <string>com.docp.manager</string>
+        <string>com.orya.manager</string>
         <key>EnvironmentVariables</key>
         <dict>
             <key>ORYA_AGENT_PORT</key>
@@ -183,13 +183,13 @@ function set_content_service() {
         <key>ExitTimeOut</key>
         <integer>10</integer>
     </dict>
-    </plist>' | sudo tee ~/Library/LaunchAgents/com.docp.manager.plist > /dev/null
+    </plist>' | sudo tee ~/Library/LaunchAgents/com.orya.manager.plist > /dev/null
 }
 
 #prepare launchd
 function prepare_launchd() {
-  launchctl load ~/Library/LaunchAgents/com.docp.manager.plist
-  launchctl start gui/$(id -u)/com.docp.manager
+  launchctl load ~/Library/LaunchAgents/com.orya.manager.plist
+  launchctl start gui/$(id -u)/com.orya.manager
 }
 
 #create config yml
@@ -224,7 +224,7 @@ function add_content_config_yml(){
   version="$3"
   noGroupAssociation="$4"
 $sudo_cmd tee $ORYA_FILES_PATH/config.yml > /dev/null <<EOF  
-# Docp file for agent configuration that contains
+# Orya file for agent configuration that contains
 # information used to perform configuration and service.
 
 no_group_association: $noGroupAssociation

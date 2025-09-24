@@ -33,9 +33,9 @@ type WindowsOperations struct {
 func NewWindowsOperations(logger interfaces.ILogger) *WindowsOperations {
 	var srvName string
 	if os.Getenv("SCM") == "agent" {
-		srvName = "DocpAgent"
+		srvName = "OryaAgent"
 	} else {
-		srvName = "DocpManager"
+		srvName = "OryaManager"
 	}
 	return &WindowsOperations{
 		logger:      logger,
@@ -194,7 +194,7 @@ func (l *WindowsOperations) StopService(serviceName string) error {
 	return nil
 }
 
-// InstallAgent execute install the agent docp
+// InstallAgent execute install the agent orya
 func (l *WindowsOperations) InstallAgent(version string) error {
 	name := utils.ChoiceNameServiceWindows("agent")
 	m, err := mgr.Connect()
@@ -208,10 +208,10 @@ func (l *WindowsOperations) InstallAgent(version string) error {
 			command := utils.ChoiceInstallerOrUninstaller("windows", "agent", "install", version)
 			out, err := l.program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
 			if err != nil {
-				l.logger.Error("error in install docp agent start process", "error", err)
+				l.logger.Error("error in install orya agent start process", "error", err)
 				return err
 			}
-			l.logger.Debug("install docp agent", "output", out)
+			l.logger.Debug("install orya agent", "output", out)
 			return nil
 		}
 		return err
@@ -220,7 +220,7 @@ func (l *WindowsOperations) InstallAgent(version string) error {
 	return nil
 }
 
-// InstallUpdater execute install the updater docp
+// InstallUpdater execute install the updater orya
 func (l *WindowsOperations) InstallUpdater(version string) error {
 	repoUrl := utils.GetBinariesRepositoryUrl()
 	updaterUrl := fmt.Sprintf("%s/%s/updater-windows-amd64.exe", repoUrl, version)
@@ -248,11 +248,11 @@ func (l *WindowsOperations) InstallUpdater(version string) error {
 	command := fmt.Sprintf(`%s; Start-Process -FilePath "%s" -RedirectStandardOutput "%s" -RedirectStandardError "%s" -NoNewWindow`, envVersion, pathUpdaterExe, pathLogOut, pathLogErr)
 	out, err := l.program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
 	if err != nil {
-		l.logger.Error("error in get wmi docp agent", "error", err)
+		l.logger.Error("error in get wmi orya agent", "error", err)
 		return err
 	}
 
-	l.logger.Debug("output wmi docp agent", "output", out)
+	l.logger.Debug("output wmi orya agent", "output", out)
 	return nil
 }
 
@@ -260,13 +260,13 @@ func (l *WindowsOperations) UninstallUpdater(version string) error {
 	return nil
 }
 
-// UpdateAgent execute update the agent docp
+// UpdateAgent execute update the agent orya
 func (l *WindowsOperations) UpdateAgent(version string) error {
 	go l.InstallUpdater(version)
 	return nil
 }
 
-// ExecuteUpdateVersion execute update version the agent docp
+// ExecuteUpdateVersion execute update version the agent orya
 func (l *WindowsOperations) ExecuteUpdateVersion(version string) error {
 
 	//get msi agent and manager
@@ -369,7 +369,7 @@ func (l *WindowsOperations) ExecuteRollbackVersion(version string) error {
 	return nil
 }
 
-// UpdaterUninstall execute uninstall the updater docp
+// UpdaterUninstall execute uninstall the updater orya
 func (l *WindowsOperations) UpdaterUninstall(version string) error {
 	workdir, err := utils.GetWorkDirPath()
 	if err != nil {
@@ -412,19 +412,19 @@ func (l *WindowsOperations) UpdaterUninstall(version string) error {
 	return nil
 }
 
-// UninstallAgent execute uninstall the agent docp
+// UninstallAgent execute uninstall the agent orya
 func (l *WindowsOperations) UninstallAgent(version string) error {
-	identifier, err := l.GetIdentifierService("DocpAgent")
+	identifier, err := l.GetIdentifierService("OryaAgent")
 	if err != nil {
 		return err
 	}
 
 	outUnistall, err := l.program.ExecuteWithOutput("powershell", []string{}, "-Command", fmt.Sprintf(`start-process msiexec -Wait -ArgumentList ('/log', 'C:\uninst.log', '/norestart', '/q', '/x', '%s')`, identifier))
 	if err != nil {
-		l.logger.Error("error in uninstall docp agent", "error", err)
+		l.logger.Error("error in uninstall orya agent", "error", err)
 		return err
 	}
-	l.logger.Debug("output uninstall docp agent", "output", outUnistall)
+	l.logger.Debug("output uninstall orya agent", "output", outUnistall)
 	return nil
 }
 
@@ -433,15 +433,15 @@ func (l *WindowsOperations) GetIdentifierService(name string) (string, error) {
 	wmiCmd := fmt.Sprintf(`(Get-Package -Name "%s").Metadata['ProductCode']`, name)
 	out, err := l.program.ExecuteWithOutput("powershell", []string{}, "-Command", wmiCmd)
 	if err != nil {
-		l.logger.Error("error in get wmi docp agent", "error", err)
+		l.logger.Error("error in get wmi orya agent", "error", err)
 		return "", err
 	}
-	l.logger.Debug("output wmi docp manager", "output", out)
+	l.logger.Debug("output wmi orya manager", "output", out)
 	re := regexp.MustCompile(`\{[A-Fa-f0-9\-]+\}`)
 	identifyingNumber := re.FindString(string(out))
 
 	if identifyingNumber == "" {
-		return "", fmt.Errorf("not found identify number for docp agent")
+		return "", fmt.Errorf("not found identify number for orya agent")
 	}
 	return identifyingNumber, nil
 }
@@ -459,11 +459,11 @@ func (l *WindowsOperations) AutoUninstall(version string) error {
 
 	batPath := filepath.Join(homeDir, "autouninstall.bat")
 
-	identifierAgent, err := l.GetIdentifierService("DocpAgent")
+	identifierAgent, err := l.GetIdentifierService("OryaAgent")
 	if err != nil {
 		return err
 	}
-	identifierManager, err := l.GetIdentifierService("DocpManager")
+	identifierManager, err := l.GetIdentifierService("OryaManager")
 	if err != nil {
 		return err
 	}
@@ -474,8 +474,8 @@ func (l *WindowsOperations) AutoUninstall(version string) error {
 			"taskkill /f /im manager.exe > nul 2>&1\n"+
 			"msiexec /x %s /quiet /norestart\n"+
 			"msiexec /x %s /quiet /norestart\n"+
-			"sc.exe delete DocpAgent > nul 2>&1\n"+
-			"sc.exe delete DocpManager > nul 2>&1\n"+
+			"sc.exe delete OryaAgent > nul 2>&1\n"+
+			"sc.exe delete OryaManager > nul 2>&1\n"+
 			"del /f /q \"%s\"\n"+
 			"rmdir /s /q \"%s\"",
 		identifierAgent,

@@ -25,9 +25,9 @@ func ChoiceNameServiceWindows(serviceName string) string {
 	name := ""
 	switch serviceName {
 	case "agent":
-		name = "DocpAgent"
+		name = "OryaAgent"
 	case "manager":
-		name = "DocpManager"
+		name = "OryaManager"
 	case "datadog":
 		name = "DatadogAgent"
 	}
@@ -53,9 +53,9 @@ func GetNameForLaunchd(serviceName string) string {
 	name := ""
 	switch serviceName {
 	case "agent":
-		name = "com.docp.agent"
+		name = "com.orya.agent"
 	case "manager":
-		name = "com.docp.manager"
+		name = "com.orya.manager"
 	case "datadog":
 		name = "com.datadoghq.agent"
 	}

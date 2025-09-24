@@ -96,7 +96,7 @@ function create_link_simbolic(){
 
 #set content service
 function set_content_service() {
-  printf "[Unit]\nDescription=Docp Agent\nAfter=network.target\n\n[Service]\nType=simple\nPIDFile=/opt/orya-agent/run/agent.pid\nUser=orya-agent\nRestart=on-failure\nEnvironmentFile=-/opt/orya-agent/environments\nRuntimeDirectory=docp\nExecStart=/opt/orya-agent/bin/current/agent run -p /opt/orya-agent/run/agent.pid\nStartLimitInterval=10\nStartLimitBurst=5\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target\n" | sudo tee /etc/systemd/system/orya-agent.service > /dev/null
+  printf "[Unit]\nDescription=Orya Agent\nAfter=network.target\n\n[Service]\nType=simple\nPIDFile=/opt/orya-agent/run/agent.pid\nUser=orya-agent\nRestart=on-failure\nEnvironmentFile=-/opt/orya-agent/environments\nRuntimeDirectory=orya\nExecStart=/opt/orya-agent/bin/current/agent run -p /opt/orya-agent/run/agent.pid\nStartLimitInterval=10\nStartLimitBurst=5\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target\n" | sudo tee /etc/systemd/system/orya-agent.service > /dev/null
 }
 
 #prepare systemd

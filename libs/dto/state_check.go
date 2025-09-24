@@ -15,14 +15,14 @@ type StateCheckSignal struct {
 
 // StateCheckAgents is struct for agents payload
 type StateCheckAgents struct {
-	DocpAgent               StateCheckDocpAgent               `json:"orya-agent"`
+	OryaAgent               StateCheckOryaAgent               `json:"docp-agent"`
 	DatadogAgent            StateCheckDatadogAgent            `json:"datadog-agent"`
 	DatadogTracerLibrary    StateCheckDatadogTracerLibrary    `json:"datadog-tracer-library"`
 	DatadogTracerSingleStep StateCheckDatadogTracerSingleStep `json:"datadog-tracer-single-step"`
 }
 
-// StateCheckDocpAgent is component for docp agents
-type StateCheckDocpAgent struct {
+// StateCheckOryaAgent is component for orya agents
+type StateCheckOryaAgent struct {
 	Version string `json:"version"`
 }
 

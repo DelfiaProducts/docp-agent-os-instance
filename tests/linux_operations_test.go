@@ -16,7 +16,7 @@ func TestNewLinuxOperations(t *testing.T) {
 			var ops *components.LinuxOperations
 			var logger interfaces.ILogger
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 
@@ -38,7 +38,7 @@ func TestLinuxOperationsSetup(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 
@@ -62,7 +62,7 @@ func TestLinuxOperationsStatus(t *testing.T) {
 			var status string
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 
@@ -92,7 +92,7 @@ func TestLinuxOperationsAlreadyInstalled(t *testing.T) {
 			var installed bool
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("LinuxOperations com systemd mockado", func() {
@@ -120,7 +120,7 @@ func TestLinuxOperationsDaemonReload(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("LinuxOperations com program mockado", func() {
@@ -147,7 +147,7 @@ func TestLinuxOperationsRestartService(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("LinuxOperations criado", func() {
@@ -174,7 +174,7 @@ func TestLinuxOperationsStopService(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("LinuxOperations criado", func() {
@@ -201,7 +201,7 @@ func TestLinuxOperationsInstallAgent(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("LinuxOperations criado", func() {
@@ -228,7 +228,7 @@ func TestLinuxOperationsInstallUpdater(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("LinuxOperations criado", func() {
@@ -255,7 +255,7 @@ func TestLinuxOperationsUninstallAgent(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("LinuxOperations criado", func() {
@@ -282,7 +282,7 @@ func TestLinuxOperationsUninstallUpdater(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("LinuxOperations criado", func() {
@@ -312,7 +312,7 @@ func TestLinuxOperationsUpdateAgent(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("LinuxOperations criado", func() {
@@ -340,7 +340,7 @@ func TestLinuxOperationsAutoUninstall(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("LinuxOperations criado", func() {
@@ -367,7 +367,7 @@ func TestLinuxOperationsExecute(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("LinuxOperations criado", func() {

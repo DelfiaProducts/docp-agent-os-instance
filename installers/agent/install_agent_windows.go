@@ -16,7 +16,7 @@ import (
 
 // parseParams parse params
 func parseParams(version *string) {
-	flag.StringVar(version, "VERSION", "latest", "docp version")
+	flag.StringVar(version, "VERSION", "latest", "orya version")
 	flag.Parse()
 }
 
@@ -71,21 +71,21 @@ func main() {
 	fileName := "agent-windows-amd64.exe"
 	//verify if version latest
 	if version == "latest" {
-		logger := utils.NewDocpLoggerText(os.Stdout)
+		logger := utils.NewOryaLoggerText(os.Stdout)
 		utilityService := services.NewUtilityService(logger)
 		if err := utilityService.Setup(); err != nil {
-			notifyError("Installer Docp Agent", err.Error())
+			notifyError("Installer Orya Agent", err.Error())
 		}
 		agentVersions, err := utilityService.FetchAgentVersions()
 		if err != nil {
-			notifyError("Installer Docp Agent", err.Error())
+			notifyError("Installer Orya Agent", err.Error())
 		}
 		version = agentVersions.LatestVersion
 	}
 	url := prepareUrlAgent(baseUrl, version, fileName)
 
 	pathDir := os.Getenv("ProgramFiles")
-	docpFilesPath := filepath.Join(pathDir, "DocpAgent")
+	docpFilesPath := filepath.Join(pathDir, "OryaAgent")
 
 	destDir := filepath.Join(docpFilesPath, "bin")
 	destFile := filepath.Join(destDir, "agent.exe")
