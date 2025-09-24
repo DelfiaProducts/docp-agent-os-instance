@@ -79,7 +79,7 @@ func (d *DatadogWindowsOperation) Setup() error {
 }
 
 // InstallAgent execute install the agent in linux
-func (d *DatadogWindowsOperation) InstallAgent(ddSite, ddApiKey string) error {
+func (d *DatadogWindowsOperation) InstallAgent(ddSite, ddApiKey, version string) error {
 	m, err := mgr.Connect()
 	if err != nil {
 		return err
@@ -106,7 +106,7 @@ func (d *DatadogWindowsOperation) InstallAgent(ddSite, ddApiKey string) error {
 }
 
 // InstallAgentApmSingleStep execute install the agent in linux with apm tracer on mode single step
-func (d *DatadogWindowsOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, datadogEnvVars []dto.DatadogEnvVars) error {
+func (d *DatadogWindowsOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, version string, datadogEnvVars []dto.DatadogEnvVars) error {
 	d.logger.Debug("install agent apm single step", "trace", "docp-agent-os-instance.datadog_windows_operations.InstallAgentApmSingleStep")
 	return nil
 }
