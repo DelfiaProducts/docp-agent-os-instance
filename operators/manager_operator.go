@@ -196,33 +196,33 @@ func (l *ManagerOperator) UpdateAgent(version string) error {
 			transaction := libutils.NewTransactionStatus()
 			ctx := context.WithValue(context.Background(), libdto.ContextTransactionStatus, transaction)
 
-			go l.adapter.NotifyStatus("update_docp_received", pkg.TransactionEventOpen, "update docp received", ctx)
+			go l.adapter.NotifyStatus("update_ORYA_received", pkg.TransactionEventOpen, "update docp received", ctx)
 			time.Sleep(l.delay)
 
-			go l.adapter.NotifyStatus("update_docp_initiate", pkg.TransactionEventUpdate, "update docp initialized", ctx)
+			go l.adapter.NotifyStatus("update_ORYA_initiate", pkg.TransactionEventUpdate, "update docp initialized", ctx)
 			time.Sleep(l.delay)
 
 			if err := l.adapter.UpdateAgent(version); err != nil {
-				go l.adapter.NotifyStatus("update_docp_error", pkg.TransactionEventClose, "failed update agent version", ctx)
+				go l.adapter.NotifyStatus("update_ORYA_error", pkg.TransactionEventClose, "failed update agent version", ctx)
 				l.chanErrors <- dto.CommonChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
 				return err
 			}
 
 			//save new version
 			if err := l.adapter.SaveAgentVersion(version); err != nil {
-				go l.adapter.NotifyStatus("update_docp_error", pkg.TransactionEventClose, "failed save agent version", ctx)
+				go l.adapter.NotifyStatus("update_ORYA_error", pkg.TransactionEventClose, "failed save agent version", ctx)
 				l.chanErrors <- dto.CommonChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
 				return err
 			}
 
 			//save rollback version
 			if err := l.adapter.SaveAgentRollbackVersion(agentVersion); err != nil {
-				go l.adapter.NotifyStatus("update_docp_error", pkg.TransactionEventClose, "failed save agent version", ctx)
+				go l.adapter.NotifyStatus("update_ORYA_error", pkg.TransactionEventClose, "failed save agent version", ctx)
 				l.chanErrors <- dto.CommonChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
 				return err
 			}
 
-			go l.adapter.NotifyStatus("update_docp_completed", pkg.TransactionEventClose, "update docp completed", ctx)
+			go l.adapter.NotifyStatus("update_ORYA_completed", pkg.TransactionEventClose, "update docp completed", ctx)
 			return nil
 		}
 	}
@@ -1153,26 +1153,26 @@ loopuninstall:
 	transaction := libutils.NewTransactionStatus()
 	ctx := context.WithValue(context.Background(), libdto.ContextTransactionStatus, transaction)
 
-	go l.adapter.NotifyStatus("uninstall_docp_received", pkg.TransactionEventOpen, "uninstall docp received", ctx)
+	go l.adapter.NotifyStatus("uninstall_ORYA_received", pkg.TransactionEventOpen, "uninstall docp received", ctx)
 	time.Sleep(l.delay)
 
-	go l.adapter.NotifyStatus("uninstall_docp_processing", pkg.TransactionEventUpdate, "uninstall docp processing", ctx)
+	go l.adapter.NotifyStatus("uninstall_ORYA_processing", pkg.TransactionEventUpdate, "uninstall docp processing", ctx)
 	time.Sleep(l.delay)
 
 	//get version installed
 	version, err := l.resolveAgentVersion()
 	if err != nil {
-		go l.adapter.NotifyStatus("uninstall_docp_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
+		go l.adapter.NotifyStatus("uninstall_ORYA_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
 		l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 		return
 	}
 
 	if err := l.adapter.AutoUninstall(version); err != nil {
-		go l.adapter.NotifyStatus("uninstall_docp_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
+		go l.adapter.NotifyStatus("uninstall_ORYA_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
 		l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 		return
 	}
-	go l.adapter.NotifyStatus("uninstall_docp_completed", pkg.TransactionEventClose, "uninstall docp completed", ctx)
+	go l.adapter.NotifyStatus("uninstall_ORYA_completed", pkg.TransactionEventClose, "uninstall docp completed", ctx)
 
 	return
 }
@@ -1193,29 +1193,29 @@ func (l *ManagerOperator) autoUninstall() {
 		transaction := libutils.NewTransactionStatus()
 		ctx := context.WithValue(context.Background(), libdto.ContextTransactionStatus, transaction)
 
-		go l.adapter.NotifyStatus("uninstall_docp_received", pkg.TransactionEventOpen, "uninstall docp received", ctx)
+		go l.adapter.NotifyStatus("uninstall_ORYA_received", pkg.TransactionEventOpen, "uninstall docp received", ctx)
 		time.Sleep(l.delay)
 
 		defer l.wg.Done()
 
-		go l.adapter.NotifyStatus("uninstall_docp_processing", pkg.TransactionEventUpdate, "uninstall docp processing", ctx)
+		go l.adapter.NotifyStatus("uninstall_ORYA_processing", pkg.TransactionEventUpdate, "uninstall docp processing", ctx)
 		time.Sleep(l.delay)
 
 		//get version
 		version, err := l.resolveAgentVersion()
 		if err != nil {
-			go l.adapter.NotifyStatus("uninstall_docp_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
+			go l.adapter.NotifyStatus("uninstall_ORYA_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
 			l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 			return
 		}
 
 		if err := l.adapter.AutoUninstall(version); err != nil {
-			go l.adapter.NotifyStatus("uninstall_docp_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
+			go l.adapter.NotifyStatus("uninstall_ORYA_error", pkg.TransactionEventClose, "failed uninstall docp", ctx)
 			l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 			return
 		}
 
-		go l.adapter.NotifyStatus("uninstall_docp_completed", pkg.TransactionEventClose, "uninstall docp completed", ctx)
+		go l.adapter.NotifyStatus("uninstall_ORYA_completed", pkg.TransactionEventClose, "uninstall docp completed", ctx)
 	}
 	return
 }
@@ -1368,7 +1368,7 @@ func (l *ManagerOperator) managerActions(arrActions []dto.StateAction) {
 	l.logger.Debug("manager actions", "trace", "agent-os-instance.manager_operator.managerActions", "arrActions", arrActions)
 	for _, act := range arrActions {
 		switch act.Type {
-		case "docp-agent":
+		case "orya-agent":
 			l.chanDocpAgent <- act
 		case "datadog":
 			l.chanDocpAgentDatadog <- act

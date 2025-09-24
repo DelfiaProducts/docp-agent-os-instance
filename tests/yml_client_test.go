@@ -37,7 +37,7 @@ func TestYmlClientUnmarshal(t *testing.T) {
 				ymlClient = pkg.NewYmlClient()
 			})
 			s.When("abro o arquivo de config e leio o conteúdo", func() {
-				f, errOpen := os.OpenFile("/opt/docp-agent/config.yml", os.O_RDONLY, os.ModePerm)
+				f, errOpen := os.OpenFile("/opt/orya-agent/config.yml", os.O_RDONLY, os.ModePerm)
 				if errOpen != nil {
 					err = errOpen
 					return

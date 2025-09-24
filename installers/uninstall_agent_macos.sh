@@ -4,9 +4,9 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-AGENT_IS_RUNNING=$(ps aux | grep -v grep | grep docp-agent/bin/agent)
-DOCP_FILES_PATH=/opt/docp-agent
-USER_GROUP_NAME=docp-agent
+AGENT_IS_RUNNING=$(ps aux | grep -v grep | grep orya-agent/bin/agent)
+ORYA_FILES_PATH=/opt/orya-agent
+USER_GROUP_NAME=orya-agent
 
 # Root user detection
 if [ "$UID" == "0" ]; then

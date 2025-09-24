@@ -4,11 +4,11 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-FILE_INDEX_URL="https://docp-agent.s3.us-east-1.amazonaws.com/index_os_instance.json"
+FILE_INDEX_URL="https://orya-agent.s3.us-east-1.amazonaws.com/index_os_instance.json"
 BINARY_URL="https://github.com/OryaHub/agent-os-instance/releases/download"
 VERSION="${VERSION:-${VERSION:-latest}}"
-DOCP_FILES_PATH=/opt/docp-agent
-USER_GROUP_NAME=docp-agent
+ORYA_FILES_PATH=/opt/orya-agent
+USER_GROUP_NAME=orya-agent
 
 # Root user detection
 if [ "$UID" == "0" ]; then
@@ -67,34 +67,34 @@ function resolve_version() {
 
 #add permission workdir
 function add_perm_work_dir(){
-  $sudo_cmd chown -R $USER_GROUP_NAME:$USER_GROUP_NAME /opt/docp-agent/
+  $sudo_cmd chown -R $USER_GROUP_NAME:$USER_GROUP_NAME /opt/orya-agent/
 }
 
 #get binary arm64
 function get_binary_arch64(){
-  sudo curl -s -L -o $DOCP_FILES_PATH/bin/releases/$VERSION/updater "$BINARY_URL/$VERSION/updater-linux-arm64"
-  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/updater
+  sudo curl -s -L -o $ORYA_FILES_PATH/bin/releases/$VERSION/updater "$BINARY_URL/$VERSION/updater-linux-arm64"
+  sudo chmod +x $ORYA_FILES_PATH/bin/releases/$VERSION/updater
 }
 #get binary amd64
 function get_binary_amd64(){
-  sudo curl -s -L -o $DOCP_FILES_PATH/bin/releases/$VERSION/updater "$BINARY_URL/$VERSION/updater-linux-amd64"
-  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/updater
+  sudo curl -s -L -o $ORYA_FILES_PATH/bin/releases/$VERSION/updater "$BINARY_URL/$VERSION/updater-linux-amd64"
+  sudo chmod +x $ORYA_FILES_PATH/bin/releases/$VERSION/updater
 }
 # create symbolic link
 function create_link_simbolic(){
-  sudo ln -sfn $DOCP_FILES_PATH/bin/releases/$VERSION/updater $DOCP_FILES_PATH/bin/current/updater
+  sudo ln -sfn $ORYA_FILES_PATH/bin/releases/$VERSION/updater $ORYA_FILES_PATH/bin/current/updater
 }
 
 #set content service
 function set_content_service() {
-  printf "[Unit]\nDescription=Docp Updater\nAfter=network.target\n\n[Service]\nType=simple\nPIDFile=/opt/docp-agent/run/updater.pid\nUser=docp-agent\nRestart=on-failure\nEnvironmentFile=-/opt/docp-agent/environments\nRuntimeDirectory=docp\nExecStart=/opt/docp-agent/bin/current/updater run -p /opt/docp-agent/run/updater.pid\nStartLimitInterval=10\nStartLimitBurst=5\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target\n" | sudo tee /etc/systemd/system/docp-updater.service > /dev/null
+  printf "[Unit]\nDescription=Docp Updater\nAfter=network.target\n\n[Service]\nType=simple\nPIDFile=/opt/orya-agent/run/updater.pid\nUser=orya-agent\nRestart=on-failure\nEnvironmentFile=-/opt/orya-agent/environments\nRuntimeDirectory=docp\nExecStart=/opt/orya-agent/bin/current/updater run -p /opt/orya-agent/run/updater.pid\nStartLimitInterval=10\nStartLimitBurst=5\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target\n" | sudo tee /etc/systemd/system/orya-updater.service > /dev/null
 }
 
 #prepare systemd
 function prepare_systemd() {
   $sudo_cmd systemctl daemon-reload
-  $sudo_cmd systemctl start docp-updater.service
-  $sudo_cmd systemctl enable docp-updater.service
+  $sudo_cmd systemctl start orya-updater.service
+  $sudo_cmd systemctl enable orya-updater.service
 }
 #actions
 VERSION=$(resolve_version "$VERSION")

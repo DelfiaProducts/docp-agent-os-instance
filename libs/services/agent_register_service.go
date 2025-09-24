@@ -237,7 +237,7 @@ func (ag *AgentRegisterService) SendMetadataCreate(data []byte) ([]byte, int, er
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("docp-api-key", apiKey)
+	req.Header.Set("orya-api-key", apiKey)
 
 	res, err := ag.client.Do(req)
 	if err != nil {

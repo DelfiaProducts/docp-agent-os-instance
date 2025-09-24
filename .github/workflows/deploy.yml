@@ -361,10 +361,10 @@ jobs:
           aws s3 cp ${{ env.TFSTATE_S3_PATH }} resources_publics.tfstate
           echo "Verificando estrutura do tfstate..."
           jq '.outputs.bucket_ids' resources_publics.tfstate
-          echo "Extraindo valor do docp-agent..."
-          docp_agent=$(jq -r '.outputs.public_bucket_ids.value."docp-agent"' resources_publics.tfstate)
-          echo "Valor extraído: $docp_agent"
-          echo "docp_agent=$docp_agent" >> $GITHUB_ENV
+          echo "Extraindo valor do orya-agent..."
+          ORYA_agent=$(jq -r '.outputs.public_bucket_ids.value."orya-agent"' resources_publics.tfstate)
+          echo "Valor extraído: $ORYA_agent"
+          echo "ORYA_agent=$ORYA_agent" >> $GITHUB_ENV
       
       - name: Gerar/Atualizar index_os_instance.json com versões
         run: |
@@ -372,7 +372,7 @@ jobs:
           RELEASE_TAG="${{ github.ref_name }}"
           
           # Tentar baixar index_os_instance.json existente do bucket
-          if aws s3 cp s3://${{ env.docp_agent}}/index_os_instance.json ./index_os_instance.json 2>/dev/null; then
+          if aws s3 cp s3://${{ env.ORYA_agent}}/index_os_instance.json ./index_os_instance.json 2>/dev/null; then
             echo "index_os_instance.json encontrado no bucket, fazendo backup e atualizando..."
             cp index_os_instance.json index_os_instance.json.backup
             
@@ -433,9 +433,9 @@ jobs:
           fi
           
           echo "=== FAZENDO UPLOAD DO index_os_instance.json ==="
-          aws s3 cp index_os_instance.json s3://${{ env.docp_agent}}/
+          aws s3 cp index_os_instance.json s3://${{ env.ORYA_agent}}/
           
           echo "Upload do index_os_instance.json concluído!"
           echo "Verificando arquivo no bucket:"
-          aws s3 ls s3://${{ env.docp_agent}}/index_os_instance.json
+          aws s3 ls s3://${{ env.ORYA_agent}}/index_os_instance.json
 

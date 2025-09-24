@@ -103,7 +103,7 @@ func TestUpdaterAdapterGetAgentVersionFromSignal(t *testing.T) {
 				err = updater.Prepare()
 			})
 			s.When("preparo o signal", func() {
-				response = []byte(`{"signal":{"type":"update","agents":{"docp-agent":{"version":"0.1.0"}}}}`)
+				response = []byte(`{"signal":{"type":"update","agents":{"orya-agent":{"version":"0.1.0"}}}}`)
 			})
 			s.When("chamo GetAgentVersion", func() {
 				version, err = updater.GetAgentVersionFromSignal(response)

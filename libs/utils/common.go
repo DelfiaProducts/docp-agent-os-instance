@@ -11,9 +11,9 @@ func ChoiceNameService(serviceName string) string {
 	name := ""
 	switch serviceName {
 	case "agent":
-		name = "docp-agent.service"
+		name = "orya-agent.service"
 	case "manager":
-		name = "docp-manager.service"
+		name = "orya-manager.service"
 	case "datadog":
 		name = "datadog-agent.service"
 	}
@@ -39,9 +39,9 @@ func GetNameForProcess(serviceName string) string {
 	name := ""
 	switch serviceName {
 	case "agent":
-		name = "docp-agent/agent"
+		name = "orya-agent/agent"
 	case "manager":
-		name = "docp-agent/manager"
+		name = "orya-agent/manager"
 	case "datadog":
 		name = "datadog-agent"
 	}
@@ -85,7 +85,7 @@ func GetBucketUrl() string {
 
 // GetFileAgentVersionsName return the file name for agent versions
 func GetFileAgentVersionsName() string {
-	return pkg.DOCP_FILE_AGENT_VERSIONS_NAME
+	return pkg.ORYA_FILE_AGENT_VERSIONS_NAME
 }
 
 // GetDatadogAgentUrlWindows return the url for download datadog agent windows

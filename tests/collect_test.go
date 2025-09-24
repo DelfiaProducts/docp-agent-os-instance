@@ -16,7 +16,7 @@ func TestGetBinary(t *testing.T) {
 			var err error
 			s.Given("uma URL válida de binário", func() {})
 			s.When("GetBinary é chamado", func() {
-				url := "https://test-docp-agent-data.s3.amazonaws.com/manager/latest/linux_amd64"
+				url := "https://test-orya-agent-data.s3.amazonaws.com/manager/latest/linux_amd64"
 				resp, statusCode, err = utils.GetBinary(url)
 			})
 			s.Then("não deve retornar erro e deve retornar resposta e statusCode", func(t *testing.T) {

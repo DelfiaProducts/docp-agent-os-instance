@@ -611,7 +611,7 @@ func (l *ManagerAdapter) DocpAgentApiInstallDatadog(ddApiKey, ddSite, version st
 	transaction := utils.NewTransactionStatus()
 	ctx := context.WithValue(context.Background(), dto.ContextTransactionStatus, transaction)
 
-	go l.NotifyStatus("install_docp_vendor_received", pkg.TransactionEventOpen, "install docp vendor received", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_received", pkg.TransactionEventOpen, "install docp vendor received", ctx)
 	time.Sleep(l.delay)
 
 	datadogDto := dto.DatadogInstallDTO{
@@ -621,21 +621,21 @@ func (l *ManagerAdapter) DocpAgentApiInstallDatadog(ddApiKey, ddSite, version st
 	}
 	bDatadogDto, err := l.marshaller(&datadogDto)
 	if err != nil {
-		go l.NotifyStatus("install_docp_vendor_error", pkg.TransactionEventClose, "failed install docp vendor", ctx)
+		go l.NotifyStatus("install_ORYA_vendor_error", pkg.TransactionEventClose, "failed install docp vendor", ctx)
 		return nil, err
 	}
-	go l.NotifyStatus("install_docp_vendor_processing", pkg.TransactionEventUpdate, "install docp vendor processing", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_processing", pkg.TransactionEventUpdate, "install docp vendor processing", ctx)
 	time.Sleep(l.delay)
 
 	urlDocpInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/install", l.docpApiPort)
 	respBytes, err := l.requestForAgentInstallDatadog(urlDocpInstallDatadog, http.MethodPost, bDatadogDto)
 	if err != nil {
-		go l.NotifyStatus("install_docp_vendor_error", pkg.TransactionEventClose, "failed install docp vendor", ctx)
+		go l.NotifyStatus("install_ORYA_vendor_error", pkg.TransactionEventClose, "failed install docp vendor", ctx)
 		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.DocpAgentApiInstallDatadog", "error", err.Error())
 		return nil, err
 	}
 
-	go l.NotifyStatus("install_docp_vendor_completed", pkg.TransactionEventClose, "install docp vendor completed", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_completed", pkg.TransactionEventClose, "install docp vendor completed", ctx)
 	return respBytes, nil
 }
 
@@ -646,7 +646,7 @@ func (l *ManagerAdapter) DocpAgentApiInstallDatadogWithApmSingleStep(ddApiKey, d
 	transaction := utils.NewTransactionStatus()
 	ctx := context.WithValue(context.Background(), dto.ContextTransactionStatus, transaction)
 
-	go l.NotifyStatus("install_docp_vendor_tracer_received", pkg.TransactionEventOpen, "install docp vendor tracer single step received", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_tracer_received", pkg.TransactionEventOpen, "install docp vendor tracer single step received", ctx)
 	time.Sleep(l.delay)
 
 	datadogDto := dto.DatadogInstallDTO{
@@ -672,29 +672,29 @@ func (l *ManagerAdapter) DocpAgentApiInstallDatadogWithApmSingleStep(ddApiKey, d
 	}
 	bDatadogDto, err := l.marshaller(&datadogDto)
 	if err != nil {
-		go l.NotifyStatus("install_docp_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer single step", ctx)
+		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer single step", ctx)
 		return nil, err
 	}
 
 	urlDocpInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/install", l.docpApiPort)
 
-	go l.NotifyStatus("install_docp_vendor_tracer_processing", pkg.TransactionEventUpdate, "install docp vendor tracer single step processing", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_tracer_processing", pkg.TransactionEventUpdate, "install docp vendor tracer single step processing", ctx)
 	time.Sleep(l.delay)
 
 	respBytes, err := l.requestForAgentInstallDatadog(urlDocpInstallDatadog, http.MethodPost, bDatadogDto)
 	if err != nil {
-		go l.NotifyStatus("install_docp_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer single step", ctx)
+		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer single step", ctx)
 		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.DocpAgentApiInstallDatadogWithApmSingleStep", "error", err.Error())
 		return nil, err
 	}
 
 	if err := l.SaveAlreadyTracer(true); err != nil {
 		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.DocpAgentApiInstallDatadogWithApmSingleStep", "error", err.Error())
-		go l.NotifyStatus("install_docp_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer single step", ctx)
+		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer single step", ctx)
 		return nil, err
 	}
 
-	go l.NotifyStatus("install_docp_vendor_tracer_completed", pkg.TransactionEventClose, "install docp vendor tracer single step completed", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_tracer_completed", pkg.TransactionEventClose, "install docp vendor tracer single step completed", ctx)
 	return respBytes, nil
 }
 
@@ -705,7 +705,7 @@ func (l *ManagerAdapter) DocpAgentApiInstallDatadogWithApmTracingLibrary(ddApiKe
 	transaction := utils.NewTransactionStatus()
 	ctx := context.WithValue(context.Background(), dto.ContextTransactionStatus, transaction)
 
-	go l.NotifyStatus("install_docp_vendor_tracer_received", pkg.TransactionEventOpen, "install docp vendor tracer library received", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_tracer_received", pkg.TransactionEventOpen, "install docp vendor tracer library received", ctx)
 	time.Sleep(l.delay)
 
 	datadogDto := dto.DatadogInstallDTO{
@@ -730,27 +730,27 @@ func (l *ManagerAdapter) DocpAgentApiInstallDatadogWithApmTracingLibrary(ddApiKe
 	}
 	bDatadogDto, err := l.marshaller(&datadogDto)
 	if err != nil {
-		go l.NotifyStatus("install_docp_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer", ctx)
+		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer", ctx)
 		return nil, err
 	}
 	urlDocpInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/tracer/install", l.docpApiPort)
 
-	go l.NotifyStatus("install_docp_vendor_tracer_processing", pkg.TransactionEventUpdate, "install docp vendor tracer library processing", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_tracer_processing", pkg.TransactionEventUpdate, "install docp vendor tracer library processing", ctx)
 	time.Sleep(l.delay)
 
 	respBytes, err := l.requestForAgentInstallDatadog(urlDocpInstallDatadog, http.MethodPost, bDatadogDto)
 	if err != nil {
 		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.DocpAgentApiInstallDatadogWithApmSingleStep", "error", err.Error())
-		go l.NotifyStatus("install_docp_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer", ctx)
+		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer", ctx)
 		return nil, err
 	}
 	if err := l.SaveAlreadyTracer(true); err != nil {
 		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.DocpAgentApiInstallDatadogWithApmSingleStep", "error", err.Error())
-		go l.NotifyStatus("install_docp_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer", ctx)
+		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer", ctx)
 		return nil, err
 	}
 
-	go l.NotifyStatus("install_docp_vendor_tracer_completed", pkg.TransactionEventClose, "install docp vendor tracer library completed", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_tracer_completed", pkg.TransactionEventClose, "install docp vendor tracer library completed", ctx)
 	return respBytes, nil
 }
 
@@ -761,7 +761,7 @@ func (l *ManagerAdapter) DocpAgentApiUninstallDatadog() ([]byte, error) {
 	transaction := utils.NewTransactionStatus()
 	ctxTransaction := context.WithValue(context.Background(), dto.ContextTransactionStatus, transaction)
 
-	go l.NotifyStatus("uninstall_docp_vendor_received", pkg.TransactionEventOpen, "uninstall docp vendor received", ctxTransaction)
+	go l.NotifyStatus("uninstall_ORYA_vendor_received", pkg.TransactionEventOpen, "uninstall docp vendor received", ctxTransaction)
 	time.Sleep(l.delay)
 
 	urlDocpUninstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/uninstall", l.docpApiPort)
@@ -769,31 +769,31 @@ func (l *ManagerAdapter) DocpAgentApiUninstallDatadog() ([]byte, error) {
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlDocpUninstallDatadog, nil)
 	if err != nil {
-		go l.NotifyStatus("uninstall_docp_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
+		go l.NotifyStatus("uninstall_ORYA_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
 		l.logger.Error("error in create request", "trace", "agent-os-instance.manager_adapter.DocpAgentApiUninstallDatadog", "error", err.Error())
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	res, err := l.client.Do(req)
 	if err != nil {
-		go l.NotifyStatus("uninstall_docp_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
+		go l.NotifyStatus("uninstall_ORYA_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
 		l.logger.Error("error in execute request", "trace", "agent-os-instance.manager_adapter.DocpAgentApiUninstallDatadog", "error", err.Error())
 		return nil, err
 	}
 
-	go l.NotifyStatus("uninstall_docp_vendor_processing", pkg.TransactionEventUpdate, "uninstall docp vendor processing", ctxTransaction)
+	go l.NotifyStatus("uninstall_ORYA_vendor_processing", pkg.TransactionEventUpdate, "uninstall docp vendor processing", ctxTransaction)
 	time.Sleep(l.delay)
 
-	go l.NotifyStatus("uninstall_docp_vendor_complete", pkg.TransactionEventClose, "uninstall docp vendor completed", ctxTransaction)
+	go l.NotifyStatus("uninstall_ORYA_vendor_complete", pkg.TransactionEventClose, "uninstall docp vendor completed", ctxTransaction)
 	defer res.Body.Close()
 	respBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		go l.NotifyStatus("uninstall_docp_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
+		go l.NotifyStatus("uninstall_ORYA_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
 		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.DocpAgentApiUninstallDatadog", "error", err.Error())
 		return nil, err
 	}
 	if err := l.SaveAlreadyTracer(false); err != nil {
-		go l.NotifyStatus("uninstall_docp_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
+		go l.NotifyStatus("uninstall_ORYA_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
 		l.logger.Error("error in save already tracer", "trace", "agent-os-instance.manager_adapter.DocpAgentApiUninstallDatadog", "error", err.Error())
 		return nil, err
 	}
@@ -816,30 +816,30 @@ func (l *ManagerAdapter) DocpAgentApiUpdateConfigurationsDatadog(content []byte)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlDocpUpdateConfigurations, bytes.NewBuffer(content))
 	if err != nil {
-		go l.NotifyStatus("update_docp_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
+		go l.NotifyStatus("update_ORYA_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
 		l.logger.Error("error in create request", "trace", "agent-os-instance.manager_adapter.DocpAgentApiUpdateConfigurationsDatadog", "error", err.Error())
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	res, err := l.client.Do(req)
 	if err != nil {
-		go l.NotifyStatus("update_docp_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
+		go l.NotifyStatus("update_ORYA_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
 		l.logger.Error("error in execute request", "trace", "agent-os-instance.manager_adapter.DocpAgentApiUpdateConfigurationsDatadog", "error", err.Error())
 		return nil, err
 	}
 
-	go l.NotifyStatus("update_docp_vendor_processing", pkg.TransactionEventUpdate, "update docp vendor processing", ctxTransaction)
+	go l.NotifyStatus("update_ORYA_vendor_processing", pkg.TransactionEventUpdate, "update docp vendor processing", ctxTransaction)
 	time.Sleep(l.delay)
 
 	defer res.Body.Close()
 	respBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		go l.NotifyStatus("update_docp_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
+		go l.NotifyStatus("update_ORYA_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
 		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.DocpAgentApiUpdateConfigurationsDatadog", "error", err.Error())
 		return nil, err
 	}
 
-	go l.NotifyStatus("update_docp_vendor_complete", pkg.TransactionEventClose, "update docp vendor completed", ctxTransaction)
+	go l.NotifyStatus("update_ORYA_vendor_complete", pkg.TransactionEventClose, "update docp vendor completed", ctxTransaction)
 	return respBytes, nil
 }
 
@@ -950,14 +950,14 @@ func (l *ManagerAdapter) prepareDocpAgentAction(stateCheckSignal dto.StateCheckS
 	if stateCheckSignal.TypeSignal == "update" {
 		if len(stateCheckSignal.Agents.DocpAgent.Version) > 0 {
 			return dto.StateAction{
-				Type:    "docp-agent",
+				Type:    "orya-agent",
 				Action:  "update",
 				Version: stateCheckSignal.Agents.DocpAgent.Version,
 			}
 		}
 	} else if stateCheckSignal.TypeSignal == "uninstall" {
 		return dto.StateAction{
-			Type:   "docp-agent",
+			Type:   "orya-agent",
 			Action: "uninstall",
 		}
 	}

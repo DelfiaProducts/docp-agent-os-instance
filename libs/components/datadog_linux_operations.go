@@ -213,7 +213,7 @@ func (d *DatadogLinuxOperation) DatadogAddPermitionGroupFilePath(filePath string
 
 // DatadogAddPermitionUser add permition for directory the datadog
 func (d *DatadogLinuxOperation) DatadogAddPermitionUser() error {
-	if err := d.program.Execute("sudo", []string{}, "usermod", "-aG", "dd-agent", "docp-agent"); err != nil {
+	if err := d.program.Execute("sudo", []string{}, "usermod", "-aG", "dd-agent", "orya-agent"); err != nil {
 		return err
 	}
 	return nil

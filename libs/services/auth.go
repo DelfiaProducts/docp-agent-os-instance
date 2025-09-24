@@ -82,7 +82,7 @@ func (as *AuthService) AuthCall(payload dto.AuthPayload) ([]byte, int, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("docp-api-key", apiKey)
+	req.Header.Set("orya-api-key", apiKey)
 
 	res, err := as.client.Do(req)
 	if err != nil {

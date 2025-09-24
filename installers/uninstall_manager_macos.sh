@@ -4,9 +4,9 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-MANAGER_IS_RUNNING=$(ps aux | grep -v grep | grep docp-agent/bin/current/manager)
-DOCP_FILES_PATH=/opt/docp-agent
-USER_GROUP_NAME=docp-agent
+MANAGER_IS_RUNNING=$(ps aux | grep -v grep | grep orya-agent/bin/current/manager)
+ORYA_FILES_PATH=/opt/orya-agent
+USER_GROUP_NAME=orya-agent
 
 # Root user detection
 if [ "$UID" == "0" ]; then
@@ -28,7 +28,7 @@ function remove_file_service(){
 
 #remove work dir
 function remove_work_dir() {
-  $sudo_cmd rm -rf $DOCP_FILES_PATH 
+  $sudo_cmd rm -rf $ORYA_FILES_PATH 
 }
 
 #verify is darwin kernel

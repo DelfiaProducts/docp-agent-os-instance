@@ -100,8 +100,8 @@ func TestManagerAdapterStatus(t *testing.T) {
 				manager = adapters.NewManagerAdapter(logger)
 				err = manager.Prepare()
 			})
-			s.When("chamo Status para docp-agent.service", func() {
-				status, err = manager.Status("docp-agent.service")
+			s.When("chamo Status para orya-agent.service", func() {
+				status, err = manager.Status("orya-agent.service")
 			})
 			s.Then("deve retornar status sem erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "Status não deve retornar erro")
@@ -139,8 +139,8 @@ func TestManagerAdapterRestartService(t *testing.T) {
 				manager = adapters.NewManagerAdapter(logger)
 				err = manager.Prepare()
 			})
-			s.When("chamo RestartService para docp-manager.service", func() {
-				err = manager.RestartService("docp-manager.service")
+			s.When("chamo RestartService para orya-manager.service", func() {
+				err = manager.RestartService("orya-manager.service")
 			})
 			s.Then("deve reiniciar sem erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "RestartService não deve retornar erro")
@@ -158,8 +158,8 @@ func TestManagerAdapterStopService(t *testing.T) {
 				manager = adapters.NewManagerAdapter(logger)
 				err = manager.Prepare()
 			})
-			s.When("chamo StopService para docp-manager.service", func() {
-				err = manager.StopService("docp-manager.service")
+			s.When("chamo StopService para orya-manager.service", func() {
+				err = manager.StopService("orya-manager.service")
 			})
 			s.Then("deve parar sem erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "StopService não deve retornar erro")

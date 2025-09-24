@@ -4,11 +4,11 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-FILE_INDEX_URL="https://docp-agent.s3.us-east-1.amazonaws.com/index_os_instance.json"
+FILE_INDEX_URL="https://orya-agent.s3.us-east-1.amazonaws.com/index_os_instance.json"
 BINARY_URL="https://github.com/OryaHub/agent-os-instance/releases/download"
 VERSION="${VERSION:-${VERSION:-latest}}"
-DOCP_FILES_PATH=/opt/docp-agent
-USER_GROUP_NAME=docp-agent
+ORYA_FILES_PATH=/opt/orya-agent
+USER_GROUP_NAME=orya-agent
 
 # Root user detection
 if [ "$UID" == "0" ]; then
@@ -67,22 +67,22 @@ function resolve_version() {
 
 #add permission workdir
 function add_perm_work_dir(){
-  $sudo_cmd chown -R $USER_GROUP_NAME:$USER_GROUP_NAME /opt/docp-agent/
+  $sudo_cmd chown -R $USER_GROUP_NAME:$USER_GROUP_NAME /opt/orya-agent/
 }
 
 #get binary arm64
 function get_binary_arch64(){
-  sudo curl -s -L -o $DOCP_FILES_PATH/bin/releases/$VERSION/updater "$BINARY_URL/$VERSION/updater-macos-arm64"
-  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/updater
+  sudo curl -s -L -o $ORYA_FILES_PATH/bin/releases/$VERSION/updater "$BINARY_URL/$VERSION/updater-macos-arm64"
+  sudo chmod +x $ORYA_FILES_PATH/bin/releases/$VERSION/updater
 }
 #get binary amd64
 function get_binary_amd64(){
-  sudo curl -s -L -o $DOCP_FILES_PATH/bin/releases/$VERSION/updater "$BINARY_URL/$VERSION/updater-macos-amd64"
-  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/updater
+  sudo curl -s -L -o $ORYA_FILES_PATH/bin/releases/$VERSION/updater "$BINARY_URL/$VERSION/updater-macos-amd64"
+  sudo chmod +x $ORYA_FILES_PATH/bin/releases/$VERSION/updater
 }
 # create symbolic link
 function create_link_simbolic(){
-  sudo ln -sfn $DOCP_FILES_PATH/bin/releases/$VERSION/updater $DOCP_FILES_PATH/bin/current/updater
+  sudo ln -sfn $ORYA_FILES_PATH/bin/releases/$VERSION/updater $ORYA_FILES_PATH/bin/current/updater
 }
 
 #set content service
@@ -101,7 +101,7 @@ function set_content_service() {
         <string>com.docp.manager</string>
         <key>EnvironmentVariables</key>
         <dict>
-            <key>DOCP_AGENT_PORT</key>
+            <key>ORYA_AGENT_PORT</key>
             <string>12012</string>
             <key>LOG_LEVEL</key>
             <string>info</string>
@@ -110,12 +110,12 @@ function set_content_service() {
         </dict>
         <key>ProgramArguments</key>
         <array>
-            <string>/opt/docp-agent/bin/current/updater</string>
+            <string>/opt/orya-agent/bin/current/updater</string>
         </array>
         <key>StandardOutPath</key>
-        <string>/opt/docp-agent/logs/launchd.log</string>
+        <string>/opt/orya-agent/logs/launchd.log</string>
         <key>StandardErrorPath</key>
-        <string>/opt/docp-agent/logs/launchd.log</string>
+        <string>/opt/orya-agent/logs/launchd.log</string>
         <key>ExitTimeOut</key>
         <integer>10</integer>
     </dict>

@@ -69,7 +69,7 @@ func TestFileSystemWriteFileContent(t *testing.T) {
 				fileSystem = pkg.NewFileSystem()
 			})
 			s.When("escrevo conteúdo no arquivo", func() {
-				err = fileSystem.WriteFileContent("/opt/docp-agent/state/hash", []byte("xpto-123"))
+				err = fileSystem.WriteFileContent("/opt/orya-agent/state/hash", []byte("xpto-123"))
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "WriteFileContent não deve retornar erro")
@@ -87,7 +87,7 @@ func TestFileSystemVerifyDirExistAndCreate(t *testing.T) {
 				fileSystem = pkg.NewFileSystem()
 			})
 			s.When("verifico/crio diretório", func() {
-				err = fileSystem.VerifyDirExistAndCreate("/opt/docp-agent/state")
+				err = fileSystem.VerifyDirExistAndCreate("/opt/orya-agent/state")
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "VerifyDirExistAndCreate não deve retornar erro")
@@ -105,7 +105,7 @@ func TestFileSystemCreateFile(t *testing.T) {
 				fileSystem = pkg.NewFileSystem()
 			})
 			s.When("crio um arquivo", func() {
-				err = fileSystem.CreateFile("/opt/docp-agent/state/hash")
+				err = fileSystem.CreateFile("/opt/orya-agent/state/hash")
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "CreateFile não deve retornar erro")
@@ -123,7 +123,7 @@ func TestFileSystemCreateOrUpdateSymlink(t *testing.T) {
 				fileSystem = pkg.NewFileSystem()
 			})
 			s.When("crio um symlink", func() {
-				err = fileSystem.CreateOrUpdateSymlink("/opt/docp-agent/bin/releases/0.1.1/manager", "/opt/docp-agent/bin/current/manager")
+				err = fileSystem.CreateOrUpdateSymlink("/opt/orya-agent/bin/releases/0.1.1/manager", "/opt/orya-agent/bin/current/manager")
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "CreateOrUpdateSymlink não deve retornar erro")

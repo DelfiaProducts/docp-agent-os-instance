@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	DEFAULT_LIBRARY_FILE_PATH            = "/opt/docp-agent/shared"
+	DEFAULT_LIBRARY_FILE_PATH            = "/opt/orya-agent/shared"
 	DATADOG_PHP_FILE_NAME                = "datadog-setup.php"
 	DATADOG_JAVA_FILE_NAME               = "dd-java-agent.jar"
 	DEFAULT_VERSION_DOT_NET_TRACER       = "3.7.0"
@@ -56,7 +56,7 @@ func (d *DatadogAPMTracer) formatPathTracer(pathTracer, file string) (string, er
 		} else {
 			return "", errors.New("path tracer is not directory")
 		}
-	} else { // not exist path tracer, setting /opt/docp-agent/shared
+	} else { // not exist path tracer, setting /opt/orya-agent/shared
 		if err := d.fileSystem.VerifyDirExistAndCreate(DEFAULT_LIBRARY_FILE_PATH); err != nil {
 			return "", err
 		}

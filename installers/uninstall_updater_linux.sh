@@ -4,8 +4,8 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-DOCP_FILES_PATH=/opt/docp-agent
-USER_GROUP_NAME=docp-agent
+ORYA_FILES_PATH=/opt/orya-agent
+USER_GROUP_NAME=orya-agent
 
 # Root user detection
 if [ "$UID" == "0" ]; then
@@ -16,13 +16,13 @@ fi
 
 #stop and disable systemd
 function stop_and_disable() {
-  $sudo_cmd systemctl stop docp-updater
-  $sudo_cmd systemctl disable docp-updater
+  $sudo_cmd systemctl stop orya-updater
+  $sudo_cmd systemctl disable orya-updater
 }
 
 #remove file service
 function remove_file_service(){
-  $sudo_cmd rm /etc/systemd/system/docp-updater.service
+  $sudo_cmd rm /etc/systemd/system/orya-updater.service
 }
 # reload daemon
 function reload_daemon(){
