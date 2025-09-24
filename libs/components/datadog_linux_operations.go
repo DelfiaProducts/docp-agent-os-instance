@@ -116,7 +116,7 @@ func (d *DatadogLinuxOperation) Setup() error {
 }
 
 // InstallAgent execute install the agent in linux
-func (d *DatadogLinuxOperation) InstallAgent(ddSite, ddApiKey string) error {
+func (d *DatadogLinuxOperation) InstallAgent(ddSite, ddApiKey, version string) error {
 	envs := d.prepareEnvs(ddSite, ddApiKey)
 	aptOrDpkgIsRunning, err := d.hostStats.AptOrDpkgIsRunning()
 	if err != nil {
@@ -135,7 +135,7 @@ func (d *DatadogLinuxOperation) InstallAgent(ddSite, ddApiKey string) error {
 }
 
 // InstallAgentApmSingleStep execute install the agent in linux with apm tracer on mode single step
-func (d *DatadogLinuxOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, datadogEnvVars []dto.DatadogEnvVars) error {
+func (d *DatadogLinuxOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, version string, datadogEnvVars []dto.DatadogEnvVars) error {
 	envs := d.prepareEnvs(ddSite, ddApiKey)
 	aptOrDpkgIsRunning, err := d.hostStats.AptOrDpkgIsRunning()
 	if err != nil {
