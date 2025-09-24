@@ -88,6 +88,11 @@ func GetFileAgentVersionsName() string {
 	return pkg.DOCP_FILE_AGENT_VERSIONS_NAME
 }
 
+// GetDatadogAgentUrlWindows return the url for download datadog agent windows
+func GetDatadogAgentUrlWindows() string {
+	return pkg.URL_DATADOG_AGENT_WINDOWS
+}
+
 // GetRuntimeArch return runtime arch
 func GetRuntimeArch() string {
 	return runtime.GOARCH
