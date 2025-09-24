@@ -236,7 +236,7 @@ func TestManagerAdapterDocpAgentApiInstallDatadog(t *testing.T) {
 				err = manager.Prepare()
 			})
 			s.When("chamo DocpAgentApiInstallDatadog", func() {
-				result, err = manager.DocpAgentApiInstallDatadog("9ba8aefcaa347216ffa5a5e7b3156f54", "datadoghq.com")
+				result, err = manager.DocpAgentApiInstallDatadog("9ba8aefcaa347216ffa5a5e7b3156f54", "datadoghq.com", "latest")
 			})
 			s.Then("deve instalar datadog sem erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "DocpAgentApiInstallDatadog não deve retornar erro")
