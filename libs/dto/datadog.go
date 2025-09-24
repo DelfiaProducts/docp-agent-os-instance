@@ -17,6 +17,7 @@ type DatadogInstallDTO struct {
 	DDSite    string           `json:"dd_site"`
 	DDApiKey  string           `json:"dd_api_key"`
 	Mode      string           `json:"mode"`
+	Version   string           `json:"version"`
 	Component string           `json:"component"`
 	EnvVars   []DatadogEnvVars `json:"env_vars,omitempty"`
 }
