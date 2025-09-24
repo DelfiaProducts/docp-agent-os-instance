@@ -1,10 +1,11 @@
 package pkg
 
 const (
-	DOCP_AGENT_PORT = "12012"
-	DOCP_DOMAIN     = "https://msapi.sandbox.docphq.tech"
-	BUCKET_URL      = "https://docp-agent.s3.us-east-1.amazonaws.com"
-	URL_RELEASE     = "https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
+	DOCP_AGENT_PORT           = "12012"
+	DOCP_DOMAIN               = "https://msapi.sandbox.docphq.tech"
+	BUCKET_URL                = "https://docp-agent.s3.us-east-1.amazonaws.com"
+	URL_RELEASE               = "https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
+	URL_DATADOG_AGENT_WINDOWS = "https://s3.amazonaws.com/ddagent-windows-stable"
 
 	DOCP_FILE_AGENT_VERSIONS_NAME = "index_os_instance.json"
 )
