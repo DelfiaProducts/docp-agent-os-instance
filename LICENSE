@@ -1,9 +1,9 @@
 SOURCE-AVAILABLE LICENSE
 
-Copyright (c) 2025 DOCP. All rights reserved.
+Copyright (c) 2025 ORYA. All rights reserved.
 
 GRANT OF RIGHTS:
-Subject to the terms and conditions of this license, DOCP grants you a limited, non-exclusive, non-transferable, revocable license to:
+Subject to the terms and conditions of this license, ORYA grants you a limited, non-exclusive, non-transferable, revocable license to:
 
 1. VIEW the source code of this software for transparency, security review, and educational purposes
 2. SUBMIT contributions (including bug reports, feature requests, and code contributions) through the official project repositories
@@ -24,8 +24,8 @@ You are expressly prohibited from:
 
 CONTRIBUTIONS:
 By submitting any contribution to this project, you agree that:
-- Your contribution becomes the exclusive property of DOCP
-- You grant DOCP unlimited rights to use, modify, and distribute your contribution
+- Your contribution becomes the exclusive property of ORYA
+- You grant ORYA unlimited rights to use, modify, and distribute your contribution
 - You have the right to make such contribution and it doesn't violate any third-party rights
 - You waive any moral rights or attribution rights to your contribution
 
@@ -35,16 +35,16 @@ This software and all associated intellectual property, including but not limite
 - Documentation, comments, and specifications  
 - Algorithms, techniques, and business logic
 - Trade secrets and proprietary methodologies
-remain the exclusive property of DOCP.
+remain the exclusive property of ORYA.
 
 NO WARRANTY:
 THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
 
 LIMITATION OF LIABILITY:
-IN NO EVENT SHALL DOCP BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+IN NO EVENT SHALL ORYA BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 TERMINATION:
-This license is effective until terminated. DOCP may terminate this license at any time without notice. Upon termination, you must cease all use of the software and destroy all copies in your possession.
+This license is effective until terminated. ORYA may terminate this license at any time without notice. Upon termination, you must cease all use of the software and destroy all copies in your possession.
 
 GOVERNING LAW:
 This license shall be governed by and construed in accordance with the laws of Brazil, without regard to its conflict of law provisions.
