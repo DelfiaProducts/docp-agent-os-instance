@@ -987,7 +987,7 @@ func (l *ManagerOperator) installAgentDatadogWithApmSingleStep(ddApiKey, ddSite,
 		l.chanErrors <- dto.CommonChanErrors{From: "installAgentDatadogWithApmSingleStep", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
-	l.logger.Debug("install agent datadog with apm single step", "trace", "agent-os-instance.manager_operator.installAgentDatadogWithApmSingleStep", "docpStatus", status, "alreadyTracer", alreadyTracer)
+	l.logger.Debug("install agent datadog with apm single step", "trace", "agent-os-instance.manager_operator.installAgentDatadogWithApmSingleStep", "oryaStatus", status, "alreadyTracer", alreadyTracer)
 	if status != "active" {
 		result, err := l.adapter.OryaAgentApiInstallDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
 		if err != nil {
@@ -1018,7 +1018,7 @@ func (l *ManagerOperator) installDatadogTracerWithTracingLibrary(ddApiKey, ddSit
 		l.chanErrors <- dto.CommonChanErrors{From: "installDatadogTracerWithTracingLibrary", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
-	l.logger.Debug("install datadog tracer", "trace", "agent-os-instance.manager_operator.installDatadogTracerWithTracingLibrary", "docpStatus", status, "alreadyTracer", alreadyTracer)
+	l.logger.Debug("install datadog tracer", "trace", "agent-os-instance.manager_operator.installDatadogTracerWithTracingLibrary", "oryaStatus", status, "alreadyTracer", alreadyTracer)
 	existLanguage, err := l.adapter.ExistTracerLanguage(language)
 	if err != nil {
 		return

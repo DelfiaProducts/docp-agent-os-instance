@@ -87,7 +87,7 @@ func processTags(tags string) map[string]string {
 }
 
 // addContentConfigYml save initial config yml
-func addContentConfigYml(docpFilesPath, apiKey, tags, version, noGroupAssociation string) error {
+func addContentConfigYml(oryaFilesPath, apiKey, tags, version, noGroupAssociation string) error {
 	processedTags := processTags(tags)
 	noGroupBool, err := strconv.ParseBool(noGroupAssociation)
 	if err != nil {
@@ -101,7 +101,7 @@ func addContentConfigYml(docpFilesPath, apiKey, tags, version, noGroupAssociatio
 			Tags:   processedTags,
 		},
 	}
-	configFilePath := filepath.Join(docpFilesPath, "config.yml")
+	configFilePath := filepath.Join(oryaFilesPath, "config.yml")
 
 	file, err := os.Create(configFilePath)
 	if err != nil {
@@ -175,15 +175,15 @@ func main() {
 	url := prepareUrl(baseUrl, version, fileName)
 
 	pathDir := os.Getenv("ProgramFiles")
-	docpFilesPath := filepath.Join(pathDir, "OryaAgent")
+	oryaFilesPath := filepath.Join(pathDir, "OryaAgent")
 	if err := createDefaultFiles(pathDir); err != nil {
 		notifyError("Installer Orya Manager", err.Error())
 	}
-	if err := addContentConfigYml(docpFilesPath, apiKey, tags, version, noGroupAssociation); err != nil {
+	if err := addContentConfigYml(oryaFilesPath, apiKey, tags, version, noGroupAssociation); err != nil {
 		notifyError("Installer Orya Manager", err.Error())
 	}
 
-	destDir := filepath.Join(docpFilesPath, "bin")
+	destDir := filepath.Join(oryaFilesPath, "bin")
 	destFile := filepath.Join(destDir, "manager.exe")
 
 	err := downloadFile(url, destFile)

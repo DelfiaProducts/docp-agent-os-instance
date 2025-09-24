@@ -67,7 +67,7 @@ type StateActionFiles struct {
 
 // AuthTokenClaims is struct for auth token claims
 type AuthTokenClaims struct {
-	OryaOrgId int    `json:"docp_org_id"`
+	OryaOrgId int    `json:"orya_org_id"`
 	ComputeId string `json:"compute_id"`
 }
 

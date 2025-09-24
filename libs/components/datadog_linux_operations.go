@@ -221,11 +221,11 @@ func (d *DatadogLinuxOperation) DatadogAddPermitionUser() error {
 
 // BackupConfigFileDatadog execute backup the current config file datadog
 func (d *DatadogLinuxOperation) BackupConfigFileDatadog(filePath string, content []byte) error {
-	docpFilePath, err := utils.GetWorkDirPath()
+	oryaFilePath, err := utils.GetWorkDirPath()
 	if err != nil {
 		return err
 	}
-	filePathState := filepath.Join(docpFilePath, "state", "datadog", filePath)
+	filePathState := filepath.Join(oryaFilePath, "state", "datadog", filePath)
 	if err := d.fileSystem.VerifyFileExist(filePathState); err != nil {
 		if errCrt := d.fileSystem.CreatePathCompleted(filePathState); errCrt != nil {
 			return errCrt
@@ -239,16 +239,16 @@ func (d *DatadogLinuxOperation) BackupConfigFileDatadog(filePath string, content
 
 // UpdateConfigFileDatadog execute update the config file datadog
 func (d *DatadogLinuxOperation) UpdateConfigFileDatadog(filePath string) error {
-	docpFilePath, err := utils.GetWorkDirPath()
+	oryaFilePath, err := utils.GetWorkDirPath()
 	if err != nil {
 		return err
 	}
 	datadogFilePathDir := filepath.Dir(filePath)
-	docpStateDatadogPath := filepath.Join(docpFilePath, "state", "datadog", filePath)
+	oryaStateDatadogPath := filepath.Join(oryaFilePath, "state", "datadog", filePath)
 	if err := d.program.Execute("sudo", []string{}, "-u", "dd-agent", "bash", "-c", fmt.Sprintf("mkdir -p %s", datadogFilePathDir)); err != nil {
 		return err
 	}
-	if err := d.program.Execute("sudo", []string{}, "-u", "dd-agent", "bash", "-c", fmt.Sprintf("cat %s | tee %s > /dev/null", docpStateDatadogPath, filePath)); err != nil {
+	if err := d.program.Execute("sudo", []string{}, "-u", "dd-agent", "bash", "-c", fmt.Sprintf("cat %s | tee %s > /dev/null", oryaStateDatadogPath, filePath)); err != nil {
 		return err
 	}
 	return nil

@@ -144,7 +144,7 @@ function create_workdir(){
 function save_api_key_and_tags(){
   api_key=$1
   tgs=$2
-  printf "ORYA_API_KEY=$api_key\nORYA_TAGS=$tgs\nORYA_DOMAIN=https://msapi.sandbox.docphq.tech\nORYA_AGENT_PORT=12012\n" | sudo tee $ORYA_FILES_PATH/environments > /dev/null
+  printf "ORYA_API_KEY=$api_key\nORYA_TAGS=$tgs\nORYA_DOMAIN=https://msapi.sandbox.oryahq.tech\nORYA_AGENT_PORT=12012\n" | sudo tee $ORYA_FILES_PATH/environments > /dev/null
 }
 
 # Corrige a função resolve_version para extrair corretamente o campo "latest" do JSON

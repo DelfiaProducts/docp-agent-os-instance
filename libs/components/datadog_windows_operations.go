@@ -169,14 +169,14 @@ func (d *DatadogWindowsOperation) DatadogAddPermitionUser() error {
 
 // BackupConfigFileDatadog execute backup the current config file datadog
 func (d *DatadogWindowsOperation) BackupConfigFileDatadog(filePath string, content []byte) error {
-	docpFilePath, err := utils.GetWorkDirPath()
+	oryaFilePath, err := utils.GetWorkDirPath()
 	if err != nil {
 		return err
 	}
 	programData := os.Getenv("ProgramData")
 	basePath := filepath.Join(programData, "Datadog")
 	filteredPath := strings.TrimPrefix(filePath, basePath)
-	filePathState := filepath.Join(docpFilePath, "state", "Datadog", filteredPath)
+	filePathState := filepath.Join(oryaFilePath, "state", "Datadog", filteredPath)
 	if err := d.fileSystem.VerifyFileExist(filePathState); err != nil {
 		if errCrt := d.fileSystem.CreatePathCompleted(filePathState); errCrt != nil {
 			return errCrt
@@ -190,7 +190,7 @@ func (d *DatadogWindowsOperation) BackupConfigFileDatadog(filePath string, conte
 
 // UpdateConfigFileDatadog execute update the config file datadog
 func (d *DatadogWindowsOperation) UpdateConfigFileDatadog(filePath string) error {
-	docpFilePath, err := utils.GetWorkDirPath()
+	oryaFilePath, err := utils.GetWorkDirPath()
 	if err != nil {
 		return err
 	}
@@ -199,13 +199,13 @@ func (d *DatadogWindowsOperation) UpdateConfigFileDatadog(filePath string) error
 	filteredPath := strings.TrimPrefix(filePath, basePath)
 
 	datadogFilePathDir := filepath.Dir(filePath)
-	docpStateDatadogPath := filepath.Join(docpFilePath, "state", "Datadog", filteredPath)
+	oryaStateDatadogPath := filepath.Join(oryaFilePath, "state", "Datadog", filteredPath)
 
 	if err := os.MkdirAll(datadogFilePathDir, os.ModePerm); err != nil {
 		return err
 	}
 
-	content, err := os.ReadFile(docpStateDatadogPath)
+	content, err := os.ReadFile(oryaStateDatadogPath)
 	if err != nil {
 		return err
 	}

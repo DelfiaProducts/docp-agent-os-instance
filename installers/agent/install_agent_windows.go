@@ -85,9 +85,9 @@ func main() {
 	url := prepareUrlAgent(baseUrl, version, fileName)
 
 	pathDir := os.Getenv("ProgramFiles")
-	docpFilesPath := filepath.Join(pathDir, "OryaAgent")
+	oryaFilesPath := filepath.Join(pathDir, "OryaAgent")
 
-	destDir := filepath.Join(docpFilesPath, "bin")
+	destDir := filepath.Join(oryaFilesPath, "bin")
 	destFile := filepath.Join(destDir, "agent.exe")
 
 	err := downloadFileAgent(url, destFile)

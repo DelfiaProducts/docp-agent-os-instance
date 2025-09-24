@@ -11,9 +11,9 @@ import (
 
 // GetDomainUrl return domain url
 func GetDomainUrl() (string, error) {
-	docpDomain := os.Getenv("ORYA_DOMAIN")
-	if len(docpDomain) != 0 {
-		return docpDomain, nil
+	oryaDomain := os.Getenv("ORYA_DOMAIN")
+	if len(oryaDomain) != 0 {
+		return oryaDomain, nil
 	}
 	return pkg.ORYA_DOMAIN, nil
 }

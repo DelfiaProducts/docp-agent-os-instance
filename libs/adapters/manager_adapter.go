@@ -40,7 +40,7 @@ type ManagerAdapter struct {
 	stateCheck               *services.StateCheckService
 	auth                     *services.AuthService
 	utilityService           *services.UtilityService
-	docpApiPort              string
+	oryaApiPort              string
 	delay                    time.Duration
 	pendingTransactionEvents []dto.TransactionStatus
 	LockedEvents             bool
@@ -93,7 +93,7 @@ func (l *ManagerAdapter) Prepare() error {
 	if err != nil {
 		return err
 	}
-	l.docpApiPort = apiPort
+	l.oryaApiPort = apiPort
 	agentWorkDir, err := utils.GetWorkDirPath()
 	if err != nil {
 		return err
@@ -627,7 +627,7 @@ func (l *ManagerAdapter) OryaAgentApiInstallDatadog(ddApiKey, ddSite, version st
 	go l.NotifyStatus("install_ORYA_vendor_processing", pkg.TransactionEventUpdate, "install orya vendor processing", ctx)
 	time.Sleep(l.delay)
 
-	urlOryaInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/install", l.docpApiPort)
+	urlOryaInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/install", l.oryaApiPort)
 	respBytes, err := l.requestForAgentInstallDatadog(urlOryaInstallDatadog, http.MethodPost, bDatadogDto)
 	if err != nil {
 		go l.NotifyStatus("install_ORYA_vendor_error", pkg.TransactionEventClose, "failed install orya vendor", ctx)
@@ -676,7 +676,7 @@ func (l *ManagerAdapter) OryaAgentApiInstallDatadogWithApmSingleStep(ddApiKey, d
 		return nil, err
 	}
 
-	urlOryaInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/install", l.docpApiPort)
+	urlOryaInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/install", l.oryaApiPort)
 
 	go l.NotifyStatus("install_ORYA_vendor_tracer_processing", pkg.TransactionEventUpdate, "install orya vendor tracer single step processing", ctx)
 	time.Sleep(l.delay)
@@ -733,7 +733,7 @@ func (l *ManagerAdapter) OryaAgentApiInstallDatadogWithApmTracingLibrary(ddApiKe
 		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer", ctx)
 		return nil, err
 	}
-	urlOryaInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/tracer/install", l.docpApiPort)
+	urlOryaInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/tracer/install", l.oryaApiPort)
 
 	go l.NotifyStatus("install_ORYA_vendor_tracer_processing", pkg.TransactionEventUpdate, "install orya vendor tracer library processing", ctx)
 	time.Sleep(l.delay)
@@ -764,7 +764,7 @@ func (l *ManagerAdapter) OryaAgentApiUninstallDatadog() ([]byte, error) {
 	go l.NotifyStatus("uninstall_ORYA_vendor_received", pkg.TransactionEventOpen, "uninstall orya vendor received", ctxTransaction)
 	time.Sleep(l.delay)
 
-	urlOryaUninstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/uninstall", l.docpApiPort)
+	urlOryaUninstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/uninstall", l.oryaApiPort)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlOryaUninstallDatadog, nil)
@@ -811,7 +811,7 @@ func (l *ManagerAdapter) OryaAgentApiUpdateConfigurationsDatadog(content []byte)
 	go l.NotifyStatus("update_vendor_received", pkg.TransactionEventOpen, "update vendor received", ctxTransaction)
 	time.Sleep(l.delay)
 
-	urlOryaUpdateConfigurations := fmt.Sprintf("http://127.0.0.1:%s/datadog/configurations", l.docpApiPort)
+	urlOryaUpdateConfigurations := fmt.Sprintf("http://127.0.0.1:%s/datadog/configurations", l.oryaApiPort)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlOryaUpdateConfigurations, bytes.NewBuffer(content))
@@ -852,7 +852,7 @@ func (l *ManagerAdapter) OryaAgentApiUpdateVersionDatadog(version string) ([]byt
 		return nil, err
 	}
 
-	urlOryaUpdateVersion := fmt.Sprintf("http://127.0.0.1:%s/datadog/update/version", l.docpApiPort)
+	urlOryaUpdateVersion := fmt.Sprintf("http://127.0.0.1:%s/datadog/update/version", l.oryaApiPort)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlOryaUpdateVersion, bytes.NewBuffer(bodyUpdateVersion))
@@ -1226,16 +1226,16 @@ func (l *ManagerAdapter) GetActions(stateCheckResponse *dto.StateCheckResponse) 
 	var arrStateActions []dto.StateAction
 
 	// prepare orya agent action
-	docpAgentAction := l.prepareOryaAgentAction(stateCheckResponse.Signal)
+	oryaAgentAction := l.prepareOryaAgentAction(stateCheckResponse.Signal)
 	lastOryaAgentActionHash := l.GetStore("action.orya.state")
-	docpAgentActionBytes, err := l.marshaller(&docpAgentAction)
+	oryaAgentActionBytes, err := l.marshaller(&oryaAgentAction)
 	if err != nil {
 		return nil, err
 	}
 
-	newOryaAgentActionHash := utils.GenerateMd5Hash(docpAgentActionBytes)
+	newOryaAgentActionHash := utils.GenerateMd5Hash(oryaAgentActionBytes)
 	if newOryaAgentActionHash != lastOryaAgentActionHash {
-		arrStateActions = append(arrStateActions, docpAgentAction)
+		arrStateActions = append(arrStateActions, oryaAgentAction)
 		if err := l.SetStore("action.orya.state", newOryaAgentActionHash); err != nil {
 			return nil, err
 		}
@@ -1313,7 +1313,7 @@ func (l *ManagerAdapter) GetActions(stateCheckResponse *dto.StateCheckResponse) 
 	}
 
 	arrStateActionsFiltered := l.removeAgentDatadogIfTracerSingleStepExists(arrStateActions)
-	l.logger.Debug("get actions", "trace", "agent-os-instance.manager_adapter.GetActions", "docpAgentAction", docpAgentAction, "agentDatadogAction", agentDatadogAction, "agentDatadogUpdateAction", agentDatadogUpdateAction, "tracerDatadogLibraryAction", tracerDatadogLibraryAction, "tracerDatadogSingleStepAction", tracerDatadogSingleStepAction)
+	l.logger.Debug("get actions", "trace", "agent-os-instance.manager_adapter.GetActions", "oryaAgentAction", oryaAgentAction, "agentDatadogAction", agentDatadogAction, "agentDatadogUpdateAction", agentDatadogUpdateAction, "tracerDatadogLibraryAction", tracerDatadogLibraryAction, "tracerDatadogSingleStepAction", tracerDatadogSingleStepAction)
 	l.logger.Debug("get actions", "trace", "agent-os-instance.manager_adapter.GetActions", "arrStateActions", arrStateActions)
 
 	return arrStateActionsFiltered, nil
@@ -1481,7 +1481,7 @@ func (l *ManagerAdapter) ValidateDatadogNotInstalled() (bool, error) {
 // Validade execute validate states
 func (l *ManagerAdapter) Validate() error {
 	l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate")
-	docpAgentIsOK := false
+	oryaAgentIsOK := false
 	datadogAgentIsOK := false
 
 	workdir, err := utils.GetWorkDirPath()
@@ -1510,7 +1510,7 @@ func (l *ManagerAdapter) Validate() error {
 	datadog := signal.Agents.DatadogAgent
 
 	// validate orya agent
-	l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "docpAgent", agent)
+	l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "oryaAgent", agent)
 	if len(agent.Version) > 0 {
 		status, err := l.osOperation.Status("agent")
 		l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "orya agent status when enabled", status)
@@ -1518,20 +1518,20 @@ func (l *ManagerAdapter) Validate() error {
 			return err
 		}
 		if strings.ReplaceAll(status, "\"", "") == "active" {
-			docpAgentIsOK = true
-			l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "docpAgentIsOK", docpAgentIsOK)
+			oryaAgentIsOK = true
+			l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "oryaAgentIsOK", oryaAgentIsOK)
 		}
 
 	}
 
 	if len(agent.Version) == 0 {
 		status, err := l.osOperation.Status("agent")
-		l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "orya agent status not when enabled", status, "docpAgentIsOk", docpAgentIsOK)
+		l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "orya agent status not when enabled", status, "oryaAgentIsOk", oryaAgentIsOK)
 		if err != nil {
 			return err
 		}
 		if strings.ReplaceAll(status, "\"", "") != "active" {
-			docpAgentIsOK = true
+			oryaAgentIsOK = true
 		}
 
 	}
@@ -1556,8 +1556,8 @@ func (l *ManagerAdapter) Validate() error {
 		}
 	}
 
-	l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "docpAgentIsOk", docpAgentIsOK, "datadogAgentIsOk", datadogAgentIsOK)
-	if docpAgentIsOK && datadogAgentIsOK {
+	l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "oryaAgentIsOk", oryaAgentIsOK, "datadogAgentIsOk", datadogAgentIsOK)
+	if oryaAgentIsOK && datadogAgentIsOK {
 		l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "status", "validation success")
 		if err := l.fileSystem.WriteFileContent(currentFilePath, content); err != nil {
 			return err
