@@ -8,6 +8,7 @@ var (
 	ErrNotFound               = errors.New("not found")
 	ErrSignalAlreadyExists    = errors.New("signal already exists")
 	ErrFailedGetAgentVersions = errors.New("failed get agent versions")
+	ErrValidateUrlExists      = errors.New("url not found")
 	ErrAgentVersionNotFound   = errors.New("agent version not found")
 	ErrDatadogVersionNotFound = errors.New("datadog version not found")
 	ErrContextExpired         = errors.New("context expired")
