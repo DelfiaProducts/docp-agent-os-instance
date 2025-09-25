@@ -132,3 +132,8 @@ func ErrDatadogVersionNotFound() error {
 func ErrContextExpired() error {
 	return pkg.ErrContextExpired
 }
+
+// ErrValidateUrlExists return error the url not found
+func ErrValidateUrlExists() error {
+	return pkg.ErrValidateUrlExists
+}
