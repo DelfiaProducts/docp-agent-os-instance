@@ -76,3 +76,24 @@ func (u *UtilityService) FetchAgentVersions() (dto.AgentVersions, error) {
 
 	return versions, nil
 }
+
+// FetchAgentVersions fetches the summary agent versions from the repository.
+func (u *UtilityService) ValidateUrlExists(url string) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+	res, err := u.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return utils.ErrValidateUrlExists()
+	}
+
+	return nil
+}
