@@ -75,3 +75,27 @@ func TestUtilityServiceFetchAgentVersions(t *testing.T) {
 		})
 	})
 }
+
+func TestUtilityServiceValidateUrlExists(t *testing.T) {
+	bdd.Feature(t, "Validar URL existe", func(t *testing.T, scenario func(description string, steps func(s *bdd.Scenario))) {
+		scenario("URL existe", func(s *bdd.Scenario) {
+			var err error
+			var logger interfaces.ILogger
+			var utilityService *services.UtilityService
+			s.Given("eu crio o utility service", func() {
+				logger = utils.NewOryaLoggerText(os.Stdout)
+				utilityService = services.NewUtilityService(logger)
+			})
+			s.When("eu configuro o utility service", func() {
+				err = utilityService.Setup()
+				bdd.AssertNoError(t, err, "configuração do serviço deve ser executada sem erro")
+			})
+			s.When("eu valido a URL", func() {
+				err = utilityService.ValidateUrlExists("https://example.com")
+			})
+			s.Then("a validação deve ser bem-sucedida", func(t *testing.T) {
+				bdd.AssertNoError(t, err, "validação da URL deve ser executada sem erro")
+			})
+		})
+	})
+}
