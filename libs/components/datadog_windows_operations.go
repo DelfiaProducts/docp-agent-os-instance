@@ -26,6 +26,7 @@ type DatadogWindowsOperation struct {
 	program          *pkg.ExecProgram
 	hostStats        *pkg.HostStats
 	stateCheck       *services.StateCheckService
+	utilityService   *services.UtilityService
 	fileSystem       *pkg.FileSystem
 	datadogApmTracer *DatadogWindowsAPMTracer
 }
@@ -34,31 +35,6 @@ func NewDatadogWindowsOperation(logger interfaces.ILogger) *DatadogWindowsOperat
 	return &DatadogWindowsOperation{
 		logger: logger,
 	}
-}
-
-// prepareEnvs return envs the datadog
-func (d *DatadogWindowsOperation) prepareEnvs(ddSite, ddApiKey string) []string {
-	var envs []string
-	envs = append(envs, fmt.Sprintf("DD_API_KEY=%s", ddApiKey))
-	envs = append(envs, fmt.Sprintf("DD_SITE=%s", ddSite))
-	return envs
-}
-
-// getApmEnvVarsSingleStep get envs apm datadog in mode single step
-func (d *DatadogWindowsOperation) getApmEnvVarsSingleStep(envs []dto.DatadogEnvVars) (string, string, string) {
-	var ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries string
-	for _, env := range envs {
-		if env.Name == "DD_APM_INSTRUMENTATION_ENABLED" {
-			ddApmInstrumentationEnabled = env.Value
-		}
-		if env.Name == "DD_ENV" {
-			ddEnv = env.Value
-		}
-		if env.Name == "DD_APM_INSTRUMENTATION_LIBRARIES" {
-			ddApmInstrumentationLibraries = env.Value
-		}
-	}
-	return ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries
 }
 
 func (d *DatadogWindowsOperation) Setup() error {
@@ -75,6 +51,8 @@ func (d *DatadogWindowsOperation) Setup() error {
 	d.datadogApmTracer = datadogWindowsApmTracer
 	fileSystem := pkg.NewFileSystem()
 	d.fileSystem = fileSystem
+	utilityService := services.NewUtilityService(d.logger)
+	d.utilityService = utilityService
 	return nil
 }
 
@@ -89,7 +67,14 @@ func (d *DatadogWindowsOperation) InstallAgent(ddSite, ddApiKey, version string)
 	if err != nil {
 		d.logger.Warn("error in install datadog agent", "error", err)
 		if errors.Is(err, windows.ERROR_SERVICE_DOES_NOT_EXIST) {
-			urlVersion := fmt.Sprintf("%s/%s", utils.GetDatadogAgentUrlWindows(), "datadog-agent-7-latest.amd64.msi")
+			fileVersion := utils.ChoiceMsiWindowsInstallerFile(version)
+			if len(fileVersion) == 0 {
+				return utils.ErrDatadogVersionNotFound()
+			}
+			urlVersion := fmt.Sprintf("%s/%s", utils.GetDatadogAgentUrlWindows(), fileVersion)
+			if err := d.utilityService.ValidateUrlExists(urlVersion); err != nil {
+				return err
+			}
 			command := fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s APIKEY="%s" SITE="%s"'`, urlVersion, ddApiKey, ddSite)
 			out, err := d.program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
 			if err != nil {
