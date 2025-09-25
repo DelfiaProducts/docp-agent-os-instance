@@ -76,3 +76,13 @@ func ChoiceInstallerOrUninstaller(system, mode, action, version string) string {
 	}
 	return ""
 }
+
+// ChoiceMsiWindowsInstallerFile return file msi windows installer
+func ChoiceMsiWindowsInstallerFile(version string) string {
+	switch version {
+	case "latest":
+		return "datadog-agent-7-latest.amd64.msi"
+	default:
+		return fmt.Sprintf("datadog-agent-%s-1.x86_64.msi", version)
+	}
+}
