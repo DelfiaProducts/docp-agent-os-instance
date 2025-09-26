@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -77,7 +78,7 @@ func (u *UtilityService) FetchAgentVersions() (dto.AgentVersions, error) {
 	return versions, nil
 }
 
-// FetchAgentVersions fetches the summary agent versions from the repository.
+// ValidateUrlExists validates if a URL exists.
 func (u *UtilityService) ValidateUrlExists(url string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
@@ -96,4 +97,32 @@ func (u *UtilityService) ValidateUrlExists(url string) error {
 	}
 
 	return nil
+}
+
+// GetDatadogLastVersionFromGithub fetches the latest version of Datadog from GitHub.
+func (u *UtilityService) GetDatadogLastVersionFromGithub() (string, error) {
+	url := fmt.Sprintf("%s/latest", utils.GetDatadogGithubUrlVersions())
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	res, err := u.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return "", utils.ErrFailedGetLatestVersionDatadog()
+	}
+
+	var datadogApiGithubVersions dto.DatadogApiGithubVersions
+	if err := json.NewDecoder(res.Body).Decode(&datadogApiGithubVersions); err != nil {
+		return "", err
+	}
+
+	return datadogApiGithubVersions.TagName, nil
 }
