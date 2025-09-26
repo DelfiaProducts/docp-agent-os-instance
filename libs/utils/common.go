@@ -93,6 +93,11 @@ func GetDatadogAgentUrlWindows() string {
 	return pkg.URL_DATADOG_AGENT_WINDOWS
 }
 
+// GetDatadogGithubUrlVersions return the url for datadog github versions
+func GetDatadogGithubUrlVersions() string {
+	return pkg.URL_DATADOG_GITHUB_VERSIONS
+}
+
 // GetRuntimeArch return runtime arch
 func GetRuntimeArch() string {
 	return runtime.GOARCH
@@ -136,4 +141,9 @@ func ErrContextExpired() error {
 // ErrValidateUrlExists return error the url not found
 func ErrValidateUrlExists() error {
 	return pkg.ErrValidateUrlExists
+}
+
+// ErrFailedGetLatestVersionDatadog return error the failed get latest version datadog
+func ErrFailedGetLatestVersionDatadog() error {
+	return pkg.ErrFailedGetLatestVersionDatadog
 }
