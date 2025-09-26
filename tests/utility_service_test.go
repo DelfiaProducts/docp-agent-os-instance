@@ -99,3 +99,29 @@ func TestUtilityServiceValidateUrlExists(t *testing.T) {
 		})
 	})
 }
+
+func TestUtilityServiceGetDatadogLastVersionFromGithub(t *testing.T) {
+	bdd.Feature(t, "Buscar última versão do Datadog do GitHub", func(t *testing.T, scenario func(description string, steps func(s *bdd.Scenario))) {
+		scenario("busca bem-sucedida", func(s *bdd.Scenario) {
+			var err error
+			var logger interfaces.ILogger
+			var utilityService *services.UtilityService
+			var version string
+			s.Given("eu crio o utility service", func() {
+				logger = utils.NewOryaLoggerText(os.Stdout)
+				utilityService = services.NewUtilityService(logger)
+			})
+			s.When("eu configuro o utility service", func() {
+				err = utilityService.Setup()
+				bdd.AssertNoError(t, err, "configuração do serviço deve ser executada sem erro")
+			})
+			s.When("eu busco a última versão do Datadog", func() {
+				version, err = utilityService.GetDatadogLastVersionFromGithub()
+			})
+			s.Then("a busca deve ser bem-sucedida", func(t *testing.T) {
+				bdd.AssertNoError(t, err, "busca da última versão do Datadog deve ser executada sem erro")
+			})
+			bdd.Printf("Última versão do Datadog: %s\n", version)
+		})
+	})
+}
