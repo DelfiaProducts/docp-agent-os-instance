@@ -249,7 +249,11 @@ func (d *DatadogWindowsOperation) GetVersion() (string, error) {
 
 // GetLatestVersion return the latest version of the datadog agent
 func (d *DatadogWindowsOperation) GetLatestVersion() (string, error) {
-	return "", nil
+	latestVersion, err := d.utilityService.GetDatadogLastVersionFromGithub()
+	if err != nil {
+		return "", err
+	}
+	return latestVersion, nil
 }
 
 // UpdateVersion execute update the version of the datadog agent
