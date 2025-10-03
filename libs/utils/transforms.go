@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/OryaHub/agent-os-instance/libs/pkg"
@@ -85,4 +86,38 @@ func ChoiceMsiWindowsInstallerFile(version string) string {
 	default:
 		return fmt.Sprintf("datadog-agent-%s-1.x86_64.msi", version)
 	}
+}
+
+// IsVersionGreater compare if versionA is greater than versionB
+func IsVersionGreater(versionA string, versionB string) (bool, error) {
+	partsA := strings.Split(versionA, ".")
+	partsB := strings.Split(versionB, ".")
+
+	if len(partsA) != 3 || len(partsB) != 3 {
+		return false, ErrDatadogVersionInvalidFormat()
+	}
+
+	// 2. Itera sobre as partes e compara
+	for i := 0; i < 3; i++ {
+		// Converte a string da parte em um número inteiro (int)
+		numA, err := strconv.Atoi(partsA[i])
+		if err != nil {
+			return false, ErrDatadogVersionInvalidFormat()
+		}
+
+		numB, err := strconv.Atoi(partsB[i])
+		if err != nil {
+			return false, ErrDatadogVersionInvalidFormat()
+		}
+
+		// Compara os números
+		if numA > numB {
+			return true, nil
+		}
+		if numA < numB {
+			return false, nil
+		}
+	}
+
+	return false, nil
 }
