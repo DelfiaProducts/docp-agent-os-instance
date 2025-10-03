@@ -52,6 +52,9 @@ func (d *DatadogWindowsOperation) Setup() error {
 	fileSystem := pkg.NewFileSystem()
 	d.fileSystem = fileSystem
 	utilityService := services.NewUtilityService(d.logger)
+	if err := utilityService.Setup(); err != nil {
+		return err
+	}
 	d.utilityService = utilityService
 	return nil
 }
@@ -258,6 +261,35 @@ func (d *DatadogWindowsOperation) GetLatestVersion() (string, error) {
 
 // UpdateVersion execute update the version of the datadog agent
 func (d *DatadogWindowsOperation) UpdateVersion(version string) error {
+	m, err := mgr.Connect()
+	if err != nil {
+		return err
+	}
+	d.logger.Debug("connect manager service", "manager", m)
+	defer m.Disconnect()
+	s, err := m.OpenService("DatadogAgent")
+	d.logger.Debug("open service datadog", "service", s)
+	if err != nil {
+		return err
+	}
+	defer s.Close()
+	fileVersion := utils.ChoiceMsiWindowsInstallerFile(version)
+	if len(fileVersion) == 0 {
+		return utils.ErrDatadogVersionNotFound()
+	}
+	d.logger.Debug("file version", "fileVersion", fileVersion)
+	urlVersion := fmt.Sprintf("%s/%s", utils.GetDatadogAgentUrlWindows(), fileVersion)
+	if err := d.utilityService.ValidateUrlExists(urlVersion); err != nil {
+		return err
+	}
+	d.logger.Debug("download url version", "urlVersion", urlVersion)
+	command := fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s'`, urlVersion)
+	out, err := d.program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
+	if err != nil {
+		d.logger.Error("error in update datadog agent start process", "error", err)
+		return err
+	}
+	d.logger.Debug("update agent datadog", "output", out)
 	return nil
 }
 
