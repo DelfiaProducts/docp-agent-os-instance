@@ -93,7 +93,7 @@ func TestDatadogAdapterInstallAgent(t *testing.T) {
 			})
 			s.When("InstallAgent é chamado", func() {
 				if err == nil {
-					err = datadogAdapter.InstallAgent("datadoghq.com", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX", "latest")
+					err = datadogAdapter.InstallAgent("datadoghq.com", "XXXXXXXXXXXXXXXXXXXXXXXXX", "7.47.0")
 				}
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
@@ -309,7 +309,7 @@ func TestDatadogAdapterUpdateVersion(t *testing.T) {
 
 			})
 			s.When("UpdateVersion é chamado", func() {
-				err = datadogAdapter.UpdateVersion("7.69.4")
+				err = datadogAdapter.UpdateVersion("latest")
 
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
