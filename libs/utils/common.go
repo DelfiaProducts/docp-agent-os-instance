@@ -147,3 +147,8 @@ func ErrValidateUrlExists() error {
 func ErrFailedGetLatestVersionDatadog() error {
 	return pkg.ErrFailedGetLatestVersionDatadog
 }
+
+// ErrDatadogVersionInvalidFormat return error the datadog version invalid format
+func ErrDatadogVersionInvalidFormat() error {
+	return pkg.ErrDatadogVersionInvalidFormat
+}
