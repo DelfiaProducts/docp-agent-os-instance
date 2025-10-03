@@ -12,6 +12,7 @@ var (
 	ErrValidateUrlExists             = errors.New("url not found")
 	ErrAgentVersionNotFound          = errors.New("agent version not found")
 	ErrDatadogVersionNotFound        = errors.New("datadog version not found")
+	ErrDatadogVersionInvalidFormat   = errors.New("datadog version invalid format")
 	ErrContextExpired                = errors.New("context expired")
 
 	// transactions events
