@@ -327,6 +327,11 @@ func (d *DatadogWindowsOperation) UpdateVersion(version string) error {
 
 // RollbackVersion execute rollback the version of the datadog agent
 func (d *DatadogWindowsOperation) RollbackVersion(version string) error {
+	d.logger.Debug("rollback version", "version", version)
+	//execute update version with rollback version
+	if err := d.UpdateVersion(version); err != nil {
+		return err
+	}
 	return nil
 }
 
