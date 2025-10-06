@@ -73,15 +73,8 @@ func (d *DatadogWindowsOperation) InstallAgent(ddSite, ddApiKey, version string)
 	if err != nil {
 		d.logger.Warn("error in install datadog agent", "error", err)
 		if errors.Is(err, windows.ERROR_SERVICE_DOES_NOT_EXIST) {
-			fileVersion := utils.ChoiceMsiWindowsInstallerFile(version)
-			if len(fileVersion) == 0 {
-				return utils.ErrDatadogVersionNotFound()
-			}
-			urlVersion := fmt.Sprintf("%s/%s", utils.GetDatadogAgentUrlWindows(), fileVersion)
-			if err := d.utilityService.ValidateUrlExists(urlVersion); err != nil {
-				return err
-			}
-			command := fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s APIKEY="%s" SITE="%s"'`, urlVersion, ddApiKey, ddSite)
+			fileVersionUrl := utils.ChoiceMsiWindowsInstallerFileUrl(version)
+			command := fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s APIKEY="%s" SITE="%s"'`, fileVersionUrl, ddApiKey, ddSite)
 			out, err := d.program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
 			if err != nil {
 				d.logger.Error("error in install datadog agent start process", "error", err)
@@ -268,13 +261,20 @@ func (d *DatadogWindowsOperation) UpdateVersion(version string) error {
 	if err != nil {
 		return err
 	}
+	applyVersion := version
+	if version == "latest" {
+		applyVersion, err = d.GetLatestVersion()
+		if err != nil {
+			return err
+		}
+	}
 
 	actualVersion, err := d.GetVersion()
 	if err != nil {
 		return err
 	}
 
-	isGreaten, err := utils.IsVersionGreater(actualVersion, version)
+	isGreaten, err := utils.IsVersionGreater(actualVersion, applyVersion)
 	if err != nil {
 		return err
 	}
@@ -312,19 +312,9 @@ func (d *DatadogWindowsOperation) UpdateVersion(version string) error {
 	}
 
 	defer s.Close()
-	fileVersion := utils.ChoiceMsiWindowsInstallerFile(version)
-	if len(fileVersion) == 0 {
-		return utils.ErrDatadogVersionNotFound()
-	}
-
-	d.logger.Debug("file version", "fileVersion", fileVersion)
-	urlVersion := fmt.Sprintf("%s/%s", utils.GetDatadogAgentUrlWindows(), fileVersion)
-	if err := d.utilityService.ValidateUrlExists(urlVersion); err != nil {
-		return err
-	}
-
-	d.logger.Debug("download url version", "urlVersion", urlVersion)
-	command := fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s'`, urlVersion)
+	fileVersionUrl := utils.ChoiceMsiWindowsInstallerFileUrl(version)
+	d.logger.Debug("file version", "fileVersionUrl", fileVersionUrl)
+	command := fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s'`, fileVersionUrl)
 	out, err := d.program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
 	if err != nil {
 		d.logger.Error("error in update datadog agent start process", "error", err)
