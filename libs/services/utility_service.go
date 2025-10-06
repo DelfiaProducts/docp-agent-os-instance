@@ -78,27 +78,6 @@ func (u *UtilityService) FetchAgentVersions() (dto.AgentVersions, error) {
 	return versions, nil
 }
 
-// ValidateUrlExists validates if a URL exists.
-func (u *UtilityService) ValidateUrlExists(url string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
-	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
-	if err != nil {
-		return err
-	}
-	res, err := u.client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	if res.StatusCode != http.StatusOK {
-		return utils.ErrValidateUrlExists()
-	}
-
-	return nil
-}
-
 // GetDatadogLastVersionFromGithub fetches the latest version of Datadog from GitHub.
 func (u *UtilityService) GetDatadogLastVersionFromGithub() (string, error) {
 	url := fmt.Sprintf("%s/latest", utils.GetDatadogGithubUrlVersions())
