@@ -28,6 +28,7 @@ type DatadogWindowsOperation struct {
 	stateCheck       *services.StateCheckService
 	utilityService   *services.UtilityService
 	fileSystem       *pkg.FileSystem
+	ymlClient        *pkg.YmlClient
 	datadogApmTracer *DatadogWindowsAPMTracer
 }
 
@@ -56,6 +57,8 @@ func (d *DatadogWindowsOperation) Setup() error {
 		return err
 	}
 	d.utilityService = utilityService
+	ymlClient := pkg.NewYmlClient()
+	d.ymlClient = ymlClient
 	return nil
 }
 
@@ -265,6 +268,41 @@ func (d *DatadogWindowsOperation) UpdateVersion(version string) error {
 	if err != nil {
 		return err
 	}
+
+	actualVersion, err := d.GetVersion()
+	if err != nil {
+		return err
+	}
+
+	isGreaten, err := utils.IsVersionGreater(actualVersion, version)
+	if err != nil {
+		return err
+	}
+
+	//verify if execute downgrade
+	if isGreaten {
+		d.logger.Debug("update version with downgrade version", "actualVersion", actualVersion, "version", version)
+		if err := d.UninstallAgent(); err != nil {
+			return err
+		}
+		var datadogYamlDto dto.DatadogYamlDTO
+		programDataEnv := os.Getenv("ProgramData")
+		datadogYmlPath := filepath.Join(programDataEnv, "Datadog", "datadog.yaml")
+		content, err := d.fileSystem.GetFileContent(datadogYmlPath)
+		if err != nil {
+			return err
+		}
+
+		if err := d.ymlClient.Unmarshall(content, &datadogYamlDto); err != nil {
+			return err
+		}
+
+		if err := d.InstallAgent(datadogYamlDto.ApiKey, datadogYamlDto.Site, version); err != nil {
+			return err
+		}
+
+		return nil
+	}
 	d.logger.Debug("connect manager service", "manager", m)
 	defer m.Disconnect()
 	s, err := m.OpenService("DatadogAgent")
@@ -272,16 +310,19 @@ func (d *DatadogWindowsOperation) UpdateVersion(version string) error {
 	if err != nil {
 		return err
 	}
+
 	defer s.Close()
 	fileVersion := utils.ChoiceMsiWindowsInstallerFile(version)
 	if len(fileVersion) == 0 {
 		return utils.ErrDatadogVersionNotFound()
 	}
+
 	d.logger.Debug("file version", "fileVersion", fileVersion)
 	urlVersion := fmt.Sprintf("%s/%s", utils.GetDatadogAgentUrlWindows(), fileVersion)
 	if err := d.utilityService.ValidateUrlExists(urlVersion); err != nil {
 		return err
 	}
+
 	d.logger.Debug("download url version", "urlVersion", urlVersion)
 	command := fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s'`, urlVersion)
 	out, err := d.program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
@@ -289,6 +330,7 @@ func (d *DatadogWindowsOperation) UpdateVersion(version string) error {
 		d.logger.Error("error in update datadog agent start process", "error", err)
 		return err
 	}
+
 	d.logger.Debug("update agent datadog", "output", out)
 	return nil
 }
