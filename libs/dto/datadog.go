@@ -26,3 +26,9 @@ type DatadogInstallDTO struct {
 type DatadogUpdateVersionDTO struct {
 	Version string `json:"version"`
 }
+
+// DatadogYamlDTO is struct for dto the yaml file configuration datadog
+type DatadogYamlDTO struct {
+	ApiKey string `yaml:"api_key"`
+	Site   string `yaml:"site"`
+}
