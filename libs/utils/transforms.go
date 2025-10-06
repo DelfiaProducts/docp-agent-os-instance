@@ -1,10 +1,13 @@
 package utils
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/OryaHub/agent-os-instance/libs/pkg"
 )
@@ -78,14 +81,44 @@ func ChoiceInstallerOrUninstaller(system, mode, action, version string) string {
 	return ""
 }
 
-// ChoiceMsiWindowsInstallerFile return file msi windows installer
-func ChoiceMsiWindowsInstallerFile(version string) string {
-	switch version {
-	case "latest":
-		return "datadog-agent-7-latest.amd64.msi"
-	default:
-		return fmt.Sprintf("datadog-agent-%s-1.x86_64.msi", version)
+// ValidateUrlExists validates if a URL exists.
+func ValidateUrlExists(url string) error {
+	client := &http.Client{
+		Timeout: time.Second * 90,
 	}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return ErrValidateUrlExists()
+	}
+
+	return nil
+}
+
+// ChoiceMsiWindowsInstallerFileUrl return file url the msi windows installer
+func ChoiceMsiWindowsInstallerFileUrl(version string) string {
+	verX86_64 := fmt.Sprintf("datadog-agent-%s-1.x86_64.msi", version)
+	urlVersionX86_64 := fmt.Sprintf("%s/%s", GetDatadogAgentUrlWindows(), verX86_64)
+	err := ValidateUrlExists(urlVersionX86_64)
+	if err != nil {
+		urlVersionAmd64 := fmt.Sprintf("%s/%s", GetDatadogAgentUrlWindows(), fmt.Sprintf("datadog-agent-%s.amd64.msi", version))
+		err := ValidateUrlExists(urlVersionAmd64)
+		if err != nil {
+			return fmt.Sprintf("%s/%s", GetDatadogAgentUrlWindows(), "datadog-agent-7-latest.amd64.msi")
+		}
+		return urlVersionAmd64
+	}
+	return urlVersionX86_64
 }
 
 // IsVersionGreater compare if versionA is greater than versionB
