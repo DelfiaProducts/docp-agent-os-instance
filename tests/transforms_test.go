@@ -29,3 +29,23 @@ func TestTransformMapToSlice(t *testing.T) {
 		})
 	})
 }
+
+func TestTransformIsVersionGreater(t *testing.T) {
+	bdd.Feature(t, "TestTransformIsVersionGreater", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
+		Scenario("Deve verificar se a versão é maior", func(s *bdd.Scenario) {
+			var version string
+			var result bool
+			var err error
+			s.When("a versão é definida", func() {
+				version = "7.46.0"
+			})
+			s.Then("deve retornar true se a nova versão for maior", func(t *testing.T) {
+				result, err = utils.IsVersionGreater(version, "8.2.4")
+				if err != nil {
+					t.Errorf("TestTransformIsVersionGreater: expect(nil) - got(%s)\n", err.Error())
+				}
+			})
+			bdd.Printf("RESULT: %t\n", result)
+		})
+	})
+}
