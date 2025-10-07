@@ -126,8 +126,17 @@ func IsVersionGreater(versionA string, versionB string) (bool, error) {
 	partsA := strings.Split(versionA, ".")
 	partsB := strings.Split(versionB, ".")
 
+	//validate if both versions are in the same format
 	if len(partsA) != 3 || len(partsB) != 3 {
-		return false, ErrDatadogVersionInvalidFormat()
+		return true, nil
+	}
+
+	//check if has letters on versions
+	hasLettersVersionA := HasNonIntegerOrLetterVersionParts(versionA)
+	hasLettersVersionB := HasNonIntegerOrLetterVersionParts(versionB)
+
+	if hasLettersVersionA || hasLettersVersionB {
+		return true, nil
 	}
 
 	// 2. Itera sobre as partes e compara
@@ -153,4 +162,14 @@ func IsVersionGreater(versionA string, versionB string) (bool, error) {
 	}
 
 	return false, nil
+}
+
+// HasNonIntegerOrLetterVersionParts checks if the version string contains any letters.
+func HasNonIntegerOrLetterVersionParts(version string) bool {
+	for _, r := range version {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') {
+			return true
+		}
+	}
+	return false
 }
