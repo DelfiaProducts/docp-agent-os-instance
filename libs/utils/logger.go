@@ -18,8 +18,8 @@ const (
 	WARN
 )
 
-// DocpLogger is struct for logger the docp
-type DocpLogger struct {
+// OryaLogger is struct for logger the orya
+type OryaLogger struct {
 	logger *slog.Logger
 }
 
@@ -38,20 +38,20 @@ func getLogLevel() slog.Level {
 	}
 }
 
-// NewDocpLoggerJSON return instance of docp logger
+// NewOryaLoggerJSON return instance of orya logger
 // with formatter json
-func NewDocpLoggerJSON(writter io.Writer) *DocpLogger {
-	return &DocpLogger{
+func NewOryaLoggerJSON(writter io.Writer) *OryaLogger {
+	return &OryaLogger{
 		logger: slog.New(slog.NewJSONHandler(writter, &slog.HandlerOptions{
 			Level: getLogLevel(),
 		})),
 	}
 }
 
-// NewDocpLogger return instance of docp logger
+// NewOryaLogger return instance of orya logger
 // with formatter text
-func NewDocpLoggerText(writter io.Writer) *DocpLogger {
-	return &DocpLogger{
+func NewOryaLoggerText(writter io.Writer) *OryaLogger {
+	return &OryaLogger{
 		logger: slog.New(slog.NewTextHandler(writter, &slog.HandlerOptions{
 			Level: getLogLevel(),
 		})),
@@ -59,32 +59,32 @@ func NewDocpLoggerText(writter io.Writer) *DocpLogger {
 }
 
 // Debug execute logging the debug
-func (d *DocpLogger) Debug(msg string, args ...any) {
+func (d *OryaLogger) Debug(msg string, args ...any) {
 	d.logger.Debug(msg, args...)
 }
 
 // Info execute logging the info
-func (d *DocpLogger) Info(msg string, args ...any) {
+func (d *OryaLogger) Info(msg string, args ...any) {
 	d.logger.Info(msg, args...)
 }
 
 // Warn execute logging the warning
-func (d *DocpLogger) Warn(msg string, args ...any) {
+func (d *OryaLogger) Warn(msg string, args ...any) {
 	d.logger.Warn(msg, args...)
 }
 
 // Error execut logging the error
-func (d *DocpLogger) Error(msg string, args ...any) {
+func (d *OryaLogger) Error(msg string, args ...any) {
 	d.logger.Error(msg, args...)
 }
 
 // Close close logger
-func (d *DocpLogger) Close() error {
+func (d *OryaLogger) Close() error {
 	return nil
 }
 
-// DocpLoggerWindows is struct for logger the docp on windows
-type DocpLoggerWindows struct {
+// OryaLoggerWindows is struct for logger the orya on windows
+type OryaLoggerWindows struct {
 	logger *log.Logger
 	level  int
 	mutex  sync.Mutex
@@ -104,9 +104,9 @@ func getLogLevelWindows() int {
 	}
 }
 
-// NewDocpLoggerFileText return instance of docp logger redirect for file
+// NewOryaLoggerFileText return instance of orya logger redirect for file
 // with formatter text
-func NewDocpLoggerWindowsFileText(logPath string) *DocpLoggerWindows {
+func NewOryaLoggerWindowsFileText(logPath string) *OryaLoggerWindows {
 	logFile := &lumberjack.Logger{
 		Filename:   logPath, // Caminho do arquivo de log.
 		MaxSize:    5,       // Tamanho máximo em megabytes antes da rotação.
@@ -117,13 +117,13 @@ func NewDocpLoggerWindowsFileText(logPath string) *DocpLoggerWindows {
 
 	multiWriter := io.MultiWriter(logFile, os.Stdout)
 	logger := log.New(multiWriter, "", log.LstdFlags)
-	return &DocpLoggerWindows{
+	return &OryaLoggerWindows{
 		logger: logger,
 		level:  getLogLevelWindows(),
 	}
 }
 
-func (d *DocpLoggerWindows) formatArgs(msg string, args ...any) string {
+func (d *OryaLoggerWindows) formatArgs(msg string, args ...any) string {
 	format := msg
 	for range args {
 		format += ", %v"
@@ -133,7 +133,7 @@ func (d *DocpLoggerWindows) formatArgs(msg string, args ...any) string {
 }
 
 // Debug execute logging the debug
-func (d *DocpLoggerWindows) Debug(msg string, args ...any) {
+func (d *OryaLoggerWindows) Debug(msg string, args ...any) {
 	if d.level == DEBUG {
 		d.mutex.Lock()
 		defer d.mutex.Unlock()
@@ -142,7 +142,7 @@ func (d *DocpLoggerWindows) Debug(msg string, args ...any) {
 }
 
 // Info execute logging the info
-func (d *DocpLoggerWindows) Info(msg string, args ...any) {
+func (d *OryaLoggerWindows) Info(msg string, args ...any) {
 	if d.level == INFO {
 		d.mutex.Lock()
 		defer d.mutex.Unlock()
@@ -151,7 +151,7 @@ func (d *DocpLoggerWindows) Info(msg string, args ...any) {
 }
 
 // Warn execute logging the warning
-func (d *DocpLoggerWindows) Warn(msg string, args ...any) {
+func (d *OryaLoggerWindows) Warn(msg string, args ...any) {
 	if d.level == WARN {
 		d.mutex.Lock()
 		defer d.mutex.Unlock()
@@ -160,13 +160,13 @@ func (d *DocpLoggerWindows) Warn(msg string, args ...any) {
 }
 
 // Error execut logging the error
-func (d *DocpLoggerWindows) Error(msg string, args ...any) {
+func (d *OryaLoggerWindows) Error(msg string, args ...any) {
 	d.mutex.Lock()
 	defer d.mutex.Unlock()
 	d.logger.Printf(d.formatArgs(msg, args...))
 }
 
 // Close close logger
-func (d *DocpLoggerWindows) Close() error {
+func (d *OryaLoggerWindows) Close() error {
 	return nil
 }

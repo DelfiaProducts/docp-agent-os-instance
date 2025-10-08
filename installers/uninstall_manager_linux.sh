@@ -4,8 +4,8 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-DOCP_FILES_PATH=/opt/docp-agent
-USER_GROUP_NAME=docp-agent
+ORYA_FILES_PATH=/opt/orya-agent
+USER_GROUP_NAME=orya-agent
 
 # Root user detection
 if [ "$UID" == "0" ]; then
@@ -16,18 +16,18 @@ fi
 
 #stop and disable systemd
 function stop_and_disable() {
-  $sudo_cmd systemctl stop docp-manager
-  $sudo_cmd systemctl disable docp-manager
+  $sudo_cmd systemctl stop orya-manager
+  $sudo_cmd systemctl disable orya-manager
 }
 
 #remove file service
 function remove_file_service(){
-  $sudo_cmd rm /etc/systemd/system/docp-manager.service
+  $sudo_cmd rm /etc/systemd/system/orya-manager.service
 }
 
 #remove work dir
 function remove_work_dir() {
-  $sudo_cmd rm -rf $DOCP_FILES_PATH 
+  $sudo_cmd rm -rf $ORYA_FILES_PATH 
 }
 
 # remove user and group
@@ -38,7 +38,7 @@ function remove_user_and_group(){
 
 # remove perm sudoers file
 function remove_perm_sudoers_file(){
-  $sudo_cmd sed -i '/^docp-agent ALL=(ALL) NOPASSWD: ALL/d' /etc/sudoers
+  $sudo_cmd sed -i '/^orya-agent ALL=(ALL) NOPASSWD: ALL/d' /etc/sudoers
 }
 
 #setup configure e verify machine

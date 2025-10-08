@@ -1,8 +1,8 @@
 package builders
 
 import (
-	"github.com/DelfiaProducts/docp-agent-os-instance/agents"
-	libinterfaces "github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/agents"
+	libinterfaces "github.com/OryaHub/agent-os-instance/libs/interfaces"
 )
 
 // ManagerBuilder return manager by distro

@@ -3,8 +3,8 @@
 package components
 
 import (
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
 )
 
 type DatadogWindowsOperation struct{}
@@ -13,33 +13,17 @@ func NewDatadogWindowsOperation(logger interfaces.ILogger) *DatadogWindowsOperat
 	return &DatadogWindowsOperation{}
 }
 
-// prepareEnvs return envs the datadog
-func (d *DatadogWindowsOperation) prepareEnvs(ddSite, ddApiKey string) []string {
-	var envs []string
-	return envs
-}
-
-// sendStatus execute send status for state check
-func (d *DatadogWindowsOperation) sendStatus(status, message string) error {
-	return nil
-}
-
-// getApmEnvVarsSingleStep get envs apm datadog in mode single step
-func (d *DatadogWindowsOperation) getApmEnvVarsSingleStep(envs []dto.DatadogEnvVars) (string, string, string) {
-	return "", "", ""
-}
-
 func (d *DatadogWindowsOperation) Setup() error {
 	return nil
 }
 
 // InstallAgent execute install the agent in linux
-func (d *DatadogWindowsOperation) InstallAgent(ddSite, ddApiKey string) error {
+func (d *DatadogWindowsOperation) InstallAgent(ddSite, ddApiKey, version string) error {
 	return nil
 }
 
 // InstallAgentApmSingleStep execute install the agent in linux with apm tracer on mode single step
-func (d *DatadogWindowsOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, datadogEnvVars []dto.DatadogEnvVars) error {
+func (d *DatadogWindowsOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, version string, datadogEnvVars []dto.DatadogEnvVars) error {
 	return nil
 }
 

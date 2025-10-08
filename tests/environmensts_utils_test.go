@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 func TestGetCollectInterval(t *testing.T) {

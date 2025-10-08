@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 // AuthService is struct for auth service
@@ -82,7 +82,7 @@ func (as *AuthService) AuthCall(payload dto.AuthPayload) ([]byte, int, error) {
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("docp-api-key", apiKey)
+	req.Header.Set("orya-api-key", apiKey)
 
 	res, err := as.client.Do(req)
 	if err != nil {

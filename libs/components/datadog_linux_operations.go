@@ -10,11 +10,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/services"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 const (
@@ -116,26 +116,26 @@ func (d *DatadogLinuxOperation) Setup() error {
 }
 
 // InstallAgent execute install the agent in linux
-func (d *DatadogLinuxOperation) InstallAgent(ddSite, ddApiKey string) error {
+func (d *DatadogLinuxOperation) InstallAgent(ddSite, ddApiKey, version string) error {
 	envs := d.prepareEnvs(ddSite, ddApiKey)
 	aptOrDpkgIsRunning, err := d.hostStats.AptOrDpkgIsRunning()
 	if err != nil {
 		return err
 	}
 	if !aptOrDpkgIsRunning {
-		d.logger.Debug("install agent", "trace", "docp-agent-os-instance.datadog_linux_operations.InstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
+		d.logger.Debug("install agent", "trace", "agent-os-instance.datadog_linux_operations.InstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
 		if err := d.program.Execute("bash", envs, "-c", fmt.Sprintf("export DD_API_KEY=%s;export DD_SITE=%s;%s", ddApiKey, ddSite, CURL_INSTALL_SH)); err != nil {
 			return err
 		}
 	} else {
-		d.logger.Debug("install agent", "trace", "docp-agent-os-instance.datadog_linux_operations.InstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
+		d.logger.Debug("install agent", "trace", "agent-os-instance.datadog_linux_operations.InstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
 	}
 
 	return nil
 }
 
 // InstallAgentApmSingleStep execute install the agent in linux with apm tracer on mode single step
-func (d *DatadogLinuxOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, datadogEnvVars []dto.DatadogEnvVars) error {
+func (d *DatadogLinuxOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, version string, datadogEnvVars []dto.DatadogEnvVars) error {
 	envs := d.prepareEnvs(ddSite, ddApiKey)
 	aptOrDpkgIsRunning, err := d.hostStats.AptOrDpkgIsRunning()
 	if err != nil {
@@ -143,12 +143,12 @@ func (d *DatadogLinuxOperation) InstallAgentApmSingleStep(ddSite string, ddApiKe
 	}
 	ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries := d.getApmEnvVarsSingleStep(datadogEnvVars)
 	if !aptOrDpkgIsRunning {
-		d.logger.Debug("install agent apm single step", "trace", "docp-agent-os-instance.datadog_linux_operations.InstallAgentApmSingleStep", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
+		d.logger.Debug("install agent apm single step", "trace", "agent-os-instance.datadog_linux_operations.InstallAgentApmSingleStep", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
 		if err := d.program.Execute("bash", envs, "-c", fmt.Sprintf("export DD_API_KEY=%s;export DD_SITE=%s;export DD_APM_INSTRUMENTATION_ENABLED=%s;export DD_ENV=%s;export DD_APM_INSTRUMENTATION_LIBRARIES=%s;%s", ddApiKey, ddSite, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries, CURL_INSTALL_SH)); err != nil {
 			return err
 		}
 	} else {
-		d.logger.Debug("install agent apm single step", "trace", "docp-agent-os-instance.datadog_linux_operations.InstallAgentApmSingleStep", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
+		d.logger.Debug("install agent apm single step", "trace", "agent-os-instance.datadog_linux_operations.InstallAgentApmSingleStep", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
 	}
 
 	return nil
@@ -170,7 +170,7 @@ func (d *DatadogLinuxOperation) UninstallAgent() error {
 		return err
 	}
 	if !aptOrDpkgIsRunning {
-		d.logger.Debug("uninstall agent", "trace", "docp-agent-os-instance.datadog_linux_operations.UninstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
+		d.logger.Debug("uninstall agent", "trace", "agent-os-instance.datadog_linux_operations.UninstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
 		if err := d.program.Execute("bash", []string{}, "-c", UNINSTALL_AGENT_COMMAND); err != nil {
 			return err
 		}
@@ -181,7 +181,7 @@ func (d *DatadogLinuxOperation) UninstallAgent() error {
 			return err
 		}
 	} else {
-		d.logger.Debug("uninstall agent", "trace", "docp-agent-os-instance.datadog_linux_operations.UninstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
+		d.logger.Debug("uninstall agent", "trace", "agent-os-instance.datadog_linux_operations.UninstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
 	}
 
 	return nil
@@ -213,7 +213,7 @@ func (d *DatadogLinuxOperation) DatadogAddPermitionGroupFilePath(filePath string
 
 // DatadogAddPermitionUser add permition for directory the datadog
 func (d *DatadogLinuxOperation) DatadogAddPermitionUser() error {
-	if err := d.program.Execute("sudo", []string{}, "usermod", "-aG", "dd-agent", "docp-agent"); err != nil {
+	if err := d.program.Execute("sudo", []string{}, "usermod", "-aG", "dd-agent", "orya-agent"); err != nil {
 		return err
 	}
 	return nil
@@ -221,11 +221,11 @@ func (d *DatadogLinuxOperation) DatadogAddPermitionUser() error {
 
 // BackupConfigFileDatadog execute backup the current config file datadog
 func (d *DatadogLinuxOperation) BackupConfigFileDatadog(filePath string, content []byte) error {
-	docpFilePath, err := utils.GetWorkDirPath()
+	oryaFilePath, err := utils.GetWorkDirPath()
 	if err != nil {
 		return err
 	}
-	filePathState := filepath.Join(docpFilePath, "state", "datadog", filePath)
+	filePathState := filepath.Join(oryaFilePath, "state", "datadog", filePath)
 	if err := d.fileSystem.VerifyFileExist(filePathState); err != nil {
 		if errCrt := d.fileSystem.CreatePathCompleted(filePathState); errCrt != nil {
 			return errCrt
@@ -239,16 +239,16 @@ func (d *DatadogLinuxOperation) BackupConfigFileDatadog(filePath string, content
 
 // UpdateConfigFileDatadog execute update the config file datadog
 func (d *DatadogLinuxOperation) UpdateConfigFileDatadog(filePath string) error {
-	docpFilePath, err := utils.GetWorkDirPath()
+	oryaFilePath, err := utils.GetWorkDirPath()
 	if err != nil {
 		return err
 	}
 	datadogFilePathDir := filepath.Dir(filePath)
-	docpStateDatadogPath := filepath.Join(docpFilePath, "state", "datadog", filePath)
+	oryaStateDatadogPath := filepath.Join(oryaFilePath, "state", "datadog", filePath)
 	if err := d.program.Execute("sudo", []string{}, "-u", "dd-agent", "bash", "-c", fmt.Sprintf("mkdir -p %s", datadogFilePathDir)); err != nil {
 		return err
 	}
-	if err := d.program.Execute("sudo", []string{}, "-u", "dd-agent", "bash", "-c", fmt.Sprintf("cat %s | tee %s > /dev/null", docpStateDatadogPath, filePath)); err != nil {
+	if err := d.program.Execute("sudo", []string{}, "-u", "dd-agent", "bash", "-c", fmt.Sprintf("cat %s | tee %s > /dev/null", oryaStateDatadogPath, filePath)); err != nil {
 		return err
 	}
 	return nil

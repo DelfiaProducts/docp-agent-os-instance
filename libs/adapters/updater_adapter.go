@@ -2,24 +2,18 @@ package adapters
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/components"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
-)
-
-var (
-	CURL_UPDATER_LINUX_UNINSTALL_SH = "curl -L https://test-docp-agent-data.s3.amazonaws.com/installer/uninstall_updater_linux.sh | bash"
+	"github.com/OryaHub/agent-os-instance/libs/components"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/services"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 // UpdaterAdapter is struct for updater adapter
@@ -86,7 +80,7 @@ func (l *UpdaterAdapter) Prepare() error {
 
 // Close closing collect loop
 func (l *UpdaterAdapter) Close() error {
-	l.logger.Debug("execute close", "trace", "docp-agent-os-instance.manager_adapter.Close")
+	l.logger.Debug("execute close", "trace", "agent-os-instance.manager_adapter.Close")
 	l.chanClose <- struct{}{}
 	l.wg.Add(1)
 	go l.closeChannels()
@@ -95,7 +89,7 @@ func (l *UpdaterAdapter) Close() error {
 
 // closeChannels closing channels
 func (l *UpdaterAdapter) closeChannels() {
-	l.logger.Debug("close channels", "trace", "docp-agent-os-instance.manager_adapter.closeChannels")
+	l.logger.Debug("close channels", "trace", "agent-os-instance.manager_adapter.closeChannels")
 	close(l.chanClose)
 	l.isClosed = true
 	l.wg.Done()
@@ -104,20 +98,20 @@ func (l *UpdaterAdapter) closeChannels() {
 // Status return status from systemd api
 func (l *UpdaterAdapter) Status(serviceName string) (string, error) {
 	l.logger.Info("execute verify status the service", "serviceName", serviceName)
-	l.logger.Debug("execute verify status the service", "trace", "docp-agent-os-instance.updater_adapter.Status", "serviceName", serviceName)
+	l.logger.Debug("execute verify status the service", "trace", "agent-os-instance.updater_adapter.Status", "serviceName", serviceName)
 	output, err := l.osOperation.Status(serviceName)
 	if err != nil {
 		return "", err
 	}
 	output = strings.ReplaceAll(output, "\"", "")
-	l.logger.Debug("execute verify status the service", "trace", "docp-agent-os-instance.updater_adapter.Status", "serviceName", serviceName, "output", output)
+	l.logger.Debug("execute verify status the service", "trace", "agent-os-instance.updater_adapter.Status", "serviceName", serviceName, "output", output)
 	return output, nil
 }
 
 // DaemonReload execute daemon reload the service in systemd
 func (l *UpdaterAdapter) DaemonReload() error {
 	l.logger.Info("daemon reload", "timestamp", time.Now().UTC())
-	l.logger.Debug("daemon reload", "trace", "docp-agent-os-instance.updater_adapter.DaemonReload")
+	l.logger.Debug("daemon reload", "trace", "agent-os-instance.updater_adapter.DaemonReload")
 	if err := l.osOperation.DaemonReload(); err != nil {
 		return err
 	}
@@ -127,7 +121,7 @@ func (l *UpdaterAdapter) DaemonReload() error {
 // RestartService execute restart the service in systemd
 func (l *UpdaterAdapter) RestartService(serviceName string) error {
 	l.logger.Info("restart service", "timestamp", time.Now().UTC())
-	l.logger.Debug("restart service", "trace", "docp-agent-os-instance.manager_adapter.RestartService")
+	l.logger.Debug("restart service", "trace", "agent-os-instance.manager_adapter.RestartService")
 	if err := l.osOperation.RestartService(serviceName); err != nil {
 		return err
 	}
@@ -137,7 +131,7 @@ func (l *UpdaterAdapter) RestartService(serviceName string) error {
 // StopService execute stop the service in systemd
 func (l *UpdaterAdapter) StopService(serviceName string) error {
 	l.logger.Info("stop service", "timestamp", time.Now().UTC())
-	l.logger.Debug("stop service", "trace", "docp-agent-os-instance.manager_adapter.StopService")
+	l.logger.Debug("stop service", "trace", "agent-os-instance.manager_adapter.StopService")
 	if err := l.osOperation.StopService(serviceName); err != nil {
 		return err
 	}
@@ -146,7 +140,7 @@ func (l *UpdaterAdapter) StopService(serviceName string) error {
 
 // FetchAgentVersions fetches the available agent versions
 func (l *UpdaterAdapter) FetchAgentVersions() (dto.AgentVersions, error) {
-	l.logger.Debug("fetch agent versions", "trace", "docp-agent-os-instance.manager_adapter.FetchAgentVersions")
+	l.logger.Debug("fetch agent versions", "trace", "agent-os-instance.manager_adapter.FetchAgentVersions")
 	agentVersions, err := l.utilityService.FetchAgentVersions()
 	if err != nil {
 		return dto.AgentVersions{}, err
@@ -157,117 +151,10 @@ func (l *UpdaterAdapter) FetchAgentVersions() (dto.AgentVersions, error) {
 // ExecuteUpdateVersion execute update the version
 func (l *UpdaterAdapter) ExecuteUpdateVersion(version string) error {
 	l.logger.Info("execute update version", "version", version)
-	l.logger.Debug("fetch agent versions", "trace", "docp-agent-os-instance.updater_adapter.ExecuteUpdateVersion", "version", version)
+	l.logger.Debug("execute update version", "trace", "agent-os-instance.updater_adapter.ExecuteUpdateVersion", "version", version)
 
-	var managerUrl string
-	var agentUrl string
-	repoUrl := utils.GetBinariesRepositoryUrl()
-	arch := utils.GetRuntimeArch()
-	osSystem := utils.GetOSSystem()
-	switch osSystem {
-	case "linux":
-		switch arch {
-		case "amd64":
-			managerUrl = fmt.Sprintf("%s/%s/manager-linux-amd64", repoUrl, version)
-			agentUrl = fmt.Sprintf("%s/%s/agent-linux-amd64", repoUrl, version)
-		case "arm64":
-			managerUrl = fmt.Sprintf("%s/%s/manager-linux-arm64", repoUrl, version)
-			agentUrl = fmt.Sprintf("%s/%s/agent-linux-arm64", repoUrl, version)
-		}
-	case "darwin":
-		switch arch {
-		case "amd64":
-			managerUrl = fmt.Sprintf("%s/%s/manager-macos-amd64", repoUrl, version)
-			agentUrl = fmt.Sprintf("%s/%s/agent-macos-amd64", repoUrl, version)
-		case "arm64":
-			managerUrl = fmt.Sprintf("%s/%s/manager-macos-arm64", repoUrl, version)
-			agentUrl = fmt.Sprintf("%s/%s/agent-macos-arm64", repoUrl, version)
-		}
-	}
-
-	statusManager, err := l.Status("manager")
-	if err != nil {
-		return err
-	}
-
-	statusAgent, err := l.Status("agent")
-	if err != nil {
-		return err
-	}
-	if statusAgent == "active" {
-		if err := l.StopService("agent"); err != nil {
-			return err
-		}
-	}
-	if statusManager == "active" {
-		if err := l.StopService("manager"); err != nil {
-			return err
-		}
-	}
-
-	respManager, _, err := utils.GetBinary(managerUrl)
-	if err != nil {
-		return err
-	}
-
-	respAgent, _, err := utils.GetBinary(agentUrl)
-	if err != nil {
-		return err
-	}
-
-	workdir, err := utils.GetWorkDirPath()
-	if err != nil {
-		return err
-	}
-
-	//validate path version
-	pathVersion := filepath.Join(workdir, "bin", "releases", version)
-	if err := l.fileSystem.VerifyDirExistAndCreate(pathVersion); err != nil {
-		return err
-	}
-
-	pathCurrent := filepath.Join(workdir, "bin", "current")
-	if err := l.fileSystem.VerifyDirExistAndCreate(pathVersion); err != nil {
-		return err
-	}
-
-	pathManagerBinary := filepath.Join(pathVersion, "manager")
-	pathAgentBinary := filepath.Join(pathVersion, "agent")
-
-	pathCurrentManager := filepath.Join(pathCurrent, "manager")
-	pathCurrentAgent := filepath.Join(pathCurrent, "agent")
-
-	if err := l.fileSystem.WriteBinaryContent(pathManagerBinary, respManager); err != nil {
-		return err
-	}
-	if err := l.fileSystem.WriteBinaryContent(pathAgentBinary, respAgent); err != nil {
-		return err
-	}
-
-	err = os.Chmod(pathManagerBinary, 0755)
-	if err != nil {
-		return err
-	}
-
-	err = os.Chmod(pathAgentBinary, 0755)
-	if err != nil {
-		return err
-	}
-	//create symlink manager
-	if err := l.fileSystem.CreateOrUpdateSymlink(pathManagerBinary, pathCurrentManager); err != nil {
-		return err
-	}
-
-	//create symlink agent
-	if err := l.fileSystem.CreateOrUpdateSymlink(pathAgentBinary, pathCurrentAgent); err != nil {
-		return err
-	}
-
-	if err := l.RestartService("agent"); err != nil {
-		return err
-	}
-
-	if err := l.RestartService("manager"); err != nil {
+	// Call the OS operation to execute the update
+	if err := l.osOperation.ExecuteUpdateVersion(version); err != nil {
 		return err
 	}
 
@@ -293,7 +180,7 @@ func (l *UpdaterAdapter) GetAgentVersionFromSignal(response []byte) (string, err
 	if err := json.Unmarshal(response, &signal); err != nil {
 		return "", err
 	}
-	agent := signal.Signal.Agents.DocpAgent
+	agent := signal.Signal.Agents.OryaAgent
 	if len(agent.Version) > 0 {
 		return agent.Version, nil
 	}
@@ -302,7 +189,7 @@ func (l *UpdaterAdapter) GetAgentVersionFromSignal(response []byte) (string, err
 
 // GetAgentVersion return rollback version installed agent
 func (l *UpdaterAdapter) GetAgentVersion() (string, error) {
-	l.logger.Debug("get agent version", "trace", "docp-agent-os-instance.updater_adapter.GetAgentVersion")
+	l.logger.Debug("get agent version", "trace", "agent-os-instance.updater_adapter.GetAgentVersion")
 	var configAgent dto.ConfigAgent
 	configPath, err := utils.GetConfigFilePath()
 	if err != nil {
@@ -323,7 +210,7 @@ func (l *UpdaterAdapter) GetAgentVersion() (string, error) {
 
 // GetAgentRollbackVersion return rollback version installed agent
 func (l *UpdaterAdapter) GetAgentRollbackVersion() (string, error) {
-	l.logger.Debug("get agent rollback version", "trace", "docp-agent-os-instance.updater_adapter.GetAgentRollbackVersion")
+	l.logger.Debug("get agent rollback version", "trace", "agent-os-instance.updater_adapter.GetAgentRollbackVersion")
 	var configAgent dto.ConfigAgent
 	configPath, err := utils.GetConfigFilePath()
 	if err != nil {
@@ -344,7 +231,7 @@ func (l *UpdaterAdapter) GetAgentRollbackVersion() (string, error) {
 
 // ValidateSuccessUpdated validate if update was successful
 func (l *UpdaterAdapter) ValidateSuccessUpdated() (bool, error) {
-	l.logger.Debug("validate success updated", "trace", "docp-agent-os-instance.updater_adapter.ValidateSuccessUpdated")
+	l.logger.Debug("validate success updated", "trace", "agent-os-instance.updater_adapter.ValidateSuccessUpdated")
 	activeManager, err := l.osOperation.Status("manager")
 	if err != nil {
 		return false, err
@@ -358,53 +245,18 @@ func (l *UpdaterAdapter) ValidateSuccessUpdated() (bool, error) {
 
 // ExecuteRollbackVersion execute rollback to previous version
 func (l *UpdaterAdapter) ExecuteRollbackVersion(version string) error {
-	l.logger.Debug("execute rollback version", "trace", "docp-agent-os-instance.updater_adapter.ExecuteRollbackVersion", "version", version)
-	workdir, err := utils.GetWorkDirPath()
-	if err != nil {
+	l.logger.Debug("execute rollback version", "trace", "agent-os-instance.updater_adapter.ExecuteRollbackVersion", "version", version)
+	if err := l.osOperation.ExecuteRollbackVersion(version); err != nil {
 		return err
 	}
-	//validate path version
-	pathVersion := filepath.Join(workdir, "bin", "releases", version)
-	if err := l.fileSystem.VerifyDirExistAndCreate(pathVersion); err != nil {
-		return err
-	}
-
-	pathCurrent := filepath.Join(workdir, "bin", "current")
-	if err := l.fileSystem.VerifyDirExistAndCreate(pathVersion); err != nil {
-		return err
-	}
-
-	pathManagerBinary := filepath.Join(pathVersion, "manager")
-	pathAgentBinary := filepath.Join(pathVersion, "agent")
-
-	pathCurrentManager := filepath.Join(pathCurrent, "manager")
-	pathCurrentAgent := filepath.Join(pathCurrent, "agent")
-
-	if err := l.fileSystem.CreateOrUpdateSymlink(pathManagerBinary, pathCurrentManager); err != nil {
-		return err
-	}
-
-	if err := l.fileSystem.CreateOrUpdateSymlink(pathAgentBinary, pathCurrentAgent); err != nil {
-		return err
-	}
-
-	if err := l.RestartService("agent"); err != nil {
-		return err
-	}
-
-	if err := l.RestartService("manager"); err != nil {
-		return err
-	}
-
 	return nil
 }
 
 // UpdaterUninstall execute uninstall the updater
-func (l *UpdaterAdapter) UpdaterUninstall() error {
-	l.logger.Debug("uninstall updater", "trace", "docp-agent-os-instance.updater_adapter.UpdaterUninstall")
-	job := fmt.Sprintf("* * * * * %s; crontab -l | grep -v '%s' | crontab -", CURL_UPDATER_LINUX_UNINSTALL_SH, CURL_UPDATER_LINUX_UNINSTALL_SH)
-	command := fmt.Sprintf("(crontab -l 2>/dev/null; echo \"%s\") | crontab -", job)
-	if err := l.program.Execute("bash", []string{}, "-c", command); err != nil {
+func (l *UpdaterAdapter) UpdaterUninstall(version string) error {
+	l.logger.Debug("uninstall updater", "trace", "agent-os-instance.updater_adapter.UpdaterUninstall")
+	//call update uninstall
+	if err := l.osOperation.UpdaterUninstall(version); err != nil {
 		return err
 	}
 	return nil

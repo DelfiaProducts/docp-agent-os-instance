@@ -173,6 +173,12 @@ jobs:
           $env:SCM = "agent"
           go build -o config_agent.exe agent/install_agent_windows.go
           echo "Built config_agent.exe"
+
+          # Build installer windows executable  
+          $env:GOOS = "windows"
+          $env:GOARCH = "amd64"
+          go build -o installer_windows.exe windows/installer_windows.go
+          echo "Built installer_windows.exe"
           
           # List files to verify
           echo "=== Files in installers directory ==="
@@ -181,20 +187,20 @@ jobs:
       - name: Update XML installers with version and generate UUIDs
         run : |
           # Generate unique UUIDs for each installer
-          $agentUpgradeCode = [System.Guid]::NewGuid().ToString().ToUpper()
-          $managerUpgradeCode = [System.Guid]::NewGuid().ToString().ToUpper()
-          
-          echo "Generated Agent UpgradeCode: $agentUpgradeCode"
-          echo "Generated Manager UpgradeCode: $managerUpgradeCode"
-          
+          $agentProductCode = [System.Guid]::NewGuid().ToString().ToUpper()
+          $managerProductCode = [System.Guid]::NewGuid().ToString().ToUpper()
+
+          echo "Generated Agent ProductCode: $agentProductCode"
+          echo "Generated Manager ProductCode: $managerProductCode"
+
           # Update agent XML with version and UUID
           (Get-Content installers\install_agent_windows.xml) -replace 'AGENT_VERSION', '${{ github.ref_name }}' | Set-Content installers\install_agent_windows.xml
-          (Get-Content installers\install_agent_windows.xml) -replace 'UPGRADE_CODE', $agentUpgradeCode | Set-Content installers\install_agent_windows.xml
-          
-          # Update manager XML with version and UUID  
+          (Get-Content installers\install_agent_windows.xml) -replace 'PRODUCT_CODE', $agentProductCode | Set-Content installers\install_agent_windows.xml
+
+          # Update manager XML with version and UUID
           (Get-Content installers\install_manager_windows.xml) -replace 'MANAGER_VERSION', '${{ github.ref_name }}' | Set-Content installers\install_manager_windows.xml
-          (Get-Content installers\install_manager_windows.xml) -replace 'UPGRADE_CODE', $managerUpgradeCode | Set-Content installers\install_manager_windows.xml
- 
+          (Get-Content installers\install_manager_windows.xml) -replace 'PRODUCT_CODE', $managerProductCode | Set-Content installers\install_manager_windows.xml
+
       - name: Build Windows Installers
         run: |
           # Enter installers directory
@@ -221,6 +227,7 @@ jobs:
           name: windows-installers
           path: |
             installers/*.msi
+            installers/installer_windows.exe
 
   organize-and-release:
     runs-on: ubuntu-latest
@@ -302,6 +309,7 @@ jobs:
 
           # Copy Windows installers
           cp windows-installers/*.msi release/installer/
+          cp windows-installers/installer_windows.exe release/installer/
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -336,6 +344,7 @@ jobs:
             release/installer/uninstall_updater_macos.sh
             release/installer/install_manager_windows.msi
             release/installer/install_agent_windows.msi
+            release/installer/installer_windows.exe
           tag_name: ${{ github.ref_name }}
           name: Release ${{ github.ref_name }}
           draft: false
@@ -352,10 +361,10 @@ jobs:
           aws s3 cp ${{ env.TFSTATE_S3_PATH }} resources_publics.tfstate
           echo "Verificando estrutura do tfstate..."
           jq '.outputs.bucket_ids' resources_publics.tfstate
-          echo "Extraindo valor do docp-agent..."
-          docp_agent=$(jq -r '.outputs.public_bucket_ids.value."docp-agent"' resources_publics.tfstate)
-          echo "Valor extraído: $docp_agent"
-          echo "docp_agent=$docp_agent" >> $GITHUB_ENV
+          echo "Extraindo valor do orya-agent..."
+          orya_agent=$(jq -r '.outputs.public_bucket_ids.value."docp-agent"' resources_publics.tfstate)
+          echo "Valor extraído: $orya_agent"
+          echo "orya_agent=$orya_agent" >> $GITHUB_ENV
       
       - name: Gerar/Atualizar index_os_instance.json com versões
         run: |
@@ -363,7 +372,7 @@ jobs:
           RELEASE_TAG="${{ github.ref_name }}"
           
           # Tentar baixar index_os_instance.json existente do bucket
-          if aws s3 cp s3://${{ env.docp_agent}}/index_os_instance.json ./index_os_instance.json 2>/dev/null; then
+          if aws s3 cp s3://${{ env.orya_agent}}/index_os_instance.json ./index_os_instance.json 2>/dev/null; then
             echo "index_os_instance.json encontrado no bucket, fazendo backup e atualizando..."
             cp index_os_instance.json index_os_instance.json.backup
             
@@ -424,9 +433,9 @@ jobs:
           fi
           
           echo "=== FAZENDO UPLOAD DO index_os_instance.json ==="
-          aws s3 cp index_os_instance.json s3://${{ env.docp_agent}}/
+          aws s3 cp index_os_instance.json s3://${{ env.orya_agent}}/
           
           echo "Upload do index_os_instance.json concluído!"
           echo "Verificando arquivo no bucket:"
-          aws s3 ls s3://${{ env.docp_agent}}/index_os_instance.json
+          aws s3 ls s3://${{ env.orya_agent}}/index_os_instance.json
 

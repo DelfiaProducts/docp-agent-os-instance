@@ -4,12 +4,12 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-FILE_INDEX_URL="https://docp-agent.s3.us-east-1.amazonaws.com/index_os_instance.json"
-BINARY_URL="https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
+FILE_INDEX_URL="https://orya-agent.s3.us-east-1.amazonaws.com/index_os_instance.json"
+BINARY_URL="https://github.com/OryaHub/agent-os-instance/releases/download"
 VERSION="${VERSION:-${VERSION:-latest}}"
-AGENT_IS_RUNNING=$($sudo_cmd systemctl is-active docp-agent)
-DOCP_FILES_PATH=/opt/docp-agent
-USER_GROUP_NAME=docp-agent
+AGENT_IS_RUNNING=$($sudo_cmd systemctl is-active orya-agent)
+ORYA_FILES_PATH=/opt/orya-agent
+USER_GROUP_NAME=orya-agent
 
 # Root user detection
 if [ "$UID" == "0" ]; then
@@ -76,34 +76,34 @@ function resolve_version() {
 
 #add permission workdir
 function add_perm_work_dir(){
-  $sudo_cmd chown -R $USER_GROUP_NAME:$USER_GROUP_NAME /opt/docp-agent/
+  $sudo_cmd chown -R $USER_GROUP_NAME:$USER_GROUP_NAME /opt/orya-agent/
 }
 
 #get binary arm64
 function get_binary_arch64(){
-  sudo curl -s -L -o $DOCP_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-linux-arm64"
-  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/agent
+  sudo curl -s -L -o $ORYA_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-linux-arm64"
+  sudo chmod +x $ORYA_FILES_PATH/bin/releases/$VERSION/agent
 }
 #get binary amd64
 function get_binary_amd64(){
-  sudo curl -s -L -o $DOCP_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-linux-amd64"
-  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/agent
+  sudo curl -s -L -o $ORYA_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-linux-amd64"
+  sudo chmod +x $ORYA_FILES_PATH/bin/releases/$VERSION/agent
 }
 # create symbolic link
 function create_link_simbolic(){
-  sudo ln -sfn $DOCP_FILES_PATH/bin/releases/$VERSION/agent $DOCP_FILES_PATH/bin/current/agent
+  sudo ln -sfn $ORYA_FILES_PATH/bin/releases/$VERSION/agent $ORYA_FILES_PATH/bin/current/agent
 }
 
 #set content service
 function set_content_service() {
-  printf "[Unit]\nDescription=Docp Agent\nAfter=network.target\n\n[Service]\nType=simple\nPIDFile=/opt/docp-agent/run/agent.pid\nUser=docp-agent\nRestart=on-failure\nEnvironmentFile=-/opt/docp-agent/environments\nRuntimeDirectory=docp\nExecStart=/opt/docp-agent/bin/current/agent run -p /opt/docp-agent/run/agent.pid\nStartLimitInterval=10\nStartLimitBurst=5\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target\n" | sudo tee /etc/systemd/system/docp-agent.service > /dev/null
+  printf "[Unit]\nDescription=Orya Agent\nAfter=network.target\n\n[Service]\nType=simple\nPIDFile=/opt/orya-agent/run/agent.pid\nUser=orya-agent\nRestart=on-failure\nEnvironmentFile=-/opt/orya-agent/environments\nRuntimeDirectory=orya\nExecStart=/opt/orya-agent/bin/current/agent run -p /opt/orya-agent/run/agent.pid\nStartLimitInterval=10\nStartLimitBurst=5\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target\n" | sudo tee /etc/systemd/system/orya-agent.service > /dev/null
 }
 
 #prepare systemd
 function prepare_systemd() {
   $sudo_cmd systemctl daemon-reload
-  $sudo_cmd systemctl start docp-agent.service
-  $sudo_cmd systemctl enable docp-agent.service
+  $sudo_cmd systemctl start orya-agent.service
+  $sudo_cmd systemctl enable orya-agent.service
 }
 #actions
 VERSION=$(resolve_version "$VERSION")

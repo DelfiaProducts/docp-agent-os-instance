@@ -1,4 +1,4 @@
-module github.com/DelfiaProducts/docp-agent-os-instance
+module github.com/OryaHub/agent-os-instance
 
 go 1.24.6
 

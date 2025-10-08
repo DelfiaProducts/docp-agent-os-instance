@@ -7,9 +7,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/services"
 )
 
 func TestNewAgentRegisterService(t *testing.T) {
@@ -53,7 +53,7 @@ func TestAgentRegisterServiceGetConfigFileContent(t *testing.T) {
 				err = agRegister.Setup()
 			})
 			s.When("GetConfigFileContent é chamado", func() {
-				configFileContent, err = agRegister.GetConfigFileContent("/opt/docp-agent/config.yml")
+				configFileContent, err = agRegister.GetConfigFileContent("/opt/orya-agent/config.yml")
 			})
 			s.Then("não deve retornar erro e deve retornar conteúdo", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "GetConfigFileContent não deve retornar erro")
@@ -86,7 +86,7 @@ func TestAgentRegisterServiceInjectClientInfo(t *testing.T) {
 					err = errMarshal
 					return
 				}
-				f, errOpen := os.OpenFile("/opt/docp-agent/config.yml", os.O_RDONLY, os.ModePerm)
+				f, errOpen := os.OpenFile("/opt/orya-agent/config.yml", os.O_RDONLY, os.ModePerm)
 				if errOpen != nil {
 					err = errOpen
 					return

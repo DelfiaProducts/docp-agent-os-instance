@@ -6,9 +6,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
 )
 
 func TestNewYmlClient(t *testing.T) {
@@ -37,7 +37,7 @@ func TestYmlClientUnmarshal(t *testing.T) {
 				ymlClient = pkg.NewYmlClient()
 			})
 			s.When("abro o arquivo de config e leio o conteúdo", func() {
-				f, errOpen := os.OpenFile("/opt/docp-agent/config.yml", os.O_RDONLY, os.ModePerm)
+				f, errOpen := os.OpenFile("/opt/orya-agent/config.yml", os.O_RDONLY, os.ModePerm)
 				if errOpen != nil {
 					err = errOpen
 					return

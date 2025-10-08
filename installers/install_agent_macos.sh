@@ -4,12 +4,12 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-FILE_INDEX_URL="https://docp-agent.s3.us-east-1.amazonaws.com/index_os_instance.json"
-BINARY_URL="https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
+FILE_INDEX_URL="https://orya-agent.s3.us-east-1.amazonaws.com/index_os_instance.json"
+BINARY_URL="https://github.com/OryaHub/agent-os-instance/releases/download"
 VERSION="${VERSION:-${VERSION:-latest}}"
-AGENT_IS_RUNNING=$(ps aux | grep -v grep | grep docp-agent/bin/agent)
-DOCP_FILES_PATH=/opt/docp-agent
-USER_GROUP_NAME=docp-agent
+AGENT_IS_RUNNING=$(ps aux | grep -v grep | grep orya-agent/bin/agent)
+ORYA_FILES_PATH=/opt/orya-agent
+USER_GROUP_NAME=orya-agent
 
 # Root user detection
 if [ "$UID" == "0" ]; then
@@ -65,13 +65,13 @@ function resolve_version() {
 
 #get binary arm64
 function get_binary_arch64(){
-  sudo curl -s -L -o $DOCP_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-macos-arm64"
-  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/agent
+  sudo curl -s -L -o $ORYA_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-macos-arm64"
+  sudo chmod +x $ORYA_FILES_PATH/bin/releases/$VERSION/agent
 }
 #get binary amd64
 function get_binary_amd64(){
-  sudo curl -s -L -o $DOCP_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-macos-amd64"
-  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/agent
+  sudo curl -s -L -o $ORYA_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-macos-amd64"
+  sudo chmod +x $ORYA_FILES_PATH/bin/releases/$VERSION/agent
 }
 #set content service
 function set_content_service() {
@@ -86,10 +86,10 @@ function set_content_service() {
             <false/>
         </dict>
         <key>Label</key>
-        <string>com.docp.agent</string>
+        <string>com.orya.agent</string>
         <key>EnvironmentVariables</key>
         <dict>
-            <key>DOCP_AGENT_PORT</key>
+            <key>ORYA_AGENT_PORT</key>
             <string>12012</string>
             <key>LOG_LEVEL</key>
             <string>info</string>
@@ -98,22 +98,22 @@ function set_content_service() {
         </dict>
         <key>ProgramArguments</key>
         <array>
-            <string>/opt/docp-agent/bin/current/agent</string>
+            <string>/opt/orya-agent/bin/current/agent</string>
         </array>
         <key>StandardOutPath</key>
-        <string>/opt/docp-agent/logs/launchd.log</string>
+        <string>/opt/orya-agent/logs/launchd.log</string>
         <key>StandardErrorPath</key>
-        <string>/opt/docp-agent/logs/launchd.log</string>
+        <string>/opt/orya-agent/logs/launchd.log</string>
         <key>ExitTimeOut</key>
         <integer>10</integer>
     </dict>
-    </plist>' | sudo tee ~/Library/LaunchAgents/com.docp.agent.plist > /dev/null
+    </plist>' | sudo tee ~/Library/LaunchAgents/com.orya.agent.plist > /dev/null
 }
 
 #prepare launchd
 function prepare_launchd() {
-  launchctl load ~/Library/LaunchAgents/com.docp.agent.plist
-  launchctl start gui/$(id -u)/com.docp.agent
+  launchctl load ~/Library/LaunchAgents/com.orya.agent.plist
+  launchctl start gui/$(id -u)/com.orya.agent
 }
 #actions
 VERSION=$(resolve_version "$VERSION")

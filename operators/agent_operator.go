@@ -6,10 +6,10 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/api"
-	adapters "github.com/DelfiaProducts/docp-agent-os-instance/libs/adapters"
-	libinterfaces "github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	libutils "github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/api"
+	adapters "github.com/OryaHub/agent-os-instance/libs/adapters"
+	libinterfaces "github.com/OryaHub/agent-os-instance/libs/interfaces"
+	libutils "github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 // AgentOperator is struct for operator the linux
@@ -18,7 +18,7 @@ type AgentOperator struct {
 	chanErrors   chan error
 	adapter      *adapters.AgentAdapter
 	logger       libinterfaces.ILogger
-	api          *api.DocpApi
+	api          *api.OryaApi
 	wg           *sync.WaitGroup
 }
 
@@ -44,13 +44,13 @@ func (l *AgentOperator) Setup() error {
 			return err
 		}
 		logPath := filepath.Join(workdir, "logs", "agent.log")
-		loggerFile := libutils.NewDocpLoggerWindowsFileText(logPath)
+		loggerFile := libutils.NewOryaLoggerWindowsFileText(logPath)
 		logger = loggerFile
 	} else {
-		logger = libutils.NewDocpLoggerJSON(os.Stdout)
+		logger = libutils.NewOryaLoggerJSON(os.Stdout)
 	}
 	l.logger = logger
-	api := api.NewDocpApi(port, l.logger)
+	api := api.NewOryaApi(port, l.logger)
 	if err := api.Setup(); err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func (l *AgentOperator) Setup() error {
 
 // consumerErrors execute consumer for errors
 func (l *AgentOperator) consumerErrors() {
-	l.logger.Debug("execute consumer errors", "trace", "docp-agent-os-instance.agent_operator.consumerErrors")
+	l.logger.Debug("execute consumer errors", "trace", "agent-os-instance.agent_operator.consumerErrors")
 	defer l.wg.Done()
 	for {
 		select {
@@ -75,7 +75,7 @@ func (l *AgentOperator) consumerErrors() {
 				return
 			}
 			if err != nil {
-				l.logger.Error("error received in consumer errors", "trace", "docp-agent-os-instance.agent_operator.consumerErrors", "error", err.Error())
+				l.logger.Error("error received in consumer errors", "trace", "agent-os-instance.agent_operator.consumerErrors", "error", err.Error())
 			}
 		}
 	}
@@ -83,7 +83,7 @@ func (l *AgentOperator) consumerErrors() {
 
 // apiListen is execute listen the api
 func (l *AgentOperator) apiListen() {
-	l.logger.Debug("api listen", "trace", "docp-agent-os-instance.agent_operator.apiListen")
+	l.logger.Debug("api listen", "trace", "agent-os-instance.agent_operator.apiListen")
 	defer l.wg.Done()
 	if err := l.api.Run(); err != nil {
 		l.chanErrors <- err
@@ -95,7 +95,7 @@ func (l *AgentOperator) Run() error {
 	if err := l.Setup(); err != nil {
 		return err
 	}
-	l.logger.Debug("execute run", "trace", "docp-agent-os-instance.agent_operator.Run")
+	l.logger.Debug("execute run", "trace", "agent-os-instance.agent_operator.Run")
 	l.logger.Info("execute agent")
 	defer l.logger.Close()
 	l.wg.Add(3)

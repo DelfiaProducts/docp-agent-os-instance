@@ -1,13 +1,13 @@
 package interfaces
 
 import (
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
 )
 
 type IDatadogOperation interface {
 	Setup() error
-	InstallAgent(ddSite, ddApiKey string) error
-	InstallAgentApmSingleStep(ddSite string, ddApiKey string, datadogEnvVars []dto.DatadogEnvVars) error
+	InstallAgent(ddSite, ddApiKey, version string) error
+	InstallAgentApmSingleStep(ddSite string, ddApiKey string, version string, datadogEnvVars []dto.DatadogEnvVars) error
 	InstallAgentApmTracingLibrary(languageName, pathTracer, version string) error
 	UninstallAgent() error
 	DiscoverDatadogConfigPath() (string, error)

@@ -4,58 +4,58 @@ import (
 	"os"
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
-func TestNewDocpLoggerJSON(t *testing.T) {
-	bdd.Feature(t, "TestNewDocpLoggerJSON", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
+func TestNewOryaLoggerJSON(t *testing.T) {
+	bdd.Feature(t, "TestNewOryaLoggerJSON", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
 		Scenario("Deve criar logger JSON sem erro", func(s *bdd.Scenario) {
-			var docpLogger any
+			var oryaLogger any
 			s.Given("um stdout válido", func() {})
-			s.When("NewDocpLoggerJSON é chamado", func() {
-				docpLogger = utils.NewDocpLoggerJSON(os.Stdout)
+			s.When("NewOryaLoggerJSON é chamado", func() {
+				oryaLogger = utils.NewOryaLoggerJSON(os.Stdout)
 			})
 			s.Then("logger não deve ser nil", func(t *testing.T) {
-				bdd.AssertIsNotNil(t, docpLogger, "Logger deve ser diferente de nil")
+				bdd.AssertIsNotNil(t, oryaLogger, "Logger deve ser diferente de nil")
 			})
 		})
 	})
 }
 
-func TestDocpLoggerText(t *testing.T) {
-	bdd.Feature(t, "TestDocpLoggerText", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
+func TestOryaLoggerText(t *testing.T) {
+	bdd.Feature(t, "TestOryaLoggerText", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
 		Scenario("Deve criar logger Text sem erro", func(s *bdd.Scenario) {
-			var docpLogger any
+			var oryaLogger any
 			s.Given("um stdout válido", func() {})
-			s.When("NewDocpLoggerText é chamado", func() {
-				docpLogger = utils.NewDocpLoggerText(os.Stdout)
+			s.When("NewOryaLoggerText é chamado", func() {
+				oryaLogger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.Then("logger não deve ser nil", func(t *testing.T) {
-				bdd.AssertIsNotNil(t, docpLogger, "Logger deve ser diferente de nil")
+				bdd.AssertIsNotNil(t, oryaLogger, "Logger deve ser diferente de nil")
 			})
 		})
 	})
 }
 
-func TestDocpLoggerLogs(t *testing.T) {
-	bdd.Feature(t, "TestDocpLoggerLogs", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
+func TestOryaLoggerLogs(t *testing.T) {
+	bdd.Feature(t, "TestOryaLoggerLogs", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
 		Scenario("Deve logar mensagens nos dois formatos", func(s *bdd.Scenario) {
-			var docpLoggerJson, docpLoggerText any
+			var oryaLoggerJson, oryaLoggerText any
 			s.Given("um logger JSON e um logger Text válidos", func() {
-				docpLoggerJson = utils.NewDocpLoggerJSON(os.Stdout)
-				docpLoggerText = utils.NewDocpLoggerText(os.Stdout)
+				oryaLoggerJson = utils.NewOryaLoggerJSON(os.Stdout)
+				oryaLoggerText = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.When("chamo os métodos de log", func() {
-				if docpLoggerJson != nil {
-					docpLoggerJson.(*utils.DocpLogger).Info("test docp info", "api_key", "123rg389gh", "srv", "agent", "code", 123, "active", true)
-					docpLoggerJson.(*utils.DocpLogger).Warn("test docp warn", "api_key", "123rg389gh", "srv", "agent", "code", 123, "active", true)
-					docpLoggerJson.(*utils.DocpLogger).Error("test docp error", "api_key", "123rg389gh", "srv", "agent", "code", 123, "active", true)
+				if oryaLoggerJson != nil {
+					oryaLoggerJson.(*utils.OryaLogger).Info("test orya info", "api_key", "123rg389gh", "srv", "agent", "code", 123, "active", true)
+					oryaLoggerJson.(*utils.OryaLogger).Warn("test orya warn", "api_key", "123rg389gh", "srv", "agent", "code", 123, "active", true)
+					oryaLoggerJson.(*utils.OryaLogger).Error("test orya error", "api_key", "123rg389gh", "srv", "agent", "code", 123, "active", true)
 				}
-				if docpLoggerText != nil {
-					docpLoggerText.(*utils.DocpLogger).Info("test docp info", "api_key", "123rg389gh", "srv", "agent", "code", 123, "active", true)
-					docpLoggerText.(*utils.DocpLogger).Warn("test docp warn", "api_key", "123rg389gh", "srv", "agent", "code", 123, "active", true)
-					docpLoggerText.(*utils.DocpLogger).Error("test docp error", "api_key", "123rg389gh", "srv", "agent", "code", 123, "active", true)
+				if oryaLoggerText != nil {
+					oryaLoggerText.(*utils.OryaLogger).Info("test orya info", "api_key", "123rg389gh", "srv", "agent", "code", 123, "active", true)
+					oryaLoggerText.(*utils.OryaLogger).Warn("test orya warn", "api_key", "123rg389gh", "srv", "agent", "code", 123, "active", true)
+					oryaLoggerText.(*utils.OryaLogger).Error("test orya error", "api_key", "123rg389gh", "srv", "agent", "code", 123, "active", true)
 				}
 			})
 			s.Then("não deve ocorrer panic ao logar", func(t *testing.T) {

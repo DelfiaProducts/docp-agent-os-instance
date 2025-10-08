@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/adapters"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/adapters"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
 )
 
 func TestNewManagerAdapter(t *testing.T) {
@@ -100,8 +100,8 @@ func TestManagerAdapterStatus(t *testing.T) {
 				manager = adapters.NewManagerAdapter(logger)
 				err = manager.Prepare()
 			})
-			s.When("chamo Status para docp-agent.service", func() {
-				status, err = manager.Status("docp-agent.service")
+			s.When("chamo Status para orya-agent.service", func() {
+				status, err = manager.Status("orya-agent.service")
 			})
 			s.Then("deve retornar status sem erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "Status não deve retornar erro")
@@ -139,8 +139,8 @@ func TestManagerAdapterRestartService(t *testing.T) {
 				manager = adapters.NewManagerAdapter(logger)
 				err = manager.Prepare()
 			})
-			s.When("chamo RestartService para docp-manager.service", func() {
-				err = manager.RestartService("docp-manager.service")
+			s.When("chamo RestartService para orya-manager.service", func() {
+				err = manager.RestartService("orya-manager.service")
 			})
 			s.Then("deve reiniciar sem erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "RestartService não deve retornar erro")
@@ -158,8 +158,8 @@ func TestManagerAdapterStopService(t *testing.T) {
 				manager = adapters.NewManagerAdapter(logger)
 				err = manager.Prepare()
 			})
-			s.When("chamo StopService para docp-manager.service", func() {
-				err = manager.StopService("docp-manager.service")
+			s.When("chamo StopService para orya-manager.service", func() {
+				err = manager.StopService("orya-manager.service")
 			})
 			s.Then("deve parar sem erro", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "StopService não deve retornar erro")
@@ -225,7 +225,7 @@ func TestManagerAdapterAutoUninstall(t *testing.T) {
 	})
 }
 
-func TestManagerAdapterDocpAgentApiInstallDatadog(t *testing.T) {
+func TestManagerAdapterOryaAgentApiInstallDatadog(t *testing.T) {
 	bdd.Feature(t, "ManagerAdapter", func(t *testing.T, scenario func(description string, steps func(s *bdd.Scenario))) {
 		scenario("instalar datadog via API", func(s *bdd.Scenario) {
 			var manager *adapters.ManagerAdapter
@@ -235,18 +235,18 @@ func TestManagerAdapterDocpAgentApiInstallDatadog(t *testing.T) {
 				manager = adapters.NewManagerAdapter(logger)
 				err = manager.Prepare()
 			})
-			s.When("chamo DocpAgentApiInstallDatadog", func() {
-				result, err = manager.DocpAgentApiInstallDatadog("9ba8aefcaa347216ffa5a5e7b3156f54", "datadoghq.com")
+			s.When("chamo OryaAgentApiInstallDatadog", func() {
+				result, err = manager.OryaAgentApiInstallDatadog("9ba8aefcaa347216ffa5a5e7b3156f54", "datadoghq.com", "latest")
 			})
 			s.Then("deve instalar datadog sem erro", func(t *testing.T) {
-				bdd.AssertNoError(t, err, "DocpAgentApiInstallDatadog não deve retornar erro")
+				bdd.AssertNoError(t, err, "OryaAgentApiInstallDatadog não deve retornar erro")
 				bdd.AssertIsNotNil(t, result, "resultado não deve ser nil")
 			})
 		})
 	})
 }
 
-func TestManagerAdapterDocpAgentApiUninstallDatadog(t *testing.T) {
+func TestManagerAdapterOryaAgentApiUninstallDatadog(t *testing.T) {
 	bdd.Feature(t, "ManagerAdapter", func(t *testing.T, scenario func(description string, steps func(s *bdd.Scenario))) {
 		scenario("desinstalar datadog via API", func(s *bdd.Scenario) {
 			var manager *adapters.ManagerAdapter
@@ -256,11 +256,11 @@ func TestManagerAdapterDocpAgentApiUninstallDatadog(t *testing.T) {
 				manager = adapters.NewManagerAdapter(logger)
 				err = manager.Prepare()
 			})
-			s.When("chamo DocpAgentApiUninstallDatadog", func() {
-				result, err = manager.DocpAgentApiUninstallDatadog()
+			s.When("chamo OryaAgentApiUninstallDatadog", func() {
+				result, err = manager.OryaAgentApiUninstallDatadog()
 			})
 			s.Then("deve desinstalar datadog sem erro", func(t *testing.T) {
-				bdd.AssertNoError(t, err, "DocpAgentApiUninstallDatadog não deve retornar erro")
+				bdd.AssertNoError(t, err, "OryaAgentApiUninstallDatadog não deve retornar erro")
 				bdd.AssertIsNotNil(t, result, "resultado não deve ser nil")
 			})
 		})

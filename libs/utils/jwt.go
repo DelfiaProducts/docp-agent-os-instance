@@ -3,7 +3,7 @@ package utils
 import (
 	"encoding/json"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
 	"github.com/golang-jwt/jwt/v5"
 )
 

@@ -7,11 +7,11 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 
-	adapters "github.com/DelfiaProducts/docp-agent-os-instance/libs/adapters"
-	libinterfaces "github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	libutils "github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	adapters "github.com/OryaHub/agent-os-instance/libs/adapters"
+	libinterfaces "github.com/OryaHub/agent-os-instance/libs/interfaces"
+	libutils "github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 // UpdaterOperator is struct for updater the operator
@@ -41,10 +41,10 @@ func (l *UpdaterOperator) Setup() error {
 			return err
 		}
 		logPath := filepath.Join(workdir, "logs", "manager.log")
-		loggerFile := libutils.NewDocpLoggerWindowsFileText(logPath)
+		loggerFile := libutils.NewOryaLoggerWindowsFileText(logPath)
 		logger = loggerFile
 	} else {
-		logger = libutils.NewDocpLoggerJSON(os.Stdout)
+		logger = libutils.NewOryaLoggerJSON(os.Stdout)
 	}
 	l.logger = logger
 	adapterUpdater := adapters.NewUpdaterAdapter(l.logger)
@@ -55,19 +55,41 @@ func (l *UpdaterOperator) Setup() error {
 	return nil
 }
 
-func (l *UpdaterOperator) getLevelError() int {
-	l.logger.Debug("get level error", "trace", "docp-agent-os-instance.updater_operator.getLevelError")
-	envLevelError := os.Getenv("ERROR_LEVEL")
-	switch envLevelError {
-	case "high":
-		return dto.ErrLevelHigh
-	case "medium":
-		return dto.ErrLevelMedium
-	case "low":
-		return dto.ErrLevelLow
-	default:
-		return dto.ErrLevelHigh
+// getVersionFromReceived extracts the version from the received content
+func (l *UpdaterOperator) getVersionFromReceived() (string, error) {
+	var applyVersion string
+	received, err := l.adapter.GetContentReceived()
+	if err != nil {
+		return applyVersion, err
 	}
+	l.logger.Info("received content", "content", string(received))
+	if len(received) > 0 {
+		version, err := l.adapter.GetAgentVersionFromSignal(received)
+		if err != nil {
+			return applyVersion, err
+		}
+		l.logger.Info("version received", "version", version)
+		if len(version) > 0 {
+			if version == "latest" {
+				l.logger.Info("latest version received, update needed")
+				agentVersions, err := l.adapter.FetchAgentVersions()
+				if err != nil {
+					l.logger.Error("error fetching agent versions", "error", err.Error())
+					return applyVersion, err
+				}
+				applyVersion = agentVersions.LatestVersion
+
+			} else {
+				applyVersion = version
+			}
+
+		}
+	}
+	if len(applyVersion) == 0 {
+		return applyVersion, utils.ErrAgentVersionNotFound()
+	}
+
+	return applyVersion, nil
 }
 
 func (l *UpdaterOperator) RecoverServices() error {
@@ -102,37 +124,15 @@ func (l *UpdaterOperator) RecoverServices() error {
 // ExecuteUpdate execute update
 func (l *UpdaterOperator) ExecuteUpdate() error {
 	l.logger.Info("execute update", "timestamp", time.Now())
-	received, err := l.adapter.GetContentReceived()
+	applyVersion, err := l.getVersionFromReceived()
 	if err != nil {
 		return err
 	}
-	if len(received) > 0 {
-		l.logger.Info("update received", "received", string(received))
-		version, err := l.adapter.GetAgentVersionFromSignal(received)
-		if err != nil {
-			return err
-		}
-		l.logger.Info("update version", "version", version)
-		if len(version) > 0 {
-			l.logger.Info("version received", "version", version)
-			var applyVersion string
-			if version == "latest" {
-				l.logger.Info("latest version received, update needed")
-				agentVersions, err := l.adapter.FetchAgentVersions()
-				if err != nil {
-					l.logger.Error("error fetching agent versions", "error", err.Error())
-					return err
-				}
-				applyVersion = agentVersions.LatestVersion
-
-			} else {
-				applyVersion = version
-			}
-			if err := l.adapter.ExecuteUpdateVersion(applyVersion); err != nil {
-				return err
-			}
-		}
+	//apply version
+	if err := l.adapter.ExecuteUpdateVersion(applyVersion); err != nil {
+		return err
 	}
+
 	return nil
 }
 
@@ -149,7 +149,12 @@ func (l *UpdaterOperator) Run() error {
 			l.logger.Error("error recovering services", "error", errRecover.Error())
 
 		}
-		if err := l.adapter.UpdaterUninstall(); err != nil {
+		version, err := l.getVersionFromReceived()
+		if err != nil {
+			l.logger.Error("error getting version from received", "error", err.Error())
+			return err
+		}
+		if err := l.adapter.UpdaterUninstall(version); err != nil {
 			l.logger.Error("error uninstalling updater", "error", err.Error())
 			return err
 		}
@@ -213,9 +218,14 @@ loopvalidate:
 			return err
 		}
 	}
+	version, err := l.getVersionFromReceived()
+	if err != nil {
+		l.logger.Error("error getting version from received", "error", err.Error())
+		return err
+	}
 
 	//auto uninstall updater
-	if err := l.adapter.UpdaterUninstall(); err != nil {
+	if err := l.adapter.UpdaterUninstall(version); err != nil {
 		l.logger.Error("error uninstalling updater", "error", err.Error())
 		return err
 	}

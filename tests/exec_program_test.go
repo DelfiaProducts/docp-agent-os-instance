@@ -3,8 +3,8 @@ package tests
 import (
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
 )
 
 func TestNewExecProgram(t *testing.T) {
@@ -37,7 +37,7 @@ func TestExecProgramExecuteWithOutput(t *testing.T) {
 			})
 			s.When("ExecuteWithOutput é chamado", func() {
 				if execProgram != nil {
-					output, err = execProgram.ExecuteWithOutput("uname", []string{"DOCP_DISTRO=ubuntu"}, "-o")
+					output, err = execProgram.ExecuteWithOutput("uname", []string{"ORYA_DISTRO=ubuntu"}, "-o")
 				}
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
@@ -67,7 +67,7 @@ func TestExecProgramExecute(t *testing.T) {
 			})
 			s.When("Execute é chamado", func() {
 				if execProgram != nil {
-					err = execProgram.Execute("ls", []string{"DOCP_DISTRO=ubuntu"}, "-la")
+					err = execProgram.Execute("ls", []string{"ORYA_DISTRO=ubuntu"}, "-la")
 				}
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {

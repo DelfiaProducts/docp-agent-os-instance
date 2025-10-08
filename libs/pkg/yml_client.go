@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
 	"gopkg.in/yaml.v2"
 )
 
@@ -14,16 +13,16 @@ func NewYmlClient() *YmlClient {
 }
 
 // Unmarshall execute parse the yml for data
-func (y *YmlClient) Unmarshall(data []byte, config *dto.ConfigAgent) error {
-	if err := yaml.Unmarshal(data, config); err != nil {
+func (y *YmlClient) Unmarshall(data []byte, fileYml any) error {
+	if err := yaml.Unmarshal(data, fileYml); err != nil {
 		return err
 	}
 	return nil
 }
 
 // Marshall execute parse the data for yml
-func (y *YmlClient) Marshall(config *dto.ConfigAgent) ([]byte, error) {
-	data, err := yaml.Marshal(config)
+func (y *YmlClient) Marshall(fileYml any) ([]byte, error) {
+	data, err := yaml.Marshal(fileYml)
 	if err != nil {
 		return nil, err
 	}

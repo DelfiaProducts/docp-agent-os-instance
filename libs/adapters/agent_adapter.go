@@ -1,8 +1,8 @@
 package adapters
 
 import (
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/components"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/components"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
 )
 
 // AgentAdapter is struct for adapter agent

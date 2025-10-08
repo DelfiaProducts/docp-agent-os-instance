@@ -13,12 +13,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/components"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/components"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/services"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 // ManagerAdapter is struct for manager adapter
@@ -40,7 +40,7 @@ type ManagerAdapter struct {
 	stateCheck               *services.StateCheckService
 	auth                     *services.AuthService
 	utilityService           *services.UtilityService
-	docpApiPort              string
+	oryaApiPort              string
 	delay                    time.Duration
 	pendingTransactionEvents []dto.TransactionStatus
 	LockedEvents             bool
@@ -93,7 +93,7 @@ func (l *ManagerAdapter) Prepare() error {
 	if err != nil {
 		return err
 	}
-	l.docpApiPort = apiPort
+	l.oryaApiPort = apiPort
 	agentWorkDir, err := utils.GetWorkDirPath()
 	if err != nil {
 		return err
@@ -123,17 +123,17 @@ func (l *ManagerAdapter) Prepare() error {
 
 // marshallerMetadata execute marshall the metadata
 func (l *ManagerAdapter) marshallerMetadata(metadata dto.Metadata) []byte {
-	l.logger.Debug("marshal metadata", "trace", "docp-agent-os-instance.manager_adapter.marshaller")
+	l.logger.Debug("marshal metadata", "trace", "agent-os-instance.manager_adapter.marshaller")
 	bMetadata, err := json.Marshal(metadata)
 	if err != nil {
-		l.logger.Error("error in marshal metadata", "trace", "docp-agent-os-instance.manager_adapter.marshaller", "error", err.Error())
+		l.logger.Error("error in marshal metadata", "trace", "agent-os-instance.manager_adapter.marshaller", "error", err.Error())
 	}
 	return bMetadata
 }
 
 // marshaller execute marshal the struct for slice the bytes
 func (l *ManagerAdapter) marshaller(inner any) ([]byte, error) {
-	l.logger.Debug("execute marshaller", "trace", "docp-agent-os-instance.manager_adapter.marshaller")
+	l.logger.Debug("execute marshaller", "trace", "agent-os-instance.manager_adapter.marshaller")
 	resBytes, err := json.Marshal(inner)
 	if err != nil {
 		return nil, err
@@ -143,7 +143,7 @@ func (l *ManagerAdapter) marshaller(inner any) ([]byte, error) {
 
 // unmarshaller execute unmarshal the content bytes
 func (l *ManagerAdapter) unmarshaller(content []byte, inner any) error {
-	l.logger.Debug("execute unmarshaller", "trace", "docp-agent-os-instance.manager_adapter.unmarshaller")
+	l.logger.Debug("execute unmarshaller", "trace", "agent-os-instance.manager_adapter.unmarshaller")
 	if err := json.Unmarshal(content, inner); err != nil {
 		return err
 	}
@@ -152,26 +152,26 @@ func (l *ManagerAdapter) unmarshaller(content []byte, inner any) error {
 
 // getInfos execute get the infos in host
 func (l *ManagerAdapter) getInfos() {
-	l.logger.Debug("get infos", "trace", "docp-agent-os-instance.manager_adapter.getInfos")
+	l.logger.Debug("get infos", "trace", "agent-os-instance.manager_adapter.getInfos")
 	computeInfo, err := l.hostStats.ComputeInfo()
 	if err != nil {
-		l.logger.Error("error host info", "trace", "docp-agent-os-instance.manager_adapter.getInfos", "error", err.Error())
+		l.logger.Error("error host info", "trace", "agent-os-instance.manager_adapter.getInfos", "error", err.Error())
 	}
 	cpuInfo, err := l.hostStats.CPUInfo()
 	if err != nil {
-		l.logger.Error("error cpu info", "trace", "docp-agent-os-instance.linux_adapter.getInfos", "error", err.Error())
+		l.logger.Error("error cpu info", "trace", "agent-os-instance.linux_adapter.getInfos", "error", err.Error())
 	}
 	memoryInfo, err := l.hostStats.MemoryInfo()
 	if err != nil {
-		l.logger.Error("error memory info", "trace", "docp-agent-os-instance.manager_adapter.getInfos", "error", err.Error())
+		l.logger.Error("error memory info", "trace", "agent-os-instance.manager_adapter.getInfos", "error", err.Error())
 	}
 	diskInfo, err := l.hostStats.DiskInfo()
 	if err != nil {
-		l.logger.Error("error disk info", "trace", "docp-agent-os-instance.manager_adapter.getInfos", "error", err.Error())
+		l.logger.Error("error disk info", "trace", "agent-os-instance.manager_adapter.getInfos", "error", err.Error())
 	}
 	processInfo, err := l.hostStats.ProcessInfo()
 	if err != nil {
-		l.logger.Error("error process info", "trace", "docp-agent-os-instance.manager_adapter.getInfos", "error", err.Error())
+		l.logger.Error("error process info", "trace", "agent-os-instance.manager_adapter.getInfos", "error", err.Error())
 	}
 	linuxMetadata := dto.Metadata{
 		ComputeInfo:  computeInfo,
@@ -188,7 +188,7 @@ func (l *ManagerAdapter) getInfos() {
 
 // firstGetInfos execute first get infos in host
 func (l *ManagerAdapter) firstGetInfos() {
-	l.logger.Debug("first get infos", "trace", "docp-agent-os-instance.manager_adapter.firstGetInfos")
+	l.logger.Debug("first get infos", "trace", "agent-os-instance.manager_adapter.firstGetInfos")
 	l.wg.Add(1)
 	time.Sleep(time.Second * 5)
 	go l.getInfos()
@@ -197,7 +197,7 @@ func (l *ManagerAdapter) firstGetInfos() {
 
 // closeChannels closing channels
 func (l *ManagerAdapter) closeChannels() {
-	l.logger.Debug("close channels", "trace", "docp-agent-os-instance.manager_adapter.closeChannels")
+	l.logger.Debug("close channels", "trace", "agent-os-instance.manager_adapter.closeChannels")
 	close(l.chanClose)
 	close(l.chanMetadata)
 	l.isClosed = true
@@ -206,7 +206,7 @@ func (l *ManagerAdapter) closeChannels() {
 
 // start execute loop for adapter
 func (l *ManagerAdapter) start() {
-	l.logger.Debug("start loop", "trace", "docp-agent-os-instance.manager_adapter.start")
+	l.logger.Debug("start loop", "trace", "agent-os-instance.manager_adapter.start")
 	tick := time.NewTicker(l.interval)
 	for {
 		select {
@@ -317,7 +317,7 @@ func (l *ManagerAdapter) NotifyStatus(status string, typeEvent string, message s
 // Collect execute collect the metrics the host
 func (l *ManagerAdapter) Collect() <-chan []byte {
 	l.logger.Info("collect metadata", "timestamp", time.Now().UTC())
-	l.logger.Debug("collect metadata", "trace", "docp-agent-os-instance.manager_adapter.Collect")
+	l.logger.Debug("collect metadata", "trace", "agent-os-instance.manager_adapter.Collect")
 	l.wg.Add(2)
 	go l.firstGetInfos()
 	go l.start()
@@ -327,7 +327,7 @@ func (l *ManagerAdapter) Collect() <-chan []byte {
 // Close closing collect loop
 func (l *ManagerAdapter) Close() error {
 	l.logger.Info("execute close", "timestamp", time.Now().UTC())
-	l.logger.Debug("execute close", "trace", "docp-agent-os-instance.manager_adapter.Close")
+	l.logger.Debug("execute close", "trace", "agent-os-instance.manager_adapter.Close")
 	l.chanClose <- struct{}{}
 	l.wg.Add(1)
 	go l.closeChannels()
@@ -383,8 +383,8 @@ func (l *ManagerAdapter) GetAgentVersionFromSignalBytes(data []byte) (string, er
 			return version, err
 		}
 
-		if len(stateCheckResponse.Signal.Agents.DocpAgent.Version) > 0 {
-			version = stateCheckResponse.Signal.Agents.DocpAgent.Version
+		if len(stateCheckResponse.Signal.Agents.OryaAgent.Version) > 0 {
+			version = stateCheckResponse.Signal.Agents.OryaAgent.Version
 		}
 	}
 	return version, nil
@@ -469,32 +469,32 @@ func (l *ManagerAdapter) SaveAgentRollbackVersion(version string) error {
 // Status return status from systemd api
 func (l *ManagerAdapter) Status(serviceName string) (string, error) {
 	l.logger.Info("execute verify status the service", "serviceName", serviceName)
-	l.logger.Debug("execute verify status the service", "trace", "docp-agent-os-instance.manager_adapter.Status", "serviceName", serviceName)
+	l.logger.Debug("execute verify status the service", "trace", "agent-os-instance.manager_adapter.Status", "serviceName", serviceName)
 	output, err := l.osOperation.Status(serviceName)
 	if err != nil {
 		return "", err
 	}
 	output = strings.ReplaceAll(output, "\"", "")
-	l.logger.Debug("execute verify status the service", "trace", "docp-agent-os-instance.manager_adapter.Status", "serviceName", serviceName, "output", output)
+	l.logger.Debug("execute verify status the service", "trace", "agent-os-instance.manager_adapter.Status", "serviceName", serviceName, "output", output)
 	return output, nil
 }
 
 // AlreadyInstalled return if service already installed
 func (l *ManagerAdapter) AlreadyInstalled(serviceName string) (bool, error) {
 	l.logger.Info("execute verify already installed service", "serviceName", serviceName)
-	l.logger.Debug("execute verify already installed service", "trace", "docp-agent-os-instance.manager_adapter.AlreadyInstalled", "serviceName", serviceName)
+	l.logger.Debug("execute verify already installed service", "trace", "agent-os-instance.manager_adapter.AlreadyInstalled", "serviceName", serviceName)
 	installed, err := l.osOperation.AlreadyInstalled(serviceName)
 	if err != nil {
 		return false, err
 	}
-	l.logger.Debug("execute verify already installed service", "trace", "docp-agent-os-instance.manager_adapter.AlreadyInstalled", "serviceName", serviceName, "installed", installed)
+	l.logger.Debug("execute verify already installed service", "trace", "agent-os-instance.manager_adapter.AlreadyInstalled", "serviceName", serviceName, "installed", installed)
 	return installed, nil
 }
 
 // DaemonReload execute daemon reload the service in systemd
 func (l *ManagerAdapter) DaemonReload() error {
 	l.logger.Info("daemon reload", "timestamp", time.Now().UTC())
-	l.logger.Debug("daemon reload", "trace", "docp-agent-os-instance.manager_adapter.DaemonReload")
+	l.logger.Debug("daemon reload", "trace", "agent-os-instance.manager_adapter.DaemonReload")
 	if err := l.osOperation.DaemonReload(); err != nil {
 		return err
 	}
@@ -504,7 +504,7 @@ func (l *ManagerAdapter) DaemonReload() error {
 // RestartService execute restart the service in systemd
 func (l *ManagerAdapter) RestartService(serviceName string) error {
 	l.logger.Info("restart service", "timestamp", time.Now().UTC())
-	l.logger.Debug("restart service", "trace", "docp-agent-os-instance.manager_adapter.RestartService")
+	l.logger.Debug("restart service", "trace", "agent-os-instance.manager_adapter.RestartService")
 	if err := l.osOperation.RestartService(serviceName); err != nil {
 		return err
 	}
@@ -514,37 +514,37 @@ func (l *ManagerAdapter) RestartService(serviceName string) error {
 // StopService execute stop the service in systemd
 func (l *ManagerAdapter) StopService(serviceName string) error {
 	l.logger.Info("stop service", "timestamp", time.Now().UTC())
-	l.logger.Debug("stop service", "trace", "docp-agent-os-instance.manager_adapter.StopService")
+	l.logger.Debug("stop service", "trace", "agent-os-instance.manager_adapter.StopService")
 	if err := l.osOperation.StopService(serviceName); err != nil {
 		return err
 	}
 	return nil
 }
 
-// InstallAgent execute install the agent docp
+// InstallAgent execute install the agent orya
 func (l *ManagerAdapter) InstallAgent(version string) error {
 	l.logger.Info("install agent", "timestamp", time.Now().UTC(), "version", version)
-	l.logger.Debug("install agent", "trace", "docp-agent-os-instance.manager_adapter.InstallAgent")
+	l.logger.Debug("install agent", "trace", "agent-os-instance.manager_adapter.InstallAgent")
 	if err := l.osOperation.InstallAgent(version); err != nil {
 		return err
 	}
 	return nil
 }
 
-// UninstallAgent execute uninstall the agent docp
+// UninstallAgent execute uninstall the agent orya
 func (l *ManagerAdapter) UninstallAgent(version string) error {
 	l.logger.Info("uninstall agent", "timestamp", time.Now().UTC(), "version", version)
-	l.logger.Debug("uninstall agent", "trace", "docp-agent-os-instance.manager_adapter.UninstallAgent")
+	l.logger.Debug("uninstall agent", "trace", "agent-os-instance.manager_adapter.UninstallAgent")
 	if err := l.osOperation.UninstallAgent(version); err != nil {
 		return err
 	}
 	return nil
 }
 
-// UpdateAgent execute update the agent docp
+// UpdateAgent execute update the agent orya
 func (l *ManagerAdapter) UpdateAgent(version string) error {
 	l.logger.Info("update agent", "timestamp", time.Now().UTC(), "version", version)
-	l.logger.Debug("update agent", "trace", "docp-agent-os-instance.manager_adapter.UpdateAgent")
+	l.logger.Debug("update agent", "trace", "agent-os-instance.manager_adapter.UpdateAgent")
 	if version == "latest" {
 		agentVersions, err := l.FetchAgentVersions()
 		if err != nil {
@@ -561,7 +561,7 @@ func (l *ManagerAdapter) UpdateAgent(version string) error {
 // AutoUninstall execute auto uninstall the manager
 func (l *ManagerAdapter) AutoUninstall(version string) error {
 	l.logger.Info("auto uninstall agent", "timestamp", time.Now().UTC(), "version", version)
-	l.logger.Debug("auto uninstall agent", "trace", "docp-agent-os-instance.manager_adapter.AutoUninstall")
+	l.logger.Debug("auto uninstall agent", "trace", "agent-os-instance.manager_adapter.AutoUninstall")
 	if err := l.osOperation.AutoUninstall(version); err != nil {
 		return err
 	}
@@ -571,7 +571,7 @@ func (l *ManagerAdapter) AutoUninstall(version string) error {
 // FetchAgentVersions fetches the available agent versions
 func (l *ManagerAdapter) FetchAgentVersions() (dto.AgentVersions, error) {
 	l.logger.Info("fetch agent versions", "timestamp", time.Now().UTC())
-	l.logger.Debug("fetch agent versions", "trace", "docp-agent-os-instance.manager_adapter.FetchAgentVersions")
+	l.logger.Debug("fetch agent versions", "trace", "agent-os-instance.manager_adapter.FetchAgentVersions")
 	agentVersions, err := l.utilityService.FetchAgentVersions()
 	if err != nil {
 		return dto.AgentVersions{}, err
@@ -581,77 +581,79 @@ func (l *ManagerAdapter) FetchAgentVersions() (dto.AgentVersions, error) {
 
 // requestForAgentInstallDatadog execute request for agent
 func (l *ManagerAdapter) requestForAgentInstallDatadog(url string, method string, data []byte) ([]byte, error) {
-	l.logger.Debug("request for agent install datadog", "trace", "docp-agent-os-instance.manager_adapter.requestForAgentInstallDatadog", "url", url, "method", method, "data", data)
+	l.logger.Debug("request for agent install datadog", "trace", "agent-os-instance.manager_adapter.requestForAgentInstallDatadog", "url", url, "method", method, "data", data)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, method, url, bytes.NewBuffer(data))
 	if err != nil {
-		l.logger.Error("error in create request", "trace", "docp-agent-os-instance.manager_adapter.requestForAgentInstallDatadog", "error", err.Error())
+		l.logger.Error("error in create request", "trace", "agent-os-instance.manager_adapter.requestForAgentInstallDatadog", "error", err.Error())
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	res, err := l.client.Do(req)
 	if err != nil {
-		l.logger.Error("error in execute request", "trace", "docp-agent-os-instance.manager_adapter.requestForAgentInstallDatadog", "error", err.Error())
+		l.logger.Error("error in execute request", "trace", "agent-os-instance.manager_adapter.requestForAgentInstallDatadog", "error", err.Error())
 		return nil, err
 	}
 	defer res.Body.Close()
 	respBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		l.logger.Error("error in read body response", "trace", "docp-agent-os-instance.manager_adapter.requestForAgentInstallDatadog", "error", err.Error())
+		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.requestForAgentInstallDatadog", "error", err.Error())
 		return nil, err
 	}
 	return respBytes, nil
 }
 
-// DocpAgentApiInstallDatadog execute call to api docp for install datadog agent
-func (l *ManagerAdapter) DocpAgentApiInstallDatadog(ddApiKey, ddSite string) ([]byte, error) {
-	l.logger.Debug("execute send request for install datadog agent", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiInstallDatadog", "ddApiKey", ddApiKey, "ddSite", ddSite)
+// OryaAgentApiInstallDatadog execute call to api orya for install datadog agent
+func (l *ManagerAdapter) OryaAgentApiInstallDatadog(ddApiKey, ddSite, version string) ([]byte, error) {
+	l.logger.Debug("execute send request for install datadog agent", "trace", "agent-os-instance.manager_adapter.OryaAgentApiInstallDatadog", "ddApiKey", ddApiKey, "ddSite", ddSite)
 
 	transaction := utils.NewTransactionStatus()
 	ctx := context.WithValue(context.Background(), dto.ContextTransactionStatus, transaction)
 
-	go l.NotifyStatus("install_docp_vendor_received", pkg.TransactionEventOpen, "install docp vendor received", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_received", pkg.TransactionEventOpen, "install orya vendor received", ctx)
 	time.Sleep(l.delay)
 
 	datadogDto := dto.DatadogInstallDTO{
 		DDSite:   ddSite,
 		DDApiKey: ddApiKey,
+		Version:  version,
 	}
 	bDatadogDto, err := l.marshaller(&datadogDto)
 	if err != nil {
-		go l.NotifyStatus("install_docp_vendor_error", pkg.TransactionEventClose, "failed install docp vendor", ctx)
+		go l.NotifyStatus("install_ORYA_vendor_error", pkg.TransactionEventClose, "failed install orya vendor", ctx)
 		return nil, err
 	}
-	go l.NotifyStatus("install_docp_vendor_processing", pkg.TransactionEventUpdate, "install docp vendor processing", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_processing", pkg.TransactionEventUpdate, "install orya vendor processing", ctx)
 	time.Sleep(l.delay)
 
-	urlDocpInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/install", l.docpApiPort)
-	respBytes, err := l.requestForAgentInstallDatadog(urlDocpInstallDatadog, http.MethodPost, bDatadogDto)
+	urlOryaInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/install", l.oryaApiPort)
+	respBytes, err := l.requestForAgentInstallDatadog(urlOryaInstallDatadog, http.MethodPost, bDatadogDto)
 	if err != nil {
-		go l.NotifyStatus("install_docp_vendor_error", pkg.TransactionEventClose, "failed install docp vendor", ctx)
-		l.logger.Error("error in read body response", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiInstallDatadog", "error", err.Error())
+		go l.NotifyStatus("install_ORYA_vendor_error", pkg.TransactionEventClose, "failed install orya vendor", ctx)
+		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.OryaAgentApiInstallDatadog", "error", err.Error())
 		return nil, err
 	}
 
-	go l.NotifyStatus("install_docp_vendor_completed", pkg.TransactionEventClose, "install docp vendor completed", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_completed", pkg.TransactionEventClose, "install orya vendor completed", ctx)
 	return respBytes, nil
 }
 
-// DocpAgentApiInstallDatadog execute call to api docp for install datadog agent
-func (l *ManagerAdapter) DocpAgentApiInstallDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries string) ([]byte, error) {
-	l.logger.Debug("execute send request for install datadog agent with apm single step", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiInstallDatadogWithApmSingleStep", "ddApiKey", ddApiKey, "ddSite", ddSite, "ddEnv", ddEnv, "ddApmInstrumentationEnabled", ddApmInstrumentationEnabled, "ddApmInstrumentationLibraries", ddApmInstrumentationLibraries)
+// OryaAgentApiInstallDatadog execute call to api orya for install datadog agent
+func (l *ManagerAdapter) OryaAgentApiInstallDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries string) ([]byte, error) {
+	l.logger.Debug("execute send request for install datadog agent with apm single step", "trace", "agent-os-instance.manager_adapter.OryaAgentApiInstallDatadogWithApmSingleStep", "ddApiKey", ddApiKey, "ddSite", ddSite, "ddEnv", ddEnv, "ddApmInstrumentationEnabled", ddApmInstrumentationEnabled, "ddApmInstrumentationLibraries", ddApmInstrumentationLibraries)
 
 	transaction := utils.NewTransactionStatus()
 	ctx := context.WithValue(context.Background(), dto.ContextTransactionStatus, transaction)
 
-	go l.NotifyStatus("install_docp_vendor_tracer_received", pkg.TransactionEventOpen, "install docp vendor tracer single step received", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_tracer_received", pkg.TransactionEventOpen, "install orya vendor tracer single step received", ctx)
 	time.Sleep(l.delay)
 
 	datadogDto := dto.DatadogInstallDTO{
 		DDSite:    ddSite,
 		DDApiKey:  ddApiKey,
 		Component: "tracer",
+		Version:   version,
 		Mode:      "single_step",
 		EnvVars: []dto.DatadogEnvVars{
 			{
@@ -670,40 +672,40 @@ func (l *ManagerAdapter) DocpAgentApiInstallDatadogWithApmSingleStep(ddApiKey, d
 	}
 	bDatadogDto, err := l.marshaller(&datadogDto)
 	if err != nil {
-		go l.NotifyStatus("install_docp_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer single step", ctx)
+		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer single step", ctx)
 		return nil, err
 	}
 
-	urlDocpInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/install", l.docpApiPort)
+	urlOryaInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/install", l.oryaApiPort)
 
-	go l.NotifyStatus("install_docp_vendor_tracer_processing", pkg.TransactionEventUpdate, "install docp vendor tracer single step processing", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_tracer_processing", pkg.TransactionEventUpdate, "install orya vendor tracer single step processing", ctx)
 	time.Sleep(l.delay)
 
-	respBytes, err := l.requestForAgentInstallDatadog(urlDocpInstallDatadog, http.MethodPost, bDatadogDto)
+	respBytes, err := l.requestForAgentInstallDatadog(urlOryaInstallDatadog, http.MethodPost, bDatadogDto)
 	if err != nil {
-		go l.NotifyStatus("install_docp_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer single step", ctx)
-		l.logger.Error("error in read body response", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiInstallDatadogWithApmSingleStep", "error", err.Error())
+		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer single step", ctx)
+		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.OryaAgentApiInstallDatadogWithApmSingleStep", "error", err.Error())
 		return nil, err
 	}
 
 	if err := l.SaveAlreadyTracer(true); err != nil {
-		l.logger.Error("error in read body response", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiInstallDatadogWithApmSingleStep", "error", err.Error())
-		go l.NotifyStatus("install_docp_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer single step", ctx)
+		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.OryaAgentApiInstallDatadogWithApmSingleStep", "error", err.Error())
+		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer single step", ctx)
 		return nil, err
 	}
 
-	go l.NotifyStatus("install_docp_vendor_tracer_completed", pkg.TransactionEventClose, "install docp vendor tracer single step completed", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_tracer_completed", pkg.TransactionEventClose, "install orya vendor tracer single step completed", ctx)
 	return respBytes, nil
 }
 
-// DocpAgentApiInstallDatadog execute call to api docp for install datadog agent
-func (l *ManagerAdapter) DocpAgentApiInstallDatadogWithApmTracingLibrary(ddApiKey, ddSite, language, pathTracer, version string) ([]byte, error) {
-	l.logger.Debug("execute send request for install datadog agent with apm single step", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiInstallDatadogWithApmSingleStep", "ddApiKey", ddApiKey, "ddSite", ddSite, "language", language, "pathTracer", pathTracer, "version", version)
+// OryaAgentApiInstallDatadog execute call to api orya for install datadog agent
+func (l *ManagerAdapter) OryaAgentApiInstallDatadogWithApmTracingLibrary(ddApiKey, ddSite, language, pathTracer, version string) ([]byte, error) {
+	l.logger.Debug("execute send request for install datadog agent with apm single step", "trace", "agent-os-instance.manager_adapter.OryaAgentApiInstallDatadogWithApmSingleStep", "ddApiKey", ddApiKey, "ddSite", ddSite, "language", language, "pathTracer", pathTracer, "version", version)
 
 	transaction := utils.NewTransactionStatus()
 	ctx := context.WithValue(context.Background(), dto.ContextTransactionStatus, transaction)
 
-	go l.NotifyStatus("install_docp_vendor_tracer_received", pkg.TransactionEventOpen, "install docp vendor tracer library received", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_tracer_received", pkg.TransactionEventOpen, "install orya vendor tracer library received", ctx)
 	time.Sleep(l.delay)
 
 	datadogDto := dto.DatadogInstallDTO{
@@ -728,80 +730,80 @@ func (l *ManagerAdapter) DocpAgentApiInstallDatadogWithApmTracingLibrary(ddApiKe
 	}
 	bDatadogDto, err := l.marshaller(&datadogDto)
 	if err != nil {
-		go l.NotifyStatus("install_docp_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer", ctx)
+		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer", ctx)
 		return nil, err
 	}
-	urlDocpInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/tracer/install", l.docpApiPort)
+	urlOryaInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/tracer/install", l.oryaApiPort)
 
-	go l.NotifyStatus("install_docp_vendor_tracer_processing", pkg.TransactionEventUpdate, "install docp vendor tracer library processing", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_tracer_processing", pkg.TransactionEventUpdate, "install orya vendor tracer library processing", ctx)
 	time.Sleep(l.delay)
 
-	respBytes, err := l.requestForAgentInstallDatadog(urlDocpInstallDatadog, http.MethodPost, bDatadogDto)
+	respBytes, err := l.requestForAgentInstallDatadog(urlOryaInstallDatadog, http.MethodPost, bDatadogDto)
 	if err != nil {
-		l.logger.Error("error in read body response", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiInstallDatadogWithApmSingleStep", "error", err.Error())
-		go l.NotifyStatus("install_docp_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer", ctx)
+		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.OryaAgentApiInstallDatadogWithApmSingleStep", "error", err.Error())
+		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer", ctx)
 		return nil, err
 	}
 	if err := l.SaveAlreadyTracer(true); err != nil {
-		l.logger.Error("error in read body response", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiInstallDatadogWithApmSingleStep", "error", err.Error())
-		go l.NotifyStatus("install_docp_vendor_tracer_error", pkg.TransactionEventClose, "failed install docp vendor tracer", ctx)
+		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.OryaAgentApiInstallDatadogWithApmSingleStep", "error", err.Error())
+		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer", ctx)
 		return nil, err
 	}
 
-	go l.NotifyStatus("install_docp_vendor_tracer_completed", pkg.TransactionEventClose, "install docp vendor tracer library completed", ctx)
+	go l.NotifyStatus("install_ORYA_vendor_tracer_completed", pkg.TransactionEventClose, "install orya vendor tracer library completed", ctx)
 	return respBytes, nil
 }
 
-// DocpAgentApiUninstallDatadog execute call to api docp for uninstall datadog agent
-func (l *ManagerAdapter) DocpAgentApiUninstallDatadog() ([]byte, error) {
-	l.logger.Debug("execute send request for uninstall datadog agent", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUninstallDatadog")
+// OryaAgentApiUninstallDatadog execute call to api orya for uninstall datadog agent
+func (l *ManagerAdapter) OryaAgentApiUninstallDatadog() ([]byte, error) {
+	l.logger.Debug("execute send request for uninstall datadog agent", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUninstallDatadog")
 
 	transaction := utils.NewTransactionStatus()
 	ctxTransaction := context.WithValue(context.Background(), dto.ContextTransactionStatus, transaction)
 
-	go l.NotifyStatus("uninstall_docp_vendor_received", pkg.TransactionEventOpen, "uninstall docp vendor received", ctxTransaction)
+	go l.NotifyStatus("uninstall_ORYA_vendor_received", pkg.TransactionEventOpen, "uninstall orya vendor received", ctxTransaction)
 	time.Sleep(l.delay)
 
-	urlDocpUninstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/uninstall", l.docpApiPort)
+	urlOryaUninstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/uninstall", l.oryaApiPort)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlDocpUninstallDatadog, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlOryaUninstallDatadog, nil)
 	if err != nil {
-		go l.NotifyStatus("uninstall_docp_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
-		l.logger.Error("error in create request", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUninstallDatadog", "error", err.Error())
+		go l.NotifyStatus("uninstall_ORYA_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
+		l.logger.Error("error in create request", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUninstallDatadog", "error", err.Error())
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	res, err := l.client.Do(req)
 	if err != nil {
-		go l.NotifyStatus("uninstall_docp_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
-		l.logger.Error("error in execute request", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUninstallDatadog", "error", err.Error())
+		go l.NotifyStatus("uninstall_ORYA_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
+		l.logger.Error("error in execute request", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUninstallDatadog", "error", err.Error())
 		return nil, err
 	}
 
-	go l.NotifyStatus("uninstall_docp_vendor_processing", pkg.TransactionEventUpdate, "uninstall docp vendor processing", ctxTransaction)
+	go l.NotifyStatus("uninstall_ORYA_vendor_processing", pkg.TransactionEventUpdate, "uninstall orya vendor processing", ctxTransaction)
 	time.Sleep(l.delay)
 
-	go l.NotifyStatus("uninstall_docp_vendor_complete", pkg.TransactionEventClose, "uninstall docp vendor completed", ctxTransaction)
+	go l.NotifyStatus("uninstall_ORYA_vendor_complete", pkg.TransactionEventClose, "uninstall orya vendor completed", ctxTransaction)
 	defer res.Body.Close()
 	respBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		go l.NotifyStatus("uninstall_docp_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
-		l.logger.Error("error in read body response", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUninstallDatadog", "error", err.Error())
+		go l.NotifyStatus("uninstall_ORYA_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
+		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUninstallDatadog", "error", err.Error())
 		return nil, err
 	}
 	if err := l.SaveAlreadyTracer(false); err != nil {
-		go l.NotifyStatus("uninstall_docp_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
-		l.logger.Error("error in save already tracer", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUninstallDatadog", "error", err.Error())
+		go l.NotifyStatus("uninstall_ORYA_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
+		l.logger.Error("error in save already tracer", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUninstallDatadog", "error", err.Error())
 		return nil, err
 	}
 
 	return respBytes, nil
 }
 
-// DocpAgentApiUpdateConfigurationsDatadog execute call to api docp for update datadog configurations
-func (l *ManagerAdapter) DocpAgentApiUpdateConfigurationsDatadog(content []byte) ([]byte, error) {
-	l.logger.Debug("execute send request for update configurations in datadog agent", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateConfigurationsDatadog", "content", string(content))
+// OryaAgentApiUpdateConfigurationsDatadog execute call to api orya for update datadog configurations
+func (l *ManagerAdapter) OryaAgentApiUpdateConfigurationsDatadog(content []byte) ([]byte, error) {
+	l.logger.Debug("execute send request for update configurations in datadog agent", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUpdateConfigurationsDatadog", "content", string(content))
 
 	transaction := utils.NewTransactionStatus()
 	ctxTransaction := context.WithValue(context.Background(), dto.ContextTransactionStatus, transaction)
@@ -809,66 +811,66 @@ func (l *ManagerAdapter) DocpAgentApiUpdateConfigurationsDatadog(content []byte)
 	go l.NotifyStatus("update_vendor_received", pkg.TransactionEventOpen, "update vendor received", ctxTransaction)
 	time.Sleep(l.delay)
 
-	urlDocpUpdateConfigurations := fmt.Sprintf("http://127.0.0.1:%s/datadog/configurations", l.docpApiPort)
+	urlOryaUpdateConfigurations := fmt.Sprintf("http://127.0.0.1:%s/datadog/configurations", l.oryaApiPort)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlDocpUpdateConfigurations, bytes.NewBuffer(content))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlOryaUpdateConfigurations, bytes.NewBuffer(content))
 	if err != nil {
-		go l.NotifyStatus("update_docp_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
-		l.logger.Error("error in create request", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateConfigurationsDatadog", "error", err.Error())
+		go l.NotifyStatus("update_ORYA_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
+		l.logger.Error("error in create request", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUpdateConfigurationsDatadog", "error", err.Error())
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	res, err := l.client.Do(req)
 	if err != nil {
-		go l.NotifyStatus("update_docp_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
-		l.logger.Error("error in execute request", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateConfigurationsDatadog", "error", err.Error())
+		go l.NotifyStatus("update_ORYA_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
+		l.logger.Error("error in execute request", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUpdateConfigurationsDatadog", "error", err.Error())
 		return nil, err
 	}
 
-	go l.NotifyStatus("update_docp_vendor_processing", pkg.TransactionEventUpdate, "update docp vendor processing", ctxTransaction)
+	go l.NotifyStatus("update_ORYA_vendor_processing", pkg.TransactionEventUpdate, "update orya vendor processing", ctxTransaction)
 	time.Sleep(l.delay)
 
 	defer res.Body.Close()
 	respBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		go l.NotifyStatus("update_docp_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
-		l.logger.Error("error in read body response", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateConfigurationsDatadog", "error", err.Error())
+		go l.NotifyStatus("update_ORYA_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
+		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUpdateConfigurationsDatadog", "error", err.Error())
 		return nil, err
 	}
 
-	go l.NotifyStatus("update_docp_vendor_complete", pkg.TransactionEventClose, "update docp vendor completed", ctxTransaction)
+	go l.NotifyStatus("update_ORYA_vendor_complete", pkg.TransactionEventClose, "update orya vendor completed", ctxTransaction)
 	return respBytes, nil
 }
 
-// DocpAgentApiUpdateVersionDatadog execute call to api docp for update datadog version
-func (l *ManagerAdapter) DocpAgentApiUpdateVersionDatadog(version string) ([]byte, error) {
-	l.logger.Debug("execute send request for update version in datadog agent", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateVersionDatadog", "version", version)
+// OryaAgentApiUpdateVersionDatadog execute call to api orya for update datadog version
+func (l *ManagerAdapter) OryaAgentApiUpdateVersionDatadog(version string) ([]byte, error) {
+	l.logger.Debug("execute send request for update version in datadog agent", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUpdateVersionDatadog", "version", version)
 	updateVersion := dto.DatadogUpdateVersionDTO{Version: version}
 	bodyUpdateVersion, err := l.marshaller(updateVersion)
 	if err != nil {
 		return nil, err
 	}
 
-	urlDocpUpdateVersion := fmt.Sprintf("http://127.0.0.1:%s/datadog/update/version", l.docpApiPort)
+	urlOryaUpdateVersion := fmt.Sprintf("http://127.0.0.1:%s/datadog/update/version", l.oryaApiPort)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlDocpUpdateVersion, bytes.NewBuffer(bodyUpdateVersion))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlOryaUpdateVersion, bytes.NewBuffer(bodyUpdateVersion))
 	if err != nil {
-		l.logger.Error("error in create request", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateVersionDatadog", "error", err.Error())
+		l.logger.Error("error in create request", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUpdateVersionDatadog", "error", err.Error())
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	res, err := l.client.Do(req)
 	if err != nil {
-		l.logger.Error("error in execute request", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateVersionDatadog", "error", err.Error())
+		l.logger.Error("error in execute request", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUpdateVersionDatadog", "error", err.Error())
 		return nil, err
 	}
 
 	defer res.Body.Close()
 	respBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		l.logger.Error("error in read body response", "trace", "docp-agent-os-instance.manager_adapter.DocpAgentApiUpdateVersionDatadog", "error", err.Error())
+		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUpdateVersionDatadog", "error", err.Error())
 		return nil, err
 	}
 
@@ -877,7 +879,7 @@ func (l *ManagerAdapter) DocpAgentApiUpdateVersionDatadog(version string) ([]byt
 
 // GetStateReceived return state received from state check service
 func (l *ManagerAdapter) GetStateReceived() ([]byte, error) {
-	l.logger.Debug("get state received", "trace", "docp-agent-os-instance.manager_adapter.GetStateReceived")
+	l.logger.Debug("get state received", "trace", "agent-os-instance.manager_adapter.GetStateReceived")
 	res, err := l.fileSystem.GetFileContent(filepath.Join(l.agentWorkDir, "state", "received"))
 	if err != nil {
 		return nil, err
@@ -887,7 +889,7 @@ func (l *ManagerAdapter) GetStateReceived() ([]byte, error) {
 
 // GetStateCurrent return state current from file
 func (l *ManagerAdapter) GetStateCurrent() ([]byte, error) {
-	l.logger.Debug("get state current", "trace", "docp-agent-os-instance.manager_adapter.GetStateCurrent")
+	l.logger.Debug("get state current", "trace", "agent-os-instance.manager_adapter.GetStateCurrent")
 	res, err := l.fileSystem.GetFileContent(filepath.Join(l.agentWorkDir, "state", "current"))
 	if err != nil {
 		return nil, err
@@ -897,7 +899,7 @@ func (l *ManagerAdapter) GetStateCurrent() ([]byte, error) {
 
 // SaveStateReceived execute save the state received
 func (l *ManagerAdapter) SaveStateReceived(stateData []byte) error {
-	l.logger.Debug("save state received", "trace", "docp-agent-os-instance.manager_adapter.SaveStateReceived", "stateData", string(stateData))
+	l.logger.Debug("save state received", "trace", "agent-os-instance.manager_adapter.SaveStateReceived", "stateData", string(stateData))
 	if err := l.fileSystem.WriteFileContent(filepath.Join(l.agentWorkDir, "state", "received"), stateData); err != nil {
 		return err
 	}
@@ -906,7 +908,7 @@ func (l *ManagerAdapter) SaveStateReceived(stateData []byte) error {
 
 // SaveStateCurrent execute save the state current
 func (l *ManagerAdapter) SaveStateCurrent(stateData []byte) error {
-	l.logger.Debug("save state current", "trace", "docp-agent-os-instance.manager_adapter.SaveStateCurrent", "stateData", string(stateData))
+	l.logger.Debug("save state current", "trace", "agent-os-instance.manager_adapter.SaveStateCurrent", "stateData", string(stateData))
 	if err := l.fileSystem.WriteFileContent(filepath.Join(l.agentWorkDir, "state", "current"), stateData); err != nil {
 		return err
 	}
@@ -942,20 +944,20 @@ func (l *ManagerAdapter) GetRemoveOtherVendors() ([]string, error) {
 	return otherVendors, nil
 }
 
-// prepareDocpAgentAction execute prepare for docp agent action
-func (l *ManagerAdapter) prepareDocpAgentAction(stateCheckSignal dto.StateCheckSignal) dto.StateAction {
-	l.logger.Debug("prepare docp agent action", "trace", "docp-agent-os-instance.manager_adapter.prepareDocpAgentAction", "stateCheckSignal", stateCheckSignal)
+// prepareOryaAgentAction execute prepare for orya agent action
+func (l *ManagerAdapter) prepareOryaAgentAction(stateCheckSignal dto.StateCheckSignal) dto.StateAction {
+	l.logger.Debug("prepare orya agent action", "trace", "agent-os-instance.manager_adapter.prepareOryaAgentAction", "stateCheckSignal", stateCheckSignal)
 	if stateCheckSignal.TypeSignal == "update" {
-		if len(stateCheckSignal.Agents.DocpAgent.Version) > 0 {
+		if len(stateCheckSignal.Agents.OryaAgent.Version) > 0 {
 			return dto.StateAction{
-				Type:    "docp-agent",
+				Type:    "orya-agent",
 				Action:  "update",
-				Version: stateCheckSignal.Agents.DocpAgent.Version,
+				Version: stateCheckSignal.Agents.OryaAgent.Version,
 			}
 		}
 	} else if stateCheckSignal.TypeSignal == "uninstall" {
 		return dto.StateAction{
-			Type:   "docp-agent",
+			Type:   "orya-agent",
 			Action: "uninstall",
 		}
 	}
@@ -964,7 +966,7 @@ func (l *ManagerAdapter) prepareDocpAgentAction(stateCheckSignal dto.StateCheckS
 
 // getActionsFiles return slice the files from configurations
 func (l *ManagerAdapter) getActionsFiles(configurations dto.StateCheckDatadogConfigurations) []dto.StateActionFiles {
-	l.logger.Debug("get actions files", "trace", "docp-agent-os-instance.manager_adapter.getActionsFiles", "configurations", configurations)
+	l.logger.Debug("get actions files", "trace", "agent-os-instance.manager_adapter.getActionsFiles", "configurations", configurations)
 	var arrFiles []dto.StateActionFiles
 	if len(configurations.Files) > 0 {
 		for _, fl := range configurations.Files {
@@ -979,7 +981,7 @@ func (l *ManagerAdapter) getActionsFiles(configurations dto.StateCheckDatadogCon
 }
 
 func (l *ManagerAdapter) extractComponentEnvVarsApm(installWithEnvVars []dto.StateCheckEnvVars) []dto.StateActionEnvs {
-	l.logger.Debug("extract component env vars apm", "trace", "docp-agent-os-instance.manager_adapter.extractComponentEnvVarsApm", "installWithEnvVars", installWithEnvVars)
+	l.logger.Debug("extract component env vars apm", "trace", "agent-os-instance.manager_adapter.extractComponentEnvVarsApm", "installWithEnvVars", installWithEnvVars)
 	actionsEnvs := []dto.StateActionEnvs{}
 	for _, env := range installWithEnvVars {
 		newEnv := dto.StateActionEnvs{
@@ -993,7 +995,7 @@ func (l *ManagerAdapter) extractComponentEnvVarsApm(installWithEnvVars []dto.Sta
 
 // parseSiteDatadog execute parse the site datadog
 func (l *ManagerAdapter) parseSiteDatadog(site string) string {
-	l.logger.Debug("parse site datadog", "trace", "docp-agent-os-instance.manager_adapter.parseSiteDatadog", "site", site)
+	l.logger.Debug("parse site datadog", "trace", "agent-os-instance.manager_adapter.parseSiteDatadog", "site", site)
 	host, err := utils.GetBaseUrlSite(site)
 	if err != nil {
 		return "datadoghq.com"
@@ -1003,12 +1005,13 @@ func (l *ManagerAdapter) parseSiteDatadog(site string) string {
 
 // prepareTracerDatadogSingleStepAction execute prepare for tracer datadog single step action
 func (l *ManagerAdapter) prepareTracerDatadogSingleStepAction(stateCheckSignal dto.StateCheckSignal) dto.StateAction {
-	l.logger.Debug("prepare tracer datadog library action", "trace", "docp-agent-os-instance.manager_adapter.prepareTracerDatadogSingleStepAction", "stateCheckSignal", stateCheckSignal)
+	l.logger.Debug("prepare tracer datadog library action", "trace", "agent-os-instance.manager_adapter.prepareTracerDatadogSingleStepAction", "stateCheckSignal", stateCheckSignal)
 	var action dto.StateAction
 	var envVars []dto.StateActionEnvs
 	if stateCheckSignal.TypeSignal == "update" {
 		if len(stateCheckSignal.Agents.DatadogTracerSingleStep.Version) > 0 && len(stateCheckSignal.Agents.DatadogTracerLibrary.Version) == 0 {
 			tracerSingleStep := stateCheckSignal.Agents.DatadogTracerSingleStep
+			var version string
 			var files []dto.StateActionFiles
 			var componetEnvVars []dto.StateActionEnvs
 
@@ -1030,6 +1033,7 @@ func (l *ManagerAdapter) prepareTracerDatadogSingleStepAction(stateCheckSignal d
 					Value: l.parseSiteDatadog(datadogAgent.Site),
 				})
 				files = l.getActionsFiles(datadogAgent.Configurations)
+				version = datadogAgent.Version
 			}
 
 			action = dto.StateAction{
@@ -1037,6 +1041,7 @@ func (l *ManagerAdapter) prepareTracerDatadogSingleStepAction(stateCheckSignal d
 				Action:        "install",
 				Mode:          "single_step",
 				Component:     "tracer",
+				Version:       version,
 				ComponentEnvs: componetEnvVars,
 				Envs:          envVars,
 				Files:         files,
@@ -1048,7 +1053,7 @@ func (l *ManagerAdapter) prepareTracerDatadogSingleStepAction(stateCheckSignal d
 
 // prepareTracerDatadogLibraryAction execute prepare for tracer datadog tracer library action
 func (l *ManagerAdapter) prepareTracerDatadogLibraryAction(stateCheckSignal dto.StateCheckSignal) dto.StateAction {
-	l.logger.Debug("prepare tracer datadog library action", "trace", "docp-agent-os-instance.manager_adapter.prepareTracerDatadogLibraryAction", "stateCheckSignal", stateCheckSignal)
+	l.logger.Debug("prepare tracer datadog library action", "trace", "agent-os-instance.manager_adapter.prepareTracerDatadogLibraryAction", "stateCheckSignal", stateCheckSignal)
 	var action dto.StateAction
 	var envVars []dto.StateActionEnvs
 	if stateCheckSignal.TypeSignal == "update" {
@@ -1104,11 +1109,12 @@ func (l *ManagerAdapter) prepareTracerDatadogLibraryAction(stateCheckSignal dto.
 
 // prepareAgentDatadogAction execute prepare for agent datadog action
 func (l *ManagerAdapter) prepareAgentDatadogAction(stateCheckSignal dto.StateCheckSignal) dto.StateAction {
-	l.logger.Debug("prepare agent datadog action", "trace", "docp-agent-os-instance.manager_adapter.prepareAgentDatadogAction", "stateCheckSignal", stateCheckSignal)
+	l.logger.Debug("prepare agent datadog action", "trace", "agent-os-instance.manager_adapter.prepareAgentDatadogAction", "stateCheckSignal", stateCheckSignal)
 	var action dto.StateAction
 	var envVars []dto.StateActionEnvs
 	var componetEnvVars []dto.StateActionEnvs
 	var files []dto.StateActionFiles
+	var version string
 
 	if stateCheckSignal.TypeSignal == "update" {
 		if len(stateCheckSignal.Agents.DatadogAgent.Version) > 0 {
@@ -1127,6 +1133,7 @@ func (l *ManagerAdapter) prepareAgentDatadogAction(stateCheckSignal dto.StateChe
 				Value: l.parseSiteDatadog(datadogAgent.Site),
 			})
 			files = l.getActionsFiles(datadogAgent.Configurations)
+			version = datadogAgent.Version
 			l.logger.Debug("prepare agent datadog action", "files", files)
 			return dto.StateAction{
 				Type:          "datadog",
@@ -1136,7 +1143,7 @@ func (l *ManagerAdapter) prepareAgentDatadogAction(stateCheckSignal dto.StateChe
 				ComponentEnvs: componetEnvVars,
 				Envs:          envVars,
 				Files:         files,
-				Version:       datadogAgent.Version,
+				Version:       version,
 			}
 		}
 	} else if stateCheckSignal.TypeSignal == "uninstall" {
@@ -1158,7 +1165,7 @@ func (l *ManagerAdapter) prepareAgentDatadogAction(stateCheckSignal dto.StateChe
 
 // prepareAgentDatadogUpdateAction execute prepare for agent datadog update action
 func (l *ManagerAdapter) prepareAgentDatadogUpdateAction(stateCheckSignal dto.StateCheckSignal) dto.StateAction {
-	l.logger.Debug("prepare agent datadog action", "trace", "docp-agent-os-instance.manager_adapter.prepareAgentDatadogAction", "stateCheckSignal", stateCheckSignal)
+	l.logger.Debug("prepare agent datadog action", "trace", "agent-os-instance.manager_adapter.prepareAgentDatadogAction", "stateCheckSignal", stateCheckSignal)
 	var action dto.StateAction
 	var envVars []dto.StateActionEnvs
 	var componetEnvVars []dto.StateActionEnvs
@@ -1215,21 +1222,21 @@ func (l *ManagerAdapter) removeAgentDatadogIfTracerSingleStepExists(arrStateActi
 
 // GetActions return actions for agents
 func (l *ManagerAdapter) GetActions(stateCheckResponse *dto.StateCheckResponse) ([]dto.StateAction, error) {
-	l.logger.Debug("get actions", "trace", "docp-agent-os-instance.manager_adapter.GetActions", "stateCheckResponse", stateCheckResponse)
+	l.logger.Debug("get actions", "trace", "agent-os-instance.manager_adapter.GetActions", "stateCheckResponse", stateCheckResponse)
 	var arrStateActions []dto.StateAction
 
-	// prepare docp agent action
-	docpAgentAction := l.prepareDocpAgentAction(stateCheckResponse.Signal)
-	lastDocpAgentActionHash := l.GetStore("action.docp.state")
-	docpAgentActionBytes, err := l.marshaller(&docpAgentAction)
+	// prepare orya agent action
+	oryaAgentAction := l.prepareOryaAgentAction(stateCheckResponse.Signal)
+	lastOryaAgentActionHash := l.GetStore("action.orya.state")
+	oryaAgentActionBytes, err := l.marshaller(&oryaAgentAction)
 	if err != nil {
 		return nil, err
 	}
 
-	newDocpAgentActionHash := utils.GenerateMd5Hash(docpAgentActionBytes)
-	if newDocpAgentActionHash != lastDocpAgentActionHash {
-		arrStateActions = append(arrStateActions, docpAgentAction)
-		if err := l.SetStore("action.docp.state", newDocpAgentActionHash); err != nil {
+	newOryaAgentActionHash := utils.GenerateMd5Hash(oryaAgentActionBytes)
+	if newOryaAgentActionHash != lastOryaAgentActionHash {
+		arrStateActions = append(arrStateActions, oryaAgentAction)
+		if err := l.SetStore("action.orya.state", newOryaAgentActionHash); err != nil {
 			return nil, err
 		}
 	}
@@ -1306,15 +1313,15 @@ func (l *ManagerAdapter) GetActions(stateCheckResponse *dto.StateCheckResponse) 
 	}
 
 	arrStateActionsFiltered := l.removeAgentDatadogIfTracerSingleStepExists(arrStateActions)
-	l.logger.Debug("get actions", "trace", "docp-agent-os-instance.manager_adapter.GetActions", "docpAgentAction", docpAgentAction, "agentDatadogAction", agentDatadogAction, "agentDatadogUpdateAction", agentDatadogUpdateAction, "tracerDatadogLibraryAction", tracerDatadogLibraryAction, "tracerDatadogSingleStepAction", tracerDatadogSingleStepAction)
-	l.logger.Debug("get actions", "trace", "docp-agent-os-instance.manager_adapter.GetActions", "arrStateActions", arrStateActions)
+	l.logger.Debug("get actions", "trace", "agent-os-instance.manager_adapter.GetActions", "oryaAgentAction", oryaAgentAction, "agentDatadogAction", agentDatadogAction, "agentDatadogUpdateAction", agentDatadogUpdateAction, "tracerDatadogLibraryAction", tracerDatadogLibraryAction, "tracerDatadogSingleStepAction", tracerDatadogSingleStepAction)
+	l.logger.Debug("get actions", "trace", "agent-os-instance.manager_adapter.GetActions", "arrStateActions", arrStateActions)
 
 	return arrStateActionsFiltered, nil
 }
 
 // SaveState save state from state check
 func (l *ManagerAdapter) SaveState(data []byte) error {
-	l.logger.Debug("save state", "trace", "docp-agent-os-instance.manager_adapter.SaveState", "data", string(data))
+	l.logger.Debug("save state", "trace", "agent-os-instance.manager_adapter.SaveState", "data", string(data))
 	if err := l.SaveStateReceived(data); err != nil {
 		return err
 	}
@@ -1323,7 +1330,7 @@ func (l *ManagerAdapter) SaveState(data []byte) error {
 
 // GetState get state from state check
 func (l *ManagerAdapter) GetState() ([]byte, error) {
-	l.logger.Debug("get state", "trace", "docp-agent-os-instance.manager_adapter.GetState")
+	l.logger.Debug("get state", "trace", "agent-os-instance.manager_adapter.GetState")
 	var stateData dto.StateCheckResponse
 
 	// get state received
@@ -1352,7 +1359,7 @@ func (l *ManagerAdapter) GetState() ([]byte, error) {
 
 // GetDatadogStateFromReceived get state datadog from received file
 func (l *ManagerAdapter) GetDatadogStateFromReceived() (string, error) {
-	l.logger.Debug("get datadog state from received", "trace", "docp-agent-os-instance.manager_adapter.GetDatadogStateFromReceived")
+	l.logger.Debug("get datadog state from received", "trace", "agent-os-instance.manager_adapter.GetDatadogStateFromReceived")
 	var agentState dto.StateCheckResponse
 
 	content, err := l.GetStateReceived()
@@ -1374,9 +1381,9 @@ func (l *ManagerAdapter) GetDatadogStateFromReceived() (string, error) {
 	return "", nil
 }
 
-// ValidateDocpInstalled return if state docp is installed
-func (l *ManagerAdapter) ValidateDocpInstalled() (bool, error) {
-	l.logger.Debug("validate docp installed", "trace", "docp-agent-os-instance.manager_adapter.ValidateDocpInstalled")
+// ValidateOryaInstalled return if state orya is installed
+func (l *ManagerAdapter) ValidateOryaInstalled() (bool, error) {
+	l.logger.Debug("validate orya installed", "trace", "agent-os-instance.manager_adapter.ValidateOryaInstalled")
 	content, err := l.GetStateReceived()
 	if err != nil {
 		return false, err
@@ -1386,7 +1393,7 @@ func (l *ManagerAdapter) ValidateDocpInstalled() (bool, error) {
 		return false, err
 	}
 	signal := agentState.Signal
-	if len(signal.Agents.DocpAgent.Version) > 0 {
+	if len(signal.Agents.OryaAgent.Version) > 0 {
 		status, err := l.osOperation.Status("agent")
 		if err != nil {
 			return false, err
@@ -1398,9 +1405,9 @@ func (l *ManagerAdapter) ValidateDocpInstalled() (bool, error) {
 	return false, nil
 }
 
-// ValidateDocpNotInstalled return if state docp is not installed
-func (l *ManagerAdapter) ValidateDocpNotInstalled() (bool, error) {
-	l.logger.Debug("validate docp not installed", "trace", "docp-agent-os-instance.manager_adapter.ValidateDocpNotInstalled")
+// ValidateOryaNotInstalled return if state orya is not installed
+func (l *ManagerAdapter) ValidateOryaNotInstalled() (bool, error) {
+	l.logger.Debug("validate orya not installed", "trace", "agent-os-instance.manager_adapter.ValidateOryaNotInstalled")
 	content, err := l.GetStateReceived()
 	if err != nil {
 		return false, err
@@ -1410,7 +1417,7 @@ func (l *ManagerAdapter) ValidateDocpNotInstalled() (bool, error) {
 		return false, err
 	}
 	signal := agentState.Signal
-	if len(signal.Agents.DocpAgent.Version) == 0 {
+	if len(signal.Agents.OryaAgent.Version) == 0 {
 		status, err := l.osOperation.Status("agent")
 		if err != nil {
 			return false, err
@@ -1424,7 +1431,7 @@ func (l *ManagerAdapter) ValidateDocpNotInstalled() (bool, error) {
 
 // ValidateDatadogInstalled return if state datadog is installed
 func (l *ManagerAdapter) ValidateDatadogInstalled() (bool, error) {
-	l.logger.Debug("validate datadog installed", "trace", "docp-agent-os-instance.manager_adapter.ValidateDatadogInstalled")
+	l.logger.Debug("validate datadog installed", "trace", "agent-os-instance.manager_adapter.ValidateDatadogInstalled")
 	content, err := l.GetStateReceived()
 	if err != nil {
 		return false, err
@@ -1449,7 +1456,7 @@ func (l *ManagerAdapter) ValidateDatadogInstalled() (bool, error) {
 
 // ValidateDatadogNotInstalled return if state datadog is not installed
 func (l *ManagerAdapter) ValidateDatadogNotInstalled() (bool, error) {
-	l.logger.Debug("validate datadog not installed", "trace", "docp-agent-os-instance.manager_adapter.ValidateDatadogNotInstalled")
+	l.logger.Debug("validate datadog not installed", "trace", "agent-os-instance.manager_adapter.ValidateDatadogNotInstalled")
 	content, err := l.GetStateReceived()
 	if err != nil {
 		return false, err
@@ -1473,8 +1480,8 @@ func (l *ManagerAdapter) ValidateDatadogNotInstalled() (bool, error) {
 
 // Validade execute validate states
 func (l *ManagerAdapter) Validate() error {
-	l.logger.Debug("validate", "trace", "docp-agent-os-instance.manager_adapter.Validate")
-	docpAgentIsOK := false
+	l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate")
+	oryaAgentIsOK := false
 	datadogAgentIsOK := false
 
 	workdir, err := utils.GetWorkDirPath()
@@ -1499,32 +1506,32 @@ func (l *ManagerAdapter) Validate() error {
 		return err
 	}
 	signal := agentState.Signal
-	agent := signal.Agents.DocpAgent
+	agent := signal.Agents.OryaAgent
 	datadog := signal.Agents.DatadogAgent
 
-	// validate docp agent
-	l.logger.Debug("validate", "trace", "docp-agent-os-instance.manager_adapter.Validate", "docpAgent", agent)
+	// validate orya agent
+	l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "oryaAgent", agent)
 	if len(agent.Version) > 0 {
 		status, err := l.osOperation.Status("agent")
-		l.logger.Debug("validate", "trace", "docp-agent-os-instance.manager_adapter.Validate", "docp agent status when enabled", status)
+		l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "orya agent status when enabled", status)
 		if err != nil {
 			return err
 		}
 		if strings.ReplaceAll(status, "\"", "") == "active" {
-			docpAgentIsOK = true
-			l.logger.Debug("validate", "trace", "docp-agent-os-instance.manager_adapter.Validate", "docpAgentIsOK", docpAgentIsOK)
+			oryaAgentIsOK = true
+			l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "oryaAgentIsOK", oryaAgentIsOK)
 		}
 
 	}
 
 	if len(agent.Version) == 0 {
 		status, err := l.osOperation.Status("agent")
-		l.logger.Debug("validate", "trace", "docp-agent-os-instance.manager_adapter.Validate", "docp agent status not when enabled", status, "docpAgentIsOk", docpAgentIsOK)
+		l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "orya agent status not when enabled", status, "oryaAgentIsOk", oryaAgentIsOK)
 		if err != nil {
 			return err
 		}
 		if strings.ReplaceAll(status, "\"", "") != "active" {
-			docpAgentIsOK = true
+			oryaAgentIsOK = true
 		}
 
 	}
@@ -1540,7 +1547,7 @@ func (l *ManagerAdapter) Validate() error {
 	}
 	if len(datadog.Version) == 0 {
 		status, err := l.osOperation.Status("datadog")
-		l.logger.Debug("validate", "trace", "docp-agent-os-instance.manager_adapter.Validate", "datadog agent status", status)
+		l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "datadog agent status", status)
 		if err != nil {
 			return err
 		}
@@ -1549,22 +1556,22 @@ func (l *ManagerAdapter) Validate() error {
 		}
 	}
 
-	l.logger.Debug("validate", "trace", "docp-agent-os-instance.manager_adapter.Validate", "docpAgentIsOk", docpAgentIsOK, "datadogAgentIsOk", datadogAgentIsOK)
-	if docpAgentIsOK && datadogAgentIsOK {
-		l.logger.Debug("validate", "trace", "docp-agent-os-instance.manager_adapter.Validate", "status", "validation success")
+	l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "oryaAgentIsOk", oryaAgentIsOK, "datadogAgentIsOk", datadogAgentIsOK)
+	if oryaAgentIsOK && datadogAgentIsOK {
+		l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "status", "validation success")
 		if err := l.fileSystem.WriteFileContent(currentFilePath, content); err != nil {
 			return err
 		}
 		return nil
 	}
 
-	l.logger.Debug("validate", "trace", "docp-agent-os-instance.manager_adapter.Validate", "status", "validation failed")
+	l.logger.Debug("validate", "trace", "agent-os-instance.manager_adapter.Validate", "status", "validation failed")
 	return nil
 }
 
 // CompareState execute compare states between received and current
 func (l *ManagerAdapter) CompareState() (bool, error) {
-	l.logger.Debug("compare state", "trace", "docp-agent-os-instance.manager_adapter.CompareState")
+	l.logger.Debug("compare state", "trace", "agent-os-instance.manager_adapter.CompareState")
 	receivedBytes, err := l.GetStateReceived()
 	if err != nil {
 		return false, err
@@ -1575,7 +1582,7 @@ func (l *ManagerAdapter) CompareState() (bool, error) {
 	}
 	md5ReceivedHash := utils.GenerateMd5Hash(receivedBytes)
 	md5CurrentHash := utils.GenerateMd5Hash(currentBytes)
-	l.logger.Debug("compare state", "trace", "docp-agent-os-instance.manager_adapter.CompareState", "md5 received hash", md5ReceivedHash, "md5 current hash", md5CurrentHash)
+	l.logger.Debug("compare state", "trace", "agent-os-instance.manager_adapter.CompareState", "md5 received hash", md5ReceivedHash, "md5 current hash", md5CurrentHash)
 	if md5CurrentHash == md5ReceivedHash {
 		return true, nil
 	} else {
@@ -1585,7 +1592,7 @@ func (l *ManagerAdapter) CompareState() (bool, error) {
 
 // IsAlreadyCreated return is already created host
 func (l *ManagerAdapter) IsAlreadyCreated() (bool, error) {
-	l.logger.Debug("is already created", "trace", "docp-agent-os-instance.manager_adapter.IsAlreadyCreated")
+	l.logger.Debug("is already created", "trace", "agent-os-instance.manager_adapter.IsAlreadyCreated")
 	var configAgent dto.ConfigAgent
 	pathConfigFile := filepath.Join(l.agentWorkDir, "config.yml")
 	content, err := l.fileSystem.GetFileContent(pathConfigFile)
@@ -1604,7 +1611,7 @@ func (l *ManagerAdapter) IsAlreadyCreated() (bool, error) {
 
 // SaveAlreadyTracer save already tracer on config file
 func (l *ManagerAdapter) SaveAlreadyTracer(value bool) error {
-	l.logger.Debug("save already tracer", "trace", "docp-agent-os-instance.manager_adapter.SaveAlreadyTracer")
+	l.logger.Debug("save already tracer", "trace", "agent-os-instance.manager_adapter.SaveAlreadyTracer")
 	var configAgent dto.ConfigAgent
 	pathConfigFile := filepath.Join(l.agentWorkDir, "config.yml")
 	contentConfigAgent, err := l.fileSystem.GetFileContent(pathConfigFile)
@@ -1629,7 +1636,7 @@ func (l *ManagerAdapter) SaveAlreadyTracer(value bool) error {
 
 // GetAlreadyTracer return already tracer from config file
 func (l *ManagerAdapter) GetAlreadyTracer() (bool, error) {
-	l.logger.Debug("get already tracer", "trace", "docp-agent-os-instance.manager_adapter.GetAlreadyTracer")
+	l.logger.Debug("get already tracer", "trace", "agent-os-instance.manager_adapter.GetAlreadyTracer")
 	var configAgent dto.ConfigAgent
 	pathConfigFile := filepath.Join(l.agentWorkDir, "config.yml")
 	contentConfigAgent, err := l.fileSystem.GetFileContent(pathConfigFile)
@@ -1645,7 +1652,7 @@ func (l *ManagerAdapter) GetAlreadyTracer() (bool, error) {
 
 // SaveInitialConfigFromRegister save initial config from register in file
 func (l *ManagerAdapter) SaveInitialConfigFromRegister(data []byte) error {
-	l.logger.Debug("save initial config from register", "trace", "docp-agent-os-instance.manager_adapter.SaveInitialConfigFromRegister", "data", string(data))
+	l.logger.Debug("save initial config from register", "trace", "agent-os-instance.manager_adapter.SaveInitialConfigFromRegister", "data", string(data))
 	var configAgent dto.ConfigAgent
 	var registerDataResponseSuccess dto.AgentRegisterDataResponseSuccess
 	pathConfigFile := filepath.Join(l.agentWorkDir, "config.yml")
@@ -1666,7 +1673,7 @@ func (l *ManagerAdapter) SaveInitialConfigFromRegister(data []byte) error {
 	}
 	configAgent.AccessToken = token
 	configAgent.ComputeId = claims.ComputeId
-	configAgent.DocpOrgId = claims.DocpOrgId
+	configAgent.OryaOrgId = claims.OryaOrgId
 	configAgent.AlreadyCreated = true
 	configAgent.AlreadyTracer = false
 
@@ -1682,7 +1689,7 @@ func (l *ManagerAdapter) SaveInitialConfigFromRegister(data []byte) error {
 
 // ExistTracerLanguage verify if tracer language exist on host
 func (l *ManagerAdapter) ExistTracerLanguage(language string) (bool, error) {
-	l.logger.Debug("exist tracer language", "trace", "docp-agent-os-instance.manager_adapter.ExistTracerLanguage", "language", language)
+	l.logger.Debug("exist tracer language", "trace", "agent-os-instance.manager_adapter.ExistTracerLanguage", "language", language)
 	var configAgent dto.ConfigAgent
 	pathConfigFile := filepath.Join(l.agentWorkDir, "config.yml")
 	contentConfigAgent, err := l.fileSystem.GetFileContent(pathConfigFile)
@@ -1704,7 +1711,7 @@ func (l *ManagerAdapter) ExistTracerLanguage(language string) (bool, error) {
 // AddTracerLanguage append tracer language in slice the config file
 func (l *ManagerAdapter) AddTracerLanguage(language string) error {
 	l.logger.Info("add tracer language", "language", language)
-	l.logger.Debug("add tracer language", "trace", "docp-agent-os-instance.manager_adapter.AddTracerLanguage", "language", language)
+	l.logger.Debug("add tracer language", "trace", "agent-os-instance.manager_adapter.AddTracerLanguage", "language", language)
 	var configAgent dto.ConfigAgent
 	pathConfigFile := filepath.Join(l.agentWorkDir, "config.yml")
 	contentConfigAgent, err := l.fileSystem.GetFileContent(pathConfigFile)
@@ -1740,7 +1747,7 @@ func (l *ManagerAdapter) AddTracerLanguage(language string) error {
 // ClearTracerLanguage append tracer language in slice the config file
 func (l *ManagerAdapter) ClearTracerLanguage() error {
 	l.logger.Info("clear tracer language", "timestamp", time.Now().UTC())
-	l.logger.Debug("clear tracer language", "trace", "docp-agent-os-instance.manager_adapter.ClearTracerLanguage")
+	l.logger.Debug("clear tracer language", "trace", "agent-os-instance.manager_adapter.ClearTracerLanguage")
 	var configAgent dto.ConfigAgent
 	pathConfigFile := filepath.Join(l.agentWorkDir, "config.yml")
 	contentConfigAgent, err := l.fileSystem.GetFileContent(pathConfigFile)
@@ -1780,7 +1787,7 @@ func (l *ManagerAdapter) VerifyDatadogInstalled() bool {
 
 // GetConfigAgent get config agent from file
 func (l *ManagerAdapter) GetConfigAgent() (dto.ConfigAgent, error) {
-	l.logger.Debug("get config agent", "trace", "docp-agent-os-instance.manager_adapter.GetConfigAgent")
+	l.logger.Debug("get config agent", "trace", "agent-os-instance.manager_adapter.GetConfigAgent")
 	var configAgent dto.ConfigAgent
 	pathConfigFile := filepath.Join(l.agentWorkDir, "config.yml")
 	contentConfigAgent, err := l.fileSystem.GetFileContent(pathConfigFile)
@@ -1795,7 +1802,7 @@ func (l *ManagerAdapter) GetConfigAgent() (dto.ConfigAgent, error) {
 
 // UpdateConfigAgent update config agent for file
 func (l *ManagerAdapter) UpdateConfigAgent(configAgent dto.ConfigAgent) error {
-	l.logger.Debug("update config agent", "trace", "docp-agent-os-instance.manager_adapter.UpdateConfigAgent")
+	l.logger.Debug("update config agent", "trace", "agent-os-instance.manager_adapter.UpdateConfigAgent")
 	pathConfigFile := filepath.Join(l.agentWorkDir, "config.yml")
 
 	configBytes, err := l.ymlClient.Marshall(&configAgent)

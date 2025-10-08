@@ -3,14 +3,15 @@ package services
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"time"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 // UtilityService provides utility functions for the application.
@@ -75,4 +76,32 @@ func (u *UtilityService) FetchAgentVersions() (dto.AgentVersions, error) {
 	}
 
 	return versions, nil
+}
+
+// GetDatadogLastVersionFromGithub fetches the latest version of Datadog from GitHub.
+func (u *UtilityService) GetDatadogLastVersionFromGithub() (string, error) {
+	url := fmt.Sprintf("%s/latest", utils.GetDatadogGithubUrlVersions())
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	res, err := u.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return "", utils.ErrFailedGetLatestVersionDatadog()
+	}
+
+	var datadogApiGithubVersions dto.DatadogApiGithubVersions
+	if err := json.NewDecoder(res.Body).Decode(&datadogApiGithubVersions); err != nil {
+		return "", err
+	}
+
+	return datadogApiGithubVersions.TagName, nil
 }

@@ -4,9 +4,9 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-AGENT_IS_RUNNING=$(ps aux | grep -v grep | grep docp-agent/bin/agent)
-DOCP_FILES_PATH=/opt/docp-agent
-USER_GROUP_NAME=docp-agent
+AGENT_IS_RUNNING=$(ps aux | grep -v grep | grep orya-agent/bin/agent)
+ORYA_FILES_PATH=/opt/orya-agent
+USER_GROUP_NAME=orya-agent
 
 # Root user detection
 if [ "$UID" == "0" ]; then
@@ -17,13 +17,13 @@ fi
 
 #stop and disable launchd
 function stop_and_disable() {
-  launchctl bootout gui/$(id -u)/com.docp.agent 
-  launchctl unload ~/Library/LaunchAgents/com.docp.agent.plist
+  launchctl bootout gui/$(id -u)/com.orya.agent 
+  launchctl unload ~/Library/LaunchAgents/com.orya.agent.plist
 }
 
 #remove file service
 function remove_file_service(){
-  $sudo_cmd rm ~/Library/LaunchAgents/com.docp.agent.plist
+  $sudo_cmd rm ~/Library/LaunchAgents/com.orya.agent.plist
 }
 
 #setup configure e verify machine

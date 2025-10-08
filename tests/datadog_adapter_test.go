@@ -5,10 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/adapters"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/adapters"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 func TestNewDatadogAdapter(t *testing.T) {
@@ -17,7 +17,7 @@ func TestNewDatadogAdapter(t *testing.T) {
 			var datadogAdapter *adapters.DatadogAdapter
 			var logger interfaces.ILogger
 			s.When("logger é criado", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.When("NewDatadogAdapter é chamado", func() {
 				datadogAdapter = adapters.NewDatadogAdapter(logger)
@@ -36,7 +36,7 @@ func TestDatadogAdapterSetup(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.When("logger é criado", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido", func() {
 				datadogAdapter = adapters.NewDatadogAdapter(logger)
@@ -59,7 +59,7 @@ func TestDatadogAdapterIsActive(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.When("logger é criado", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
 				datadogAdapter = adapters.NewDatadogAdapter(logger)
@@ -84,7 +84,7 @@ func TestDatadogAdapterInstallAgent(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.When("logger é criado", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
 				datadogAdapter = adapters.NewDatadogAdapter(logger)
@@ -93,7 +93,7 @@ func TestDatadogAdapterInstallAgent(t *testing.T) {
 			})
 			s.When("InstallAgent é chamado", func() {
 				if err == nil {
-					err = datadogAdapter.InstallAgent("datadoghq.com", "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+					err = datadogAdapter.InstallAgent("datadoghq.com", "XXXXXXXXXXXXXXXXXXXXXXXXX", "7.47.0")
 				}
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
@@ -110,7 +110,7 @@ func TestDatadogAdapterUninstallAgent(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.When("logger é criado", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
 				datadogAdapter = adapters.NewDatadogAdapter(logger)
@@ -137,7 +137,7 @@ func TestDatadogAdapterDiscoverDatadogConfigPath(t *testing.T) {
 			var filePath string
 			var err error
 			s.When("logger é criado", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
 				datadogAdapter = adapters.NewDatadogAdapter(logger)
@@ -163,7 +163,7 @@ func TestDatadogAdapterDecodeBase64(t *testing.T) {
 			var decoded []byte
 			var err error
 			s.When("logger é criado", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
 				datadogAdapter = adapters.NewDatadogAdapter(logger)
@@ -189,7 +189,7 @@ func TestDatadogAdapterUpdateConfigFileDatadog(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.When("logger é criado", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
 				datadogAdapter = adapters.NewDatadogAdapter(logger)
@@ -218,7 +218,7 @@ func TestDatadogAdapterUpdateRepository(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.When("logger é criado", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
 				datadogAdapter = adapters.NewDatadogAdapter(logger)
@@ -245,7 +245,7 @@ func TestDatadogAdapterGetVersion(t *testing.T) {
 			var version string
 			var err error
 			s.When("logger é criado", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
 				datadogAdapter = adapters.NewDatadogAdapter(logger)
@@ -273,7 +273,7 @@ func TestDatadogAdapterGetLatestVersion(t *testing.T) {
 			var version string
 			var err error
 			s.When("logger é criado", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
 				datadogAdapter = adapters.NewDatadogAdapter(logger)
@@ -300,7 +300,7 @@ func TestDatadogAdapterUpdateVersion(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.When("logger é criado", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
 				datadogAdapter = adapters.NewDatadogAdapter(logger)
@@ -309,7 +309,7 @@ func TestDatadogAdapterUpdateVersion(t *testing.T) {
 
 			})
 			s.When("UpdateVersion é chamado", func() {
-				err = datadogAdapter.UpdateVersion("7.69.4")
+				err = datadogAdapter.UpdateVersion("latest")
 
 			})
 			s.Then("não deve retornar erro", func(t *testing.T) {
@@ -326,7 +326,7 @@ func TestDatadogAdapterRollbackVersion(t *testing.T) {
 			var logger interfaces.ILogger
 			var err error
 			s.When("logger é criado", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.Given("DatadogAdapter válido e setup executado", func() {
 				datadogAdapter = adapters.NewDatadogAdapter(logger)

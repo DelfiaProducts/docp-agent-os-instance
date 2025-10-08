@@ -4,9 +4,9 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-MANAGER_IS_RUNNING=$(ps aux | grep -v grep | grep docp-agent/bin/current/updater)
-DOCP_FILES_PATH=/opt/docp-agent
-USER_GROUP_NAME=docp-agent
+MANAGER_IS_RUNNING=$(ps aux | grep -v grep | grep orya-agent/bin/current/updater)
+ORYA_FILES_PATH=/opt/orya-agent
+USER_GROUP_NAME=orya-agent
 
 # Root user detection
 if [ "$UID" == "0" ]; then
@@ -17,13 +17,13 @@ fi
 
 #stop and disable launchd
 function stop_and_disable() {
-  launchctl bootout gui/$(id -u)/com.docp.updater 
-  launchctl unload ~/Library/LaunchAgents/com.docp.updater.plist
+  launchctl bootout gui/$(id -u)/com.orya.updater 
+  launchctl unload ~/Library/LaunchAgents/com.orya.updater.plist
 }
 
 #remove file service
 function remove_file_service(){
-  $sudo_cmd rm ~/Library/LaunchAgents/com.docp.updater.plist
+  $sudo_cmd rm ~/Library/LaunchAgents/com.orya.updater.plist
 }
 
 

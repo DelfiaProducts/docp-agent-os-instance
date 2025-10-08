@@ -10,18 +10,22 @@ import (
 	"syscall"
 	"unsafe"
 
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
 	"github.com/OryaHub/agent-os-instance/libs/services"
 	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 // parseParams parse params
-func parseParams(version *string) {
+func parseParams(apiKey, tags, version, noGroupAssociation *string) {
+	flag.StringVar(apiKey, "API_KEY", "", "orya api key")
+	flag.StringVar(tags, "TAGS", "", "orya tags")
 	flag.StringVar(version, "VERSION", "latest", "orya version")
+	flag.StringVar(noGroupAssociation, "NO_GROUP_ASSOCIATION", "true", "no group association")
 	flag.Parse()
 }
 
-// prepareUrlAgent return url the binary
-func prepareUrlAgent(url, version, fileName string) string {
+// prepareUrl return url the binary
+func prepareUrl(url, version, fileName string) string {
 	versionName := "latest"
 	if len(version) > 0 {
 		versionName = version
@@ -29,8 +33,8 @@ func prepareUrlAgent(url, version, fileName string) string {
 	return fmt.Sprintf("%s/%s/%s", url, versionName, fileName)
 }
 
-// downloadFileAgent get binary file from bucket
-func downloadFileAgent(url, dest string) error {
+// downloadFile get binary file from bucket
+func downloadFile(url, dest string) error {
 	resp, err := http.Get(url)
 	if err != nil {
 		return fmt.Errorf("binary not found: %v", err)
@@ -65,33 +69,49 @@ func notifyError(title, message string) {
 
 // Função principal
 func main() {
+	var apiKey string
+	var tags string
 	var version string
-	parseParams(&version)
+	var noGroupAssociation string
+	parseParams(&apiKey, &tags, &version, &noGroupAssociation)
 	baseUrl := "https://github.com/OryaHub/agent-os-instance/releases/download"
-	fileName := "agent-windows-amd64.exe"
+	fileName := "install_manager_windows.msi"
 	//verify if version latest
 	if version == "latest" {
 		logger := utils.NewOryaLoggerText(os.Stdout)
 		utilityService := services.NewUtilityService(logger)
 		if err := utilityService.Setup(); err != nil {
-			notifyError("Installer Orya Agent", err.Error())
+			notifyError("Installer Windows", err.Error())
 		}
 		agentVersions, err := utilityService.FetchAgentVersions()
 		if err != nil {
-			notifyError("Installer Orya Agent", err.Error())
+			notifyError("Installer Windows", err.Error())
 		}
 		version = agentVersions.LatestVersion
 	}
-	url := prepareUrlAgent(baseUrl, version, fileName)
+	url := prepareUrl(baseUrl, version, fileName)
 
-	pathDir := os.Getenv("ProgramFiles")
-	oryaFilesPath := filepath.Join(pathDir, "OryaAgent")
-
-	destDir := filepath.Join(oryaFilesPath, "bin")
-	destFile := filepath.Join(destDir, "agent.exe")
-
-	err := downloadFileAgent(url, destFile)
+	actualDirectory, err := os.Getwd()
 	if err != nil {
-		panic(err)
+		notifyError("Installer Windows", err.Error())
 	}
+
+	destFile := filepath.Join(actualDirectory, "install_windows.msi")
+
+	err = downloadFile(url, destFile)
+	if err != nil {
+		notifyError("Installer Windows", err.Error())
+	}
+
+	program := pkg.NewExecProgram()
+	command := fmt.Sprintf(`start-process -Wait msiexec -ArgumentList '/qn /i "%s" VERSION="%s" API_KEY="%s" TAGS="%s" NO_GROUP_ASSOCIATION="%s"'`, destFile, version, apiKey, tags, noGroupAssociation)
+
+	_, err = program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
+	if err != nil {
+		notifyError("Installer Windows", err.Error())
+	}
+	if err := os.Remove(destFile); err != nil {
+		notifyError("Installer Windows", err.Error())
+	}
+	os.Exit(0)
 }

@@ -4,10 +4,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/adapters"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/adapters"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 func TestNewUpdaterAdapter(t *testing.T) {
@@ -103,7 +103,7 @@ func TestUpdaterAdapterGetAgentVersionFromSignal(t *testing.T) {
 				err = updater.Prepare()
 			})
 			s.When("preparo o signal", func() {
-				response = []byte(`{"signal":{"type":"update","agents":{"docp-agent":{"version":"0.1.0"}}}}`)
+				response = []byte(`{"signal":{"type":"update","agents":{"orya-agent":{"version":"0.1.0"}}}}`)
 			})
 			s.When("chamo GetAgentVersion", func() {
 				version, err = updater.GetAgentVersionFromSignal(response)
@@ -145,7 +145,7 @@ func TestUpdaterAdapterExecuteUpdateVersion(t *testing.T) {
 			var updater *adapters.UpdaterAdapter
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("UpdaterAdapter criado", func() {
@@ -172,7 +172,7 @@ func TestUpdaterAdapterExecuteRollbackVersion(t *testing.T) {
 			var updater *adapters.UpdaterAdapter
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("UpdaterAdapter criado", func() {
@@ -200,7 +200,7 @@ func TestUpdaterAdapterFetchAgentVersions(t *testing.T) {
 			var agentVersions dto.AgentVersions
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("UpdaterAdapter criado", func() {
@@ -250,7 +250,7 @@ func TestUpdaterAdapterUpdaterUninstall(t *testing.T) {
 			var updater *adapters.UpdaterAdapter
 			var err error
 			s.Given("Cria logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				bdd.AssertIsNotNil(t, logger, "Logger deve ser criado")
 			})
 			s.Given("um updater adapter instanciado", func() {
@@ -260,7 +260,7 @@ func TestUpdaterAdapterUpdaterUninstall(t *testing.T) {
 				err = updater.Prepare()
 			})
 			s.When("chamo UpdaterUninstall", func() {
-				err = updater.UpdaterUninstall()
+				err = updater.UpdaterUninstall("0.1.0")
 			})
 			s.Then("não deve retornar erro (mock)", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "UpdaterUninstall não deve retornar erro (mock)")

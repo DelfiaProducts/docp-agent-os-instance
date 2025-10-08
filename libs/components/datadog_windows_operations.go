@@ -3,24 +3,22 @@
 package components
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/services"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 	"golang.org/x/sys/windows"
 	"golang.org/x/sys/windows/svc/mgr"
-)
-
-const (
-	URL_DATADOG_AGENT = "https://s3.amazonaws.com/ddagent-windows-stable/datadog-agent-7-latest.amd64.msi"
 )
 
 type DatadogWindowsOperation struct {
@@ -28,7 +26,9 @@ type DatadogWindowsOperation struct {
 	program          *pkg.ExecProgram
 	hostStats        *pkg.HostStats
 	stateCheck       *services.StateCheckService
+	utilityService   *services.UtilityService
 	fileSystem       *pkg.FileSystem
+	ymlClient        *pkg.YmlClient
 	datadogApmTracer *DatadogWindowsAPMTracer
 }
 
@@ -36,31 +36,6 @@ func NewDatadogWindowsOperation(logger interfaces.ILogger) *DatadogWindowsOperat
 	return &DatadogWindowsOperation{
 		logger: logger,
 	}
-}
-
-// prepareEnvs return envs the datadog
-func (d *DatadogWindowsOperation) prepareEnvs(ddSite, ddApiKey string) []string {
-	var envs []string
-	envs = append(envs, fmt.Sprintf("DD_API_KEY=%s", ddApiKey))
-	envs = append(envs, fmt.Sprintf("DD_SITE=%s", ddSite))
-	return envs
-}
-
-// getApmEnvVarsSingleStep get envs apm datadog in mode single step
-func (d *DatadogWindowsOperation) getApmEnvVarsSingleStep(envs []dto.DatadogEnvVars) (string, string, string) {
-	var ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries string
-	for _, env := range envs {
-		if env.Name == "DD_APM_INSTRUMENTATION_ENABLED" {
-			ddApmInstrumentationEnabled = env.Value
-		}
-		if env.Name == "DD_ENV" {
-			ddEnv = env.Value
-		}
-		if env.Name == "DD_APM_INSTRUMENTATION_LIBRARIES" {
-			ddApmInstrumentationLibraries = env.Value
-		}
-	}
-	return ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries
 }
 
 func (d *DatadogWindowsOperation) Setup() error {
@@ -77,11 +52,18 @@ func (d *DatadogWindowsOperation) Setup() error {
 	d.datadogApmTracer = datadogWindowsApmTracer
 	fileSystem := pkg.NewFileSystem()
 	d.fileSystem = fileSystem
+	utilityService := services.NewUtilityService(d.logger)
+	if err := utilityService.Setup(); err != nil {
+		return err
+	}
+	d.utilityService = utilityService
+	ymlClient := pkg.NewYmlClient()
+	d.ymlClient = ymlClient
 	return nil
 }
 
 // InstallAgent execute install the agent in linux
-func (d *DatadogWindowsOperation) InstallAgent(ddSite, ddApiKey string) error {
+func (d *DatadogWindowsOperation) InstallAgent(ddSite, ddApiKey, version string) error {
 	m, err := mgr.Connect()
 	if err != nil {
 		return err
@@ -89,9 +71,10 @@ func (d *DatadogWindowsOperation) InstallAgent(ddSite, ddApiKey string) error {
 	defer m.Disconnect()
 	s, err := m.OpenService("DatadogAgent")
 	if err != nil {
-		d.logger.Error("error in install datadog agent", "error", err)
+		d.logger.Warn("error in install datadog agent", "error", err)
 		if errors.Is(err, windows.ERROR_SERVICE_DOES_NOT_EXIST) {
-			command := fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s APIKEY="%s" SITE="%s"'`, URL_DATADOG_AGENT, ddApiKey, ddSite)
+			fileVersionUrl := utils.ChoiceMsiWindowsInstallerFileUrl(version)
+			command := fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s APIKEY="%s" SITE="%s"'`, fileVersionUrl, ddApiKey, ddSite)
 			out, err := d.program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
 			if err != nil {
 				d.logger.Error("error in install datadog agent start process", "error", err)
@@ -107,8 +90,8 @@ func (d *DatadogWindowsOperation) InstallAgent(ddSite, ddApiKey string) error {
 }
 
 // InstallAgentApmSingleStep execute install the agent in linux with apm tracer on mode single step
-func (d *DatadogWindowsOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, datadogEnvVars []dto.DatadogEnvVars) error {
-	d.logger.Debug("install agent apm single step", "trace", "docp-agent-os-instance.datadog_windows_operations.InstallAgentApmSingleStep")
+func (d *DatadogWindowsOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, version string, datadogEnvVars []dto.DatadogEnvVars) error {
+	d.logger.Debug("install agent apm single step", "trace", "agent-os-instance.datadog_windows_operations.InstallAgentApmSingleStep")
 	return nil
 }
 
@@ -170,14 +153,14 @@ func (d *DatadogWindowsOperation) DatadogAddPermitionUser() error {
 
 // BackupConfigFileDatadog execute backup the current config file datadog
 func (d *DatadogWindowsOperation) BackupConfigFileDatadog(filePath string, content []byte) error {
-	docpFilePath, err := utils.GetWorkDirPath()
+	oryaFilePath, err := utils.GetWorkDirPath()
 	if err != nil {
 		return err
 	}
 	programData := os.Getenv("ProgramData")
 	basePath := filepath.Join(programData, "Datadog")
 	filteredPath := strings.TrimPrefix(filePath, basePath)
-	filePathState := filepath.Join(docpFilePath, "state", "Datadog", filteredPath)
+	filePathState := filepath.Join(oryaFilePath, "state", "Datadog", filteredPath)
 	if err := d.fileSystem.VerifyFileExist(filePathState); err != nil {
 		if errCrt := d.fileSystem.CreatePathCompleted(filePathState); errCrt != nil {
 			return errCrt
@@ -191,7 +174,7 @@ func (d *DatadogWindowsOperation) BackupConfigFileDatadog(filePath string, conte
 
 // UpdateConfigFileDatadog execute update the config file datadog
 func (d *DatadogWindowsOperation) UpdateConfigFileDatadog(filePath string) error {
-	docpFilePath, err := utils.GetWorkDirPath()
+	oryaFilePath, err := utils.GetWorkDirPath()
 	if err != nil {
 		return err
 	}
@@ -200,13 +183,13 @@ func (d *DatadogWindowsOperation) UpdateConfigFileDatadog(filePath string) error
 	filteredPath := strings.TrimPrefix(filePath, basePath)
 
 	datadogFilePathDir := filepath.Dir(filePath)
-	docpStateDatadogPath := filepath.Join(docpFilePath, "state", "Datadog", filteredPath)
+	oryaStateDatadogPath := filepath.Join(oryaFilePath, "state", "Datadog", filteredPath)
 
 	if err := os.MkdirAll(datadogFilePathDir, os.ModePerm); err != nil {
 		return err
 	}
 
-	content, err := os.ReadFile(docpStateDatadogPath)
+	content, err := os.ReadFile(oryaStateDatadogPath)
 	if err != nil {
 		return err
 	}
@@ -224,21 +207,131 @@ func (d *DatadogWindowsOperation) UpdateRepository() error {
 
 // GetVersion return the version of the datadog agent
 func (d *DatadogWindowsOperation) GetVersion() (string, error) {
-	return "", nil
+	m, err := mgr.Connect()
+	if err != nil {
+		return "", err
+	}
+	defer m.Disconnect()
+
+	s, err := m.OpenService("DatadogAgent")
+	if err != nil {
+		if errors.Is(err, windows.ERROR_SERVICE_DOES_NOT_EXIST) {
+			return "inactive", nil
+		}
+		return "", err
+	}
+	defer s.Close()
+
+	config, err := s.Config()
+	if err != nil {
+		return "", err
+	}
+
+	binaryPath := config.BinaryPathName
+	path := strings.Trim(binaryPath, "\"")
+	var version string
+	buf := new(bytes.Buffer)
+	agentExe := filepath.Join(filepath.Dir(path), "agent.exe")
+	execCmd := exec.Command(agentExe, "version")
+	execCmd.Stdout = buf
+	execCmd.Stderr = buf
+	if err := execCmd.Run(); err != nil {
+		return "", err
+	}
+	re := regexp.MustCompile(`\d+\.\d+\.\d+`)
+	version = re.FindString(buf.String())
+	if version == "" {
+		return "", utils.ErrDatadogVersionNotFound()
+	}
+	return version, nil
 }
 
 // GetLatestVersion return the latest version of the datadog agent
 func (d *DatadogWindowsOperation) GetLatestVersion() (string, error) {
-	return "", nil
+	latestVersion, err := d.utilityService.GetDatadogLastVersionFromGithub()
+	if err != nil {
+		return "", err
+	}
+	return latestVersion, nil
 }
 
 // UpdateVersion execute update the version of the datadog agent
 func (d *DatadogWindowsOperation) UpdateVersion(version string) error {
+	m, err := mgr.Connect()
+	if err != nil {
+		return err
+	}
+	applyVersion := version
+	if version == "latest" {
+		applyVersion, err = d.GetLatestVersion()
+		if err != nil {
+			return err
+		}
+	}
+
+	actualVersion, err := d.GetVersion()
+	if err != nil {
+		return err
+	}
+
+	isGreaten, err := utils.IsVersionGreater(actualVersion, applyVersion)
+	if err != nil {
+		return err
+	}
+
+	//verify if execute downgrade
+	if isGreaten {
+		d.logger.Debug("update version with downgrade version", "actualVersion", actualVersion, "version", version)
+		if err := d.UninstallAgent(); err != nil {
+			return err
+		}
+		var datadogYamlDto dto.DatadogYamlDTO
+		programDataEnv := os.Getenv("ProgramData")
+		datadogYmlPath := filepath.Join(programDataEnv, "Datadog", "datadog.yaml")
+		content, err := d.fileSystem.GetFileContent(datadogYmlPath)
+		if err != nil {
+			return err
+		}
+
+		if err := d.ymlClient.Unmarshall(content, &datadogYamlDto); err != nil {
+			return err
+		}
+
+		if err := d.InstallAgent(datadogYamlDto.ApiKey, datadogYamlDto.Site, version); err != nil {
+			return err
+		}
+
+		return nil
+	}
+	d.logger.Debug("connect manager service", "manager", m)
+	defer m.Disconnect()
+	s, err := m.OpenService("DatadogAgent")
+	d.logger.Debug("open service datadog", "service", s)
+	if err != nil {
+		return err
+	}
+
+	defer s.Close()
+	fileVersionUrl := utils.ChoiceMsiWindowsInstallerFileUrl(version)
+	d.logger.Debug("file version", "fileVersionUrl", fileVersionUrl)
+	command := fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s'`, fileVersionUrl)
+	out, err := d.program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
+	if err != nil {
+		d.logger.Error("error in update datadog agent start process", "error", err)
+		return err
+	}
+
+	d.logger.Debug("update agent datadog", "output", out)
 	return nil
 }
 
 // RollbackVersion execute rollback the version of the datadog agent
 func (d *DatadogWindowsOperation) RollbackVersion(version string) error {
+	d.logger.Debug("rollback version", "version", version)
+	//execute update version with rollback version
+	if err := d.UpdateVersion(version); err != nil {
+		return err
+	}
 	return nil
 }
 

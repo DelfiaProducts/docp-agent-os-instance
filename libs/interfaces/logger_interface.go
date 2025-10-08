@@ -1,6 +1,6 @@
 package interfaces
 
-// ILogger is interface for logger the docp
+// ILogger is interface for logger the orya
 type ILogger interface {
 	Debug(msg string, args ...any)
 	Info(msg string, args ...any)

@@ -3,8 +3,8 @@ package tests
 import (
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/controllers"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/libs/controllers"
 )
 
 func TestNewCommonHttpController(t *testing.T) {

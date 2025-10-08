@@ -1,6 +1,6 @@
 ## Instalação
 
-Processo de instalação dos agents(manager/agent) docp.
+Processo de instalação dos agents(manager/agent) orya.
 
 ### Requerimentos
 

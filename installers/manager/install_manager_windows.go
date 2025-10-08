@@ -12,8 +12,8 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/services"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 	"gopkg.in/yaml.v2"
 )
 
@@ -32,9 +32,9 @@ type Agent struct {
 
 // parseParams parse params
 func parseParams(apiKey, tags, version, noGroupAssociation *string) {
-	flag.StringVar(apiKey, "API_KEY", "", "docp api key")
-	flag.StringVar(tags, "TAGS", "", "docp tags")
-	flag.StringVar(version, "VERSION", "latest", "docp version")
+	flag.StringVar(apiKey, "API_KEY", "", "orya api key")
+	flag.StringVar(tags, "TAGS", "", "orya tags")
+	flag.StringVar(version, "VERSION", "latest", "orya version")
 	flag.StringVar(noGroupAssociation, "NO_GROUP_ASSOCIATION", "true", "no group association")
 	flag.Parse()
 }
@@ -50,7 +50,7 @@ func prepareUrl(url, version, fileName string) string {
 
 // createDefaultFiles execute create the tree files
 func createDefaultFiles(homeDir string) error {
-	basePath := filepath.Join(homeDir, "DocpAgent")
+	basePath := filepath.Join(homeDir, "OryaAgent")
 
 	filePathEnv := filepath.Join(basePath, "environments")
 	outEnv, err := os.Create(filePathEnv)
@@ -87,7 +87,7 @@ func processTags(tags string) map[string]string {
 }
 
 // addContentConfigYml save initial config yml
-func addContentConfigYml(docpFilesPath, apiKey, tags, version, noGroupAssociation string) error {
+func addContentConfigYml(oryaFilesPath, apiKey, tags, version, noGroupAssociation string) error {
 	processedTags := processTags(tags)
 	noGroupBool, err := strconv.ParseBool(noGroupAssociation)
 	if err != nil {
@@ -101,7 +101,7 @@ func addContentConfigYml(docpFilesPath, apiKey, tags, version, noGroupAssociatio
 			Tags:   processedTags,
 		},
 	}
-	configFilePath := filepath.Join(docpFilesPath, "config.yml")
+	configFilePath := filepath.Join(oryaFilesPath, "config.yml")
 
 	file, err := os.Create(configFilePath)
 	if err != nil {
@@ -157,37 +157,37 @@ func main() {
 	var version string
 	var noGroupAssociation string
 	parseParams(&apiKey, &tags, &version, &noGroupAssociation)
-	baseUrl := "https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
+	baseUrl := "https://github.com/OryaHub/agent-os-instance/releases/download"
 	fileName := "manager-windows-amd64.exe"
 	//verify if version latest
 	if version == "latest" {
-		logger := utils.NewDocpLoggerText(os.Stdout)
+		logger := utils.NewOryaLoggerText(os.Stdout)
 		utilityService := services.NewUtilityService(logger)
 		if err := utilityService.Setup(); err != nil {
-			notifyError("Installer Docp Manager", err.Error())
+			notifyError("Installer Orya Manager", err.Error())
 		}
 		agentVersions, err := utilityService.FetchAgentVersions()
 		if err != nil {
-			notifyError("Installer Docp Manager", err.Error())
+			notifyError("Installer Orya Manager", err.Error())
 		}
 		version = agentVersions.LatestVersion
 	}
 	url := prepareUrl(baseUrl, version, fileName)
 
 	pathDir := os.Getenv("ProgramFiles")
-	docpFilesPath := filepath.Join(pathDir, "DocpAgent")
+	oryaFilesPath := filepath.Join(pathDir, "OryaAgent")
 	if err := createDefaultFiles(pathDir); err != nil {
-		notifyError("Installer Docp Manager", err.Error())
+		notifyError("Installer Orya Manager", err.Error())
 	}
-	if err := addContentConfigYml(docpFilesPath, apiKey, tags, version, noGroupAssociation); err != nil {
-		notifyError("Installer Docp Manager", err.Error())
+	if err := addContentConfigYml(oryaFilesPath, apiKey, tags, version, noGroupAssociation); err != nil {
+		notifyError("Installer Orya Manager", err.Error())
 	}
 
-	destDir := filepath.Join(docpFilesPath, "bin")
+	destDir := filepath.Join(oryaFilesPath, "bin")
 	destFile := filepath.Join(destDir, "manager.exe")
 
 	err := downloadFile(url, destFile)
 	if err != nil {
-		notifyError("Installer Docp Manager", err.Error())
+		notifyError("Installer Orya Manager", err.Error())
 	}
 }

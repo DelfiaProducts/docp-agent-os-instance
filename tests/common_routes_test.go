@@ -4,9 +4,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/api"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	libutils "github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/api"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	libutils "github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 func TestNewCommonRoutes(t *testing.T) {
@@ -15,7 +15,7 @@ func TestNewCommonRoutes(t *testing.T) {
 			var commonRouter any
 			s.Given("um logger válido", func() {})
 			s.When("NewCommonRoutes é chamado", func() {
-				logger := libutils.NewDocpLoggerJSON(os.Stdout)
+				logger := libutils.NewOryaLoggerJSON(os.Stdout)
 				commonRouter = api.NewCommonRoutes(logger)
 			})
 			s.Then("CommonRoutes não deve ser nil", func(t *testing.T) {
@@ -32,7 +32,7 @@ func TestCommonRoutesSetup(t *testing.T) {
 			var err error
 			s.Given("um logger válido", func() {})
 			s.When("NewCommonRoutes é chamado", func() {
-				logger := libutils.NewDocpLoggerJSON(os.Stdout)
+				logger := libutils.NewOryaLoggerJSON(os.Stdout)
 				commonRouter = api.NewCommonRoutes(logger)
 			})
 			s.When("Setup é chamado", func() {

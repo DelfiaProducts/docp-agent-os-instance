@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 // MacosOperations is instance of macos operations
@@ -87,7 +87,7 @@ func (l *MacosOperations) StopService(serviceName string) error {
 	return nil
 }
 
-// InstallAgent execute install the agent docp
+// InstallAgent execute install the agent orya
 func (l *MacosOperations) InstallAgent(version string) error {
 	if err := l.program.Execute("bash", []string{fmt.Sprintf("VERSION=%s", version)}, "-c", utils.ChoiceInstallerOrUninstaller("macos", "agent", "install", version)); err != nil {
 		return err
@@ -95,18 +95,42 @@ func (l *MacosOperations) InstallAgent(version string) error {
 	return nil
 }
 
-// InstallUpdater execute install the updater docp
+// InstallUpdater execute install the updater orya
 func (l *MacosOperations) InstallUpdater(version string) error {
 	return nil
 }
 
-// UpdateAgent execute update the agent docp
+// UninstallUpdater execute uninstall the updater orya
+func (l *MacosOperations) UninstallUpdater(version string) error {
+	//TODO: add logic for uninstall updater macos
+	return nil
+}
+
+// UpdateAgent execute update the agent orya
 func (l *MacosOperations) UpdateAgent(version string) error {
 	//TODO: add logic for update agent macos
 	return nil
 }
 
-// UninstallAgent execute uninstall the agent docp
+// ExecuteUpdateVersion execute update the version
+func (l *MacosOperations) ExecuteUpdateVersion(version string) error {
+	//TODO: add logic for update version macos
+	return nil
+}
+
+// ExecuteRollbackVersion execute rollback the version
+func (l *MacosOperations) ExecuteRollbackVersion(version string) error {
+	//TODO: add logic for rollback version macos
+	return nil
+}
+
+// UninstallUpdater execute uninstall the updater agent
+func (l *MacosOperations) UpdaterUninstall(version string) error {
+	//TODO: add logic for uninstall updater agent macos
+	return nil
+}
+
+// UninstallAgent execute uninstall the agent orya
 func (l *MacosOperations) UninstallAgent(version string) error {
 	if err := l.program.Execute("bash", []string{}, "-c", utils.ChoiceInstallerOrUninstaller("macos", "agent", "uninstall", version)); err != nil {
 		return err

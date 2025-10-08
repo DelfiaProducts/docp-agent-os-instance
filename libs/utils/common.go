@@ -3,7 +3,7 @@ package utils
 import (
 	"runtime"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
 )
 
 // ChoiceNameService return name os service
@@ -11,9 +11,9 @@ func ChoiceNameService(serviceName string) string {
 	name := ""
 	switch serviceName {
 	case "agent":
-		name = "docp-agent.service"
+		name = "orya-agent.service"
 	case "manager":
-		name = "docp-manager.service"
+		name = "orya-manager.service"
 	case "datadog":
 		name = "datadog-agent.service"
 	}
@@ -25,9 +25,9 @@ func ChoiceNameServiceWindows(serviceName string) string {
 	name := ""
 	switch serviceName {
 	case "agent":
-		name = "DocpAgent"
+		name = "OryaAgent"
 	case "manager":
-		name = "DocpManager"
+		name = "OryaManager"
 	case "datadog":
 		name = "DatadogAgent"
 	}
@@ -39,9 +39,9 @@ func GetNameForProcess(serviceName string) string {
 	name := ""
 	switch serviceName {
 	case "agent":
-		name = "docp-agent/agent"
+		name = "orya-agent/agent"
 	case "manager":
-		name = "docp-agent/manager"
+		name = "orya-agent/manager"
 	case "datadog":
 		name = "datadog-agent"
 	}
@@ -53,9 +53,9 @@ func GetNameForLaunchd(serviceName string) string {
 	name := ""
 	switch serviceName {
 	case "agent":
-		name = "com.docp.agent"
+		name = "com.orya.agent"
 	case "manager":
-		name = "com.docp.manager"
+		name = "com.orya.manager"
 	case "datadog":
 		name = "com.datadoghq.agent"
 	}
@@ -85,7 +85,17 @@ func GetBucketUrl() string {
 
 // GetFileAgentVersionsName return the file name for agent versions
 func GetFileAgentVersionsName() string {
-	return pkg.DOCP_FILE_AGENT_VERSIONS_NAME
+	return pkg.ORYA_FILE_AGENT_VERSIONS_NAME
+}
+
+// GetDatadogAgentUrlWindows return the url for download datadog agent windows
+func GetDatadogAgentUrlWindows() string {
+	return pkg.URL_DATADOG_AGENT_WINDOWS
+}
+
+// GetDatadogGithubUrlVersions return the url for datadog github versions
+func GetDatadogGithubUrlVersions() string {
+	return pkg.URL_DATADOG_GITHUB_VERSIONS
 }
 
 // GetRuntimeArch return runtime arch
@@ -126,4 +136,19 @@ func ErrDatadogVersionNotFound() error {
 // ErrContextExpired return error the context expired
 func ErrContextExpired() error {
 	return pkg.ErrContextExpired
+}
+
+// ErrValidateUrlExists return error the url not found
+func ErrValidateUrlExists() error {
+	return pkg.ErrValidateUrlExists
+}
+
+// ErrFailedGetLatestVersionDatadog return error the failed get latest version datadog
+func ErrFailedGetLatestVersionDatadog() error {
+	return pkg.ErrFailedGetLatestVersionDatadog
+}
+
+// ErrDatadogVersionInvalidFormat return error the datadog version invalid format
+func ErrDatadogVersionInvalidFormat() error {
+	return pkg.ErrDatadogVersionInvalidFormat
 }

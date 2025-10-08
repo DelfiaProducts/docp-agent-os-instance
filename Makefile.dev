@@ -12,11 +12,11 @@ uninstall-datadog:
 	@echo "Agent datadog uninstalled"
 
 #install manager linux local
-#DOCP_API_KEY -> docp api key
-#DOCP_AGENT_TAGS -> docp agent tags
+#ORYA_API_KEY -> ORYA api key
+#ORYA_AGENT_TAGS -> ORYA agent tags
 install-manager-linux-local:
 	@echo "Install manager linux local"
-	@bash -c "./installers/install_manager_linux.sh --apiKey $(DOCP_API_KEY) --tags $(DOCP_AGENT_TAGS)"
+	@bash -c "./installers/install_manager_linux.sh --apiKey $(ORYA_API_KEY) --tags $(ORYA_AGENT_TAGS)"
 	@echo "Manager linux local installed"
 
 #uninstall manager linux local

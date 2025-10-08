@@ -3,8 +3,8 @@ package api
 import (
 	"net/http"
 
-	controllers "github.com/DelfiaProducts/docp-agent-os-instance/libs/controllers"
-	libinterfaces "github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
+	controllers "github.com/OryaHub/agent-os-instance/libs/controllers"
+	libinterfaces "github.com/OryaHub/agent-os-instance/libs/interfaces"
 	"github.com/gorilla/mux"
 )
 

@@ -8,13 +8,13 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/pkg"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 var (
-	DEFAULT_LIBRARY_FILE_PATH            = "/opt/docp-agent/shared"
+	DEFAULT_LIBRARY_FILE_PATH            = "/opt/orya-agent/shared"
 	DATADOG_PHP_FILE_NAME                = "datadog-setup.php"
 	DATADOG_JAVA_FILE_NAME               = "dd-java-agent.jar"
 	DEFAULT_VERSION_DOT_NET_TRACER       = "3.7.0"
@@ -32,7 +32,7 @@ type DatadogAPMTracer struct {
 
 // NewDatadogAPMTracer return new instance of datadog apm tracer
 func NewDatadogAPMTracer() *DatadogAPMTracer {
-	logger := utils.NewDocpLoggerJSON(os.Stdout)
+	logger := utils.NewOryaLoggerJSON(os.Stdout)
 	return &DatadogAPMTracer{
 		logger:     logger,
 		program:    pkg.NewExecProgram(),
@@ -56,7 +56,7 @@ func (d *DatadogAPMTracer) formatPathTracer(pathTracer, file string) (string, er
 		} else {
 			return "", errors.New("path tracer is not directory")
 		}
-	} else { // not exist path tracer, setting /opt/docp-agent/shared
+	} else { // not exist path tracer, setting /opt/orya-agent/shared
 		if err := d.fileSystem.VerifyDirExistAndCreate(DEFAULT_LIBRARY_FILE_PATH); err != nil {
 			return "", err
 		}
@@ -84,12 +84,12 @@ func (d *DatadogAPMTracer) prepareDotNetNameInstaller(version string) (string, s
 
 // installLibraryJava install java library
 func (d *DatadogAPMTracer) installLibraryJava(languageName, pathTracer string) error {
-	d.logger.Debug("install library java", "trace", "docp-agent-os-instance.datadog_apm_tracer.installLibraryJava", "language", languageName, "pathTracer", pathTracer)
+	d.logger.Debug("install library java", "trace", "agent-os-instance.datadog_apm_tracer.installLibraryJava", "language", languageName, "pathTracer", pathTracer)
 	if err := d.verifyUtilityExist("curl"); err != nil {
 		return err
 	}
 	pathFormated, err := d.formatPathTracer(pathTracer, DATADOG_JAVA_FILE_NAME)
-	d.logger.Debug("install library java", "trace", "docp-agent-os-instance.datadog_apm_tracer.installLibraryJava", "pathFormated", pathFormated)
+	d.logger.Debug("install library java", "trace", "agent-os-instance.datadog_apm_tracer.installLibraryJava", "pathFormated", pathFormated)
 	if err != nil {
 		return err
 	}
@@ -97,7 +97,7 @@ func (d *DatadogAPMTracer) installLibraryJava(languageName, pathTracer string) e
 	if err != nil {
 		return err
 	}
-	d.logger.Debug("install library java", "trace", "docp-agent-os-instance.datadog_apm_tracer.installLibraryJava", "language", languageName, "output", output)
+	d.logger.Debug("install library java", "trace", "agent-os-instance.datadog_apm_tracer.installLibraryJava", "language", languageName, "output", output)
 	return nil
 }
 
@@ -137,7 +137,7 @@ func (d *DatadogAPMTracer) verifyAndDownloadDotNetLibrary(pathTracer, version st
 
 // installLibraryPhpAll install php with apm all
 func (d *DatadogAPMTracer) installLibraryPhpAll(languageName, pathTracer string) error {
-	d.logger.Debug("install library php all", "trace", "docp-agent-os-instance.datadog_apm_tracer.installLibraryPhpAll", "language", languageName)
+	d.logger.Debug("install library php all", "trace", "agent-os-instance.datadog_apm_tracer.installLibraryPhpAll", "language", languageName)
 	if err := d.verifyAndDownloadPhpLibrary(pathTracer); err != nil {
 		return err
 	}
@@ -149,13 +149,13 @@ func (d *DatadogAPMTracer) installLibraryPhpAll(languageName, pathTracer string)
 	if err != nil {
 		return err
 	}
-	d.logger.Debug("install library php all", "trace", "docp-agent-os-instance.datadog_apm_tracer.installLibraryPhpAll", "language", languageName, "output", output)
+	d.logger.Debug("install library php all", "trace", "agent-os-instance.datadog_apm_tracer.installLibraryPhpAll", "language", languageName, "output", output)
 	return nil
 }
 
 // installLibraryPhpApmAsm install php with apm and asm
 func (d *DatadogAPMTracer) installLibraryPhpApmAsm(languageName, pathTracer string) error {
-	d.logger.Debug("install library php apm asm", "trace", "docp-agent-os-instance.datadog_apm_tracer.installLibraryPhpApmAsm", "language", languageName, "pathTracer", pathTracer)
+	d.logger.Debug("install library php apm asm", "trace", "agent-os-instance.datadog_apm_tracer.installLibraryPhpApmAsm", "language", languageName, "pathTracer", pathTracer)
 	if err := d.verifyAndDownloadPhpLibrary(pathTracer); err != nil {
 		return err
 	}
@@ -167,13 +167,13 @@ func (d *DatadogAPMTracer) installLibraryPhpApmAsm(languageName, pathTracer stri
 	if err != nil {
 		return err
 	}
-	d.logger.Debug("install library php apm asm", "trace", "docp-agent-os-instance.datadog_apm_tracer.installLibraryPhpApmAsm", "language", languageName, "pathTracer", pathTracer, "output", output)
+	d.logger.Debug("install library php apm asm", "trace", "agent-os-instance.datadog_apm_tracer.installLibraryPhpApmAsm", "language", languageName, "pathTracer", pathTracer, "output", output)
 	return nil
 }
 
 // installLibraryPhpApmProfiling install php with apm and profiling
 func (d *DatadogAPMTracer) installLibraryPhpApmProfiling(languageName, pathTracer string) error {
-	d.logger.Debug("install library php apm profiling", "trace", "docp-agent-os-instance.datadog_apm_tracer.installLibraryPhpApmProfiling", "language", languageName, "pathTracer", pathTracer)
+	d.logger.Debug("install library php apm profiling", "trace", "agent-os-instance.datadog_apm_tracer.installLibraryPhpApmProfiling", "language", languageName, "pathTracer", pathTracer)
 	if err := d.verifyAndDownloadPhpLibrary(pathTracer); err != nil {
 		return err
 	}
@@ -185,13 +185,13 @@ func (d *DatadogAPMTracer) installLibraryPhpApmProfiling(languageName, pathTrace
 	if err != nil {
 		return err
 	}
-	d.logger.Debug("install library php apm profiling", "trace", "docp-agent-os-instance.datadog_apm_tracer.installLibraryPhpApmProfiling", "language", languageName, "output", output)
+	d.logger.Debug("install library php apm profiling", "trace", "agent-os-instance.datadog_apm_tracer.installLibraryPhpApmProfiling", "language", languageName, "output", output)
 	return nil
 }
 
 // installLibraryPhpApmOnly install php with apm only
 func (d *DatadogAPMTracer) installLibraryPhpApmOnly(languageName, pathTracer string) error {
-	d.logger.Debug("install library php apm only", "trace", "docp-agent-os-instance.datadog_apm_tracer.installLibraryPhpApmOnly", "language", languageName, "pathTracer", pathTracer)
+	d.logger.Debug("install library php apm only", "trace", "agent-os-instance.datadog_apm_tracer.installLibraryPhpApmOnly", "language", languageName, "pathTracer", pathTracer)
 	if err := d.verifyAndDownloadPhpLibrary(pathTracer); err != nil {
 		return err
 	}
@@ -203,13 +203,13 @@ func (d *DatadogAPMTracer) installLibraryPhpApmOnly(languageName, pathTracer str
 	if err != nil {
 		return err
 	}
-	d.logger.Debug("install library php apm only", "trace", "docp-agent-os-instance.datadog_apm_tracer.installLibraryPhpApmOnly", "language", languageName, "output", output)
+	d.logger.Debug("install library php apm only", "trace", "agent-os-instance.datadog_apm_tracer.installLibraryPhpApmOnly", "language", languageName, "output", output)
 	return nil
 }
 
 // installLibraryNetCore install dotnet core
 func (d *DatadogAPMTracer) installLibraryNetCore(languageName, pathTracer, version string) error {
-	d.logger.Debug("install library net core", "trace", "docp-agent-os-instance.datadog_apm_tracer.installLibraryNetCore", "language", languageName, "pathTracer", pathTracer, "version", version)
+	d.logger.Debug("install library net core", "trace", "agent-os-instance.datadog_apm_tracer.installLibraryNetCore", "language", languageName, "pathTracer", pathTracer, "version", version)
 	fmt.Printf("INSTALL DATADOG LIBRARY LANGUAGE: [%s]\n", languageName)
 	if err := d.verifyUtilityExist("dpkg"); err != nil {
 		return err
@@ -228,19 +228,19 @@ func (d *DatadogAPMTracer) installLibraryNetCore(languageName, pathTracer, versi
 		return err
 	}
 
-	d.logger.Debug("install library net core", "trace", "docp-agent-os-instance.datadog_apm_tracer.installLibraryNetCore", "language", languageName, "outputDpkg", outputDpkg)
+	d.logger.Debug("install library net core", "trace", "agent-os-instance.datadog_apm_tracer.installLibraryNetCore", "language", languageName, "outputDpkg", outputDpkg)
 	output, err := d.program.ExecuteWithOutput("sudo", []string{}, "bash", "-c", "/opt/datadog/createLogPath.sh")
 	if err != nil {
 		return err
 	}
-	d.logger.Debug("install library net core", "trace", "docp-agent-os-instance.datadog_apm_tracer.installLibraryNetCore", "language", languageName, "output", output)
+	d.logger.Debug("install library net core", "trace", "agent-os-instance.datadog_apm_tracer.installLibraryNetCore", "language", languageName, "output", output)
 
 	return nil
 }
 
 // InstallLibrary execute install the library of language
 func (d *DatadogAPMTracer) InstallLibrary(languageName, pathTracer, version string) error {
-	d.logger.Debug("install library", "trace", "docp-agent-os-instance.datadog_apm_tracer.InstallLibrary", "language", languageName, "pathTracer", pathTracer, "version", version)
+	d.logger.Debug("install library", "trace", "agent-os-instance.datadog_apm_tracer.InstallLibrary", "language", languageName, "pathTracer", pathTracer, "version", version)
 	switch languageName {
 	case "java":
 		return d.installLibraryJava(languageName, pathTracer)

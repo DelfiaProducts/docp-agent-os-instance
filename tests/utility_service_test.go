@@ -4,11 +4,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/dto"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/interfaces"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/services"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/utils"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/libs/dto"
+	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/services"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 func TestNewUtilityService(t *testing.T) {
@@ -17,7 +17,7 @@ func TestNewUtilityService(t *testing.T) {
 			var logger interfaces.ILogger
 			var utilityService *services.UtilityService
 			s.Given("que eu tenho um logger", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 			})
 			s.When("eu instancio o serviço de utilitário", func() {
 				utilityService = services.NewUtilityService(logger)
@@ -36,7 +36,7 @@ func TestUtilityServiceSetup(t *testing.T) {
 			var logger interfaces.ILogger
 			var utilityService *services.UtilityService
 			s.Given("eu crio o utility service", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				utilityService = services.NewUtilityService(logger)
 			})
 			s.When("eu configuro o utility service", func() {
@@ -57,7 +57,7 @@ func TestUtilityServiceFetchAgentVersions(t *testing.T) {
 			var utilityService *services.UtilityService
 			var versions dto.AgentVersions
 			s.Given("eu crio o utility service", func() {
-				logger = utils.NewDocpLoggerText(os.Stdout)
+				logger = utils.NewOryaLoggerText(os.Stdout)
 				utilityService = services.NewUtilityService(logger)
 			})
 			s.When("eu configuro o utility service", func() {
@@ -72,6 +72,32 @@ func TestUtilityServiceFetchAgentVersions(t *testing.T) {
 				bdd.AssertIsNotNil(t, versions, "versões do agente devem ser diferentes de nil")
 			})
 			bdd.Printf("Versões do agente: %+v\n", versions)
+		})
+	})
+}
+
+func TestUtilityServiceGetDatadogLastVersionFromGithub(t *testing.T) {
+	bdd.Feature(t, "Buscar última versão do Datadog do GitHub", func(t *testing.T, scenario func(description string, steps func(s *bdd.Scenario))) {
+		scenario("busca bem-sucedida", func(s *bdd.Scenario) {
+			var err error
+			var logger interfaces.ILogger
+			var utilityService *services.UtilityService
+			var version string
+			s.Given("eu crio o utility service", func() {
+				logger = utils.NewOryaLoggerText(os.Stdout)
+				utilityService = services.NewUtilityService(logger)
+			})
+			s.When("eu configuro o utility service", func() {
+				err = utilityService.Setup()
+				bdd.AssertNoError(t, err, "configuração do serviço deve ser executada sem erro")
+			})
+			s.When("eu busco a última versão do Datadog", func() {
+				version, err = utilityService.GetDatadogLastVersionFromGithub()
+			})
+			s.Then("a busca deve ser bem-sucedida", func(t *testing.T) {
+				bdd.AssertNoError(t, err, "busca da última versão do Datadog deve ser executada sem erro")
+			})
+			bdd.Printf("Última versão do Datadog: %s\n", version)
 		})
 	})
 }

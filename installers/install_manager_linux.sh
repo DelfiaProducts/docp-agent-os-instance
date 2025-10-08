@@ -4,12 +4,12 @@ sudo_cmd=
 
 KERNEL_NAME=$(uname -s)
 ARCHITECTURE=$(uname -m)
-FILE_INDEX_URL="https://docp-agent.s3.us-east-1.amazonaws.com/index_os_instance.json"
-BINARY_URL="https://github.com/DelfiaProducts/docp-agent-os-instance/releases/download"
+FILE_INDEX_URL="https://orya-agent.s3.us-east-1.amazonaws.com/index_os_instance.json"
+BINARY_URL="https://github.com/OryaHub/agent-os-instance/releases/download"
 VERSION="latest"
-MANAGER_IS_RUNNING=$($sudo_cmd systemctl is-active docp-manager)
-DOCP_FILES_PATH=/opt/docp-agent
-USER_GROUP_NAME=docp-agent
+MANAGER_IS_RUNNING=$($sudo_cmd systemctl is-active orya-manager)
+ORYA_FILES_PATH=/opt/orya-agent
+USER_GROUP_NAME=orya-agent
 
 # Root user detection
 if [ "$UID" == "0" ]; then
@@ -109,12 +109,12 @@ function add_user_to_group(){
 
 # add perm sudoers file
 function add_perm_sudoers_file(){
-  $sudo_cmd echo 'docp-agent ALL=(ALL) NOPASSWD: ALL' | sudo tee -a /etc/sudoers > /dev/null 2>&1
+  $sudo_cmd echo 'orya-agent ALL=(ALL) NOPASSWD: ALL' | sudo tee -a /etc/sudoers > /dev/null 2>&1
 }
 
 #add permission workdir
 function add_perm_work_dir(){
-  $sudo_cmd chown -R $USER_GROUP_NAME:$USER_GROUP_NAME /opt/docp-agent/
+  $sudo_cmd chown -R $USER_GROUP_NAME:$USER_GROUP_NAME /opt/orya-agent/
 }
 
 #setup configure e verify machine
@@ -126,25 +126,25 @@ function setup(){
   add_perm_sudoers_file
 }
 
-#create directories for docp agent
+#create directories for orya agent
 function create_workdir(){
-  [[ ! -d $DOCP_FILES_PATH ]] && $sudo_cmd mkdir $DOCP_FILES_PATH 
-  [[ ! -d $DOCP_FILES_PATH/bin ]] && $sudo_cmd mkdir $DOCP_FILES_PATH/bin 
-  [[ ! -d $DOCP_FILES_PATH/bin/current ]] && $sudo_cmd mkdir $DOCP_FILES_PATH/bin/current 
-  [[ ! -d $DOCP_FILES_PATH/bin/releases ]] && $sudo_cmd mkdir $DOCP_FILES_PATH/bin/releases 
-  [[ ! -d $DOCP_FILES_PATH/bin/releases/$VERSION ]] && $sudo_cmd mkdir $DOCP_FILES_PATH/bin/releases/$VERSION 
-  [[ ! -d $DOCP_FILES_PATH/logs ]] && $sudo_cmd mkdir $DOCP_FILES_PATH/logs 
-  [[ ! -d $DOCP_FILES_PATH/state ]] && $sudo_cmd mkdir $DOCP_FILES_PATH/state 
-  [[ ! -f $DOCP_FILES_PATH/environments ]] && $sudo_cmd touch $DOCP_FILES_PATH/environments 
-  [[ ! -f $DOCP_FILES_PATH/state/current ]] && $sudo_cmd touch $DOCP_FILES_PATH/state/current 
-  [[ ! -f $DOCP_FILES_PATH/state/received ]] && $sudo_cmd touch $DOCP_FILES_PATH/state/received 
+  [[ ! -d $ORYA_FILES_PATH ]] && $sudo_cmd mkdir $ORYA_FILES_PATH 
+  [[ ! -d $ORYA_FILES_PATH/bin ]] && $sudo_cmd mkdir $ORYA_FILES_PATH/bin 
+  [[ ! -d $ORYA_FILES_PATH/bin/current ]] && $sudo_cmd mkdir $ORYA_FILES_PATH/bin/current 
+  [[ ! -d $ORYA_FILES_PATH/bin/releases ]] && $sudo_cmd mkdir $ORYA_FILES_PATH/bin/releases 
+  [[ ! -d $ORYA_FILES_PATH/bin/releases/$VERSION ]] && $sudo_cmd mkdir $ORYA_FILES_PATH/bin/releases/$VERSION 
+  [[ ! -d $ORYA_FILES_PATH/logs ]] && $sudo_cmd mkdir $ORYA_FILES_PATH/logs 
+  [[ ! -d $ORYA_FILES_PATH/state ]] && $sudo_cmd mkdir $ORYA_FILES_PATH/state 
+  [[ ! -f $ORYA_FILES_PATH/environments ]] && $sudo_cmd touch $ORYA_FILES_PATH/environments 
+  [[ ! -f $ORYA_FILES_PATH/state/current ]] && $sudo_cmd touch $ORYA_FILES_PATH/state/current 
+  [[ ! -f $ORYA_FILES_PATH/state/received ]] && $sudo_cmd touch $ORYA_FILES_PATH/state/received 
 }
 
 #save apiKey and tags in directory
 function save_api_key_and_tags(){
   api_key=$1
   tgs=$2
-  printf "DOCP_API_KEY=$api_key\nDOCP_TAGS=$tgs\nDOCP_DOMAIN=https://msapi.sandbox.docphq.tech\nDOCP_AGENT_PORT=12012\n" | sudo tee $DOCP_FILES_PATH/environments > /dev/null
+  printf "ORYA_API_KEY=$api_key\nORYA_TAGS=$tgs\nORYA_DOMAIN=https://msapi.sandbox.oryahq.tech\nORYA_AGENT_PORT=12012\n" | sudo tee $ORYA_FILES_PATH/environments > /dev/null
 }
 
 # Corrige a função resolve_version para extrair corretamente o campo "latest" do JSON
@@ -163,35 +163,35 @@ function resolve_version() {
 
 #get binary arm64
 function get_binary_arch64(){
-  sudo curl -s -L -o $DOCP_FILES_PATH/bin/releases/$VERSION/manager "$BINARY_URL/$VERSION/manager-linux-arm64"
-  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/manager
+  sudo curl -s -L -o $ORYA_FILES_PATH/bin/releases/$VERSION/manager "$BINARY_URL/$VERSION/manager-linux-arm64"
+  sudo chmod +x $ORYA_FILES_PATH/bin/releases/$VERSION/manager
 }
 #get binary amd64
 function get_binary_amd64(){
-  sudo curl -s -L -o $DOCP_FILES_PATH/bin/releases/$VERSION/manager "$BINARY_URL/$VERSION/manager-linux-amd64"
-  sudo chmod +x $DOCP_FILES_PATH/bin/releases/$VERSION/manager
+  sudo curl -s -L -o $ORYA_FILES_PATH/bin/releases/$VERSION/manager "$BINARY_URL/$VERSION/manager-linux-amd64"
+  sudo chmod +x $ORYA_FILES_PATH/bin/releases/$VERSION/manager
 }
 
 # create symbolic link
 function create_link_simbolic(){
-  sudo ln -sfn $DOCP_FILES_PATH/bin/releases/$VERSION/manager $DOCP_FILES_PATH/bin/current/manager
+  sudo ln -sfn $ORYA_FILES_PATH/bin/releases/$VERSION/manager $ORYA_FILES_PATH/bin/current/manager
 }
 
 #set content service
 function set_content_service() {
-  printf "[Unit]\nDescription=Docp Manager\nAfter=network.target\n\n[Service]\nType=simple\nPIDFile=/opt/docp-agent/run/manager.pid\nUser=docp-agent\nRestart=on-failure\nEnvironmentFile=-/opt/docp-agent/environments\nRuntimeDirectory=docp\nExecStart=/opt/docp-agent/bin/current/manager run -p /opt/docp-agent/run/manager.pid\nStartLimitInterval=10\nStartLimitBurst=5\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target\n" | sudo tee /etc/systemd/system/docp-manager.service > /dev/null
+  printf "[Unit]\nDescription=Orya Manager\nAfter=network.target\n\n[Service]\nType=simple\nPIDFile=/opt/orya-agent/run/manager.pid\nUser=orya-agent\nRestart=on-failure\nEnvironmentFile=-/opt/orya-agent/environments\nRuntimeDirectory=orya\nExecStart=/opt/orya-agent/bin/current/manager run -p /opt/orya-agent/run/manager.pid\nStartLimitInterval=10\nStartLimitBurst=5\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target\n" | sudo tee /etc/systemd/system/orya-manager.service > /dev/null
 }
 
 #prepare systemd
 function prepare_systemd() {
   sudo systemctl daemon-reload
-  sudo systemctl start docp-manager.service
-  sudo systemctl enable docp-manager.service
+  sudo systemctl start orya-manager.service
+  sudo systemctl enable orya-manager.service
 }
 
 #create config yml
 function create_config_yml(){
-  $sudo_cmd touch $DOCP_FILES_PATH/config.yml
+  $sudo_cmd touch $ORYA_FILES_PATH/config.yml
 }
 
 #process tags
@@ -220,8 +220,8 @@ function add_content_config_yml(){
   tags=$(process_tags "$2")
   version="$3"
   noGroupAssociation="$4"
-$sudo_cmd tee $DOCP_FILES_PATH/config.yml > /dev/null <<EOF  
-# Docp file for agent configuration that contains
+$sudo_cmd tee $ORYA_FILES_PATH/config.yml > /dev/null <<EOF  
+# Orya file for agent configuration that contains
 # information used to perform configuration and service.
 
 no_group_association: $noGroupAssociation

@@ -4,8 +4,8 @@ import (
 	"log"
 	"testing"
 
-	"github.com/DelfiaProducts/docp-agent-os-instance/builders"
-	"github.com/DelfiaProducts/docp-agent-os-instance/libs/bdd"
+	"github.com/OryaHub/agent-os-instance/builders"
+	"github.com/OryaHub/agent-os-instance/libs/bdd"
 )
 
 func TestAgentBuilder(t *testing.T) {
