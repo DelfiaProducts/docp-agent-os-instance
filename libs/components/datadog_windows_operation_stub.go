@@ -3,7 +3,6 @@
 package components
 
 import (
-	"github.com/OryaHub/agent-os-instance/libs/dto"
 	"github.com/OryaHub/agent-os-instance/libs/interfaces"
 )
 
@@ -23,7 +22,7 @@ func (d *DatadogWindowsOperation) InstallAgent(ddSite, ddApiKey, version string)
 }
 
 // InstallAgentApmSingleStep execute install the agent in linux with apm tracer on mode single step
-func (d *DatadogWindowsOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, version string, datadogEnvVars []dto.DatadogEnvVars) error {
+func (d *DatadogWindowsOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, ddApmInstrumentationLibraries string) error {
 	return nil
 }
 
