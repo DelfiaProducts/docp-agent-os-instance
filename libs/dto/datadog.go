@@ -14,12 +14,13 @@ type DatadogEnvVars struct {
 
 // DatadogInstallDTO is struct for payload the install datadog
 type DatadogInstallDTO struct {
-	DDSite    string           `json:"dd_site"`
-	DDApiKey  string           `json:"dd_api_key"`
-	Mode      string           `json:"mode"`
-	Version   string           `json:"version"`
-	Component string           `json:"component"`
-	EnvVars   []DatadogEnvVars `json:"env_vars,omitempty"`
+	DDSite                        string           `json:"dd_site"`
+	DDApiKey                      string           `json:"dd_api_key"`
+	Mode                          string           `json:"mode"`
+	Version                       string           `json:"version"`
+	Component                     string           `json:"component"`
+	DDApmInstrumentationLibraries string           `json:"dd_apm_instrumentation_libraries"`
+	EnvVars                       []DatadogEnvVars `json:"env_vars,omitempty"`
 }
 
 // DatadogUpdateVersionDTO is struct for payload the update version datadog
