@@ -640,8 +640,8 @@ func (l *ManagerAdapter) OryaAgentApiInstallDatadog(ddApiKey, ddSite, version st
 }
 
 // OryaAgentApiInstallDatadog execute call to api orya for install datadog agent
-func (l *ManagerAdapter) OryaAgentApiInstallDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries string) ([]byte, error) {
-	l.logger.Debug("execute send request for install datadog agent with apm single step", "trace", "agent-os-instance.manager_adapter.OryaAgentApiInstallDatadogWithApmSingleStep", "ddApiKey", ddApiKey, "ddSite", ddSite, "ddEnv", ddEnv, "ddApmInstrumentationEnabled", ddApmInstrumentationEnabled, "ddApmInstrumentationLibraries", ddApmInstrumentationLibraries)
+func (l *ManagerAdapter) OryaAgentApiInstallDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationLibraries string) ([]byte, error) {
+	l.logger.Debug("execute send request for install datadog agent with apm single step", "trace", "agent-os-instance.manager_adapter.OryaAgentApiInstallDatadogWithApmSingleStep", "ddApiKey", ddApiKey, "ddSite", ddSite, "ddApmInstrumentationLibraries", ddApmInstrumentationLibraries)
 
 	transaction := utils.NewTransactionStatus()
 	ctx := context.WithValue(context.Background(), dto.ContextTransactionStatus, transaction)
@@ -650,25 +650,11 @@ func (l *ManagerAdapter) OryaAgentApiInstallDatadogWithApmSingleStep(ddApiKey, d
 	time.Sleep(l.delay)
 
 	datadogDto := dto.DatadogInstallDTO{
-		DDSite:    ddSite,
-		DDApiKey:  ddApiKey,
-		Component: "tracer",
-		Version:   version,
-		Mode:      "single_step",
-		EnvVars: []dto.DatadogEnvVars{
-			{
-				Name:  "DD_APM_INSTRUMENTATION_ENABLED",
-				Value: ddApmInstrumentationEnabled,
-			},
-			{
-				Name:  "DD_APM_INSTRUMENTATION_LIBRARIES",
-				Value: ddApmInstrumentationLibraries,
-			},
-			{
-				Name:  "DD_ENV",
-				Value: ddEnv,
-			},
-		},
+		DDSite:                        ddSite,
+		DDApiKey:                      ddApiKey,
+		Component:                     "tracer",
+		Mode:                          "single_step",
+		DDApmInstrumentationLibraries: ddApmInstrumentationLibraries,
 	}
 	bDatadogDto, err := l.marshaller(&datadogDto)
 	if err != nil {
@@ -1009,13 +995,16 @@ func (l *ManagerAdapter) prepareTracerDatadogSingleStepAction(stateCheckSignal d
 	var action dto.StateAction
 	var envVars []dto.StateActionEnvs
 	if stateCheckSignal.TypeSignal == "update" {
-		if len(stateCheckSignal.Agents.DatadogTracerSingleStep.Version) > 0 && len(stateCheckSignal.Agents.DatadogTracerLibrary.Version) == 0 {
+		if len(stateCheckSignal.Agents.DatadogTracerSingleStep.DDApmInstrumentationLibraries) > 0 && len(stateCheckSignal.Agents.DatadogTracerLibrary.Version) == 0 {
 			tracerSingleStep := stateCheckSignal.Agents.DatadogTracerSingleStep
 			var version string
 			var files []dto.StateActionFiles
 			var componetEnvVars []dto.StateActionEnvs
 
-			componetEnvVars = l.extractComponentEnvVarsApm(tracerSingleStep.InstallWithEnvVars)
+			componetEnvVars = append(componetEnvVars, dto.StateActionEnvs{
+				Name:  "DD_APM_INSTRUMENTATION_LIBRARIES",
+				Value: tracerSingleStep.DDApmInstrumentationLibraries,
+			})
 
 			if len(stateCheckSignal.Agents.DatadogAgent.Version) > 0 {
 				datadogAgent := stateCheckSignal.Agents.DatadogAgent
@@ -1057,7 +1046,7 @@ func (l *ManagerAdapter) prepareTracerDatadogLibraryAction(stateCheckSignal dto.
 	var action dto.StateAction
 	var envVars []dto.StateActionEnvs
 	if stateCheckSignal.TypeSignal == "update" {
-		if len(stateCheckSignal.Agents.DatadogTracerLibrary.Version) > 0 && len(stateCheckSignal.Agents.DatadogTracerSingleStep.Version) == 0 {
+		if len(stateCheckSignal.Agents.DatadogTracerLibrary.Version) > 0 && len(stateCheckSignal.Agents.DatadogTracerSingleStep.DDApmInstrumentationLibraries) == 0 {
 			tracerLibrary := stateCheckSignal.Agents.DatadogTracerLibrary
 			var files []dto.StateActionFiles
 			var componetEnvVars []dto.StateActionEnvs
