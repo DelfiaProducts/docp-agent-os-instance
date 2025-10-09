@@ -778,29 +778,19 @@ func (l *ManagerOperator) extractDDApiKeyAndDDSiteFromEnvs(envs []dto.StateActio
 }
 
 // extractDDApiKeyAndDDSiteFromEnvs return envs for install datadog agent
-func (l *ManagerOperator) extractApmSingleStepEnvs(envs []dto.StateActionEnvs) (string, string, string, error) {
+func (l *ManagerOperator) extractApmSingleStepEnvs(envs []dto.StateActionEnvs) (string, error) {
 	l.logger.Debug("extract envs the datadog", "trace", "agent-os-instance.manager_operator.extractDDApiKeyAndDDSiteFromEnvs", "envs", envs)
-	var ddApmInstrumentationEnabled string
-	var ddEnv string
 	var ddApmInstrumentationLibraries string
 	for _, env := range envs {
-		if env.Name == "DD_APM_INSTRUMENTATION_ENABLED" {
-			ddApmInstrumentationEnabled = env.Value
-		}
-		if env.Name == "DD_ENV" {
-			ddEnv = env.Value
-		}
 		if env.Name == "DD_APM_INSTRUMENTATION_LIBRARIES" {
 			ddApmInstrumentationLibraries = env.Value
 		}
 	}
-	if len(ddApmInstrumentationEnabled) == 0 {
-		return "", "", "", errors.New("invalid dd apm instrumentation enabled")
-	}
+
 	if len(ddApmInstrumentationLibraries) == 0 {
-		return "", "", "", errors.New("invalid dd apm instrumentation libraries")
+		return "", errors.New("invalid dd apm instrumentation libraries")
 	}
-	return ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries, nil
+	return ddApmInstrumentationLibraries, nil
 }
 
 // extractApmTracingLibrayEnvs return envs for install datadog agent
@@ -922,8 +912,8 @@ loopinstalldatadog:
 	}
 }
 
-func (l *ManagerOperator) handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries string) {
-	l.logger.Debug("handle install datadog agent with APM single step", "trace", "agent-os-instance.manager_operator.handlerInstallDatadogWithApmSingleStep", "ddApiKey", ddApiKey, "ddSite", ddSite, "ddApmInstrumentationEnabled", ddApmInstrumentationEnabled, "ddEnv", ddEnv, "ddApmInstrumentationLibraries", ddApmInstrumentationLibraries)
+func (l *ManagerOperator) handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationLibraries string) {
+	l.logger.Debug("handle install datadog agent with APM single step", "trace", "agent-os-instance.manager_operator.handlerInstallDatadogWithApmSingleStep", "ddApiKey", ddApiKey, "ddSite", ddSite, "ddApmInstrumentationLibraries", ddApmInstrumentationLibraries)
 	defer l.wg.Done()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
@@ -954,7 +944,7 @@ func (l *ManagerOperator) handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSit
 
 			if !alreadyInstalled {
 				result, err := l.adapter.OryaAgentApiInstallDatadogWithApmSingleStep(
-					ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries,
+					ddApiKey, ddSite, ddApmInstrumentationLibraries,
 				)
 				if err != nil {
 					l.logger.Error("Failed to install Datadog agent with APM single step", "error", err)
@@ -974,8 +964,8 @@ func (l *ManagerOperator) handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSit
 
 // installAgentDatadog execute call to api orya agent
 // to install datadog agent
-func (l *ManagerOperator) installAgentDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries string) {
-	l.logger.Debug("install agent datadog with apm single step", "trace", "agent-os-instance.manager_operator.installAgentDatadogWithApmSingleStep", "ddApiKey", ddApiKey, "ddSite", ddSite, "ddApmInstrumentationEnabled", ddApmInstrumentationEnabled, "ddEnv", ddEnv, "ddApmInstrumentationLibraries", ddApmInstrumentationLibraries)
+func (l *ManagerOperator) installAgentDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationLibraries string) {
+	l.logger.Debug("install agent datadog with apm single step", "trace", "agent-os-instance.manager_operator.installAgentDatadogWithApmSingleStep", "ddApiKey", ddApiKey, "ddSite", ddSite, "ddApmInstrumentationLibraries", ddApmInstrumentationLibraries)
 	defer l.wg.Done()
 	status, err := l.adapter.Status("datadog")
 	if err != nil {
@@ -989,7 +979,7 @@ func (l *ManagerOperator) installAgentDatadogWithApmSingleStep(ddApiKey, ddSite,
 	}
 	l.logger.Debug("install agent datadog with apm single step", "trace", "agent-os-instance.manager_operator.installAgentDatadogWithApmSingleStep", "oryaStatus", status, "alreadyTracer", alreadyTracer)
 	if status != "active" {
-		result, err := l.adapter.OryaAgentApiInstallDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
+		result, err := l.adapter.OryaAgentApiInstallDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationLibraries)
 		if err != nil {
 			l.chanErrors <- dto.CommonChanErrors{From: "installAgentDatadogWithApmSingleStep", Priority: dto.ErrLevelMedium, Err: err}
 			return
@@ -998,7 +988,7 @@ func (l *ManagerOperator) installAgentDatadogWithApmSingleStep(ddApiKey, ddSite,
 		return
 	} else if status == "active" && !alreadyTracer {
 		l.wg.Add(1)
-		go l.handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
+		go l.handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationLibraries)
 		return
 	}
 }
@@ -1304,21 +1294,21 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 			if act.Component == "tracer" {
 				if act.Mode == "single_step" {
 					if datadogAlreadyInstalled {
-						ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries, err := l.extractApmSingleStepEnvs(act.ComponentEnvs)
+						ddApmInstrumentationLibraries, err := l.extractApmSingleStepEnvs(act.ComponentEnvs)
 						if err != nil {
 							l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
 							return
 						}
 						l.wg.Add(1)
-						go l.handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
+						go l.handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationLibraries)
 					} else {
 						l.wg.Add(1)
-						ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries, err := l.extractApmSingleStepEnvs(act.ComponentEnvs)
+						ddApmInstrumentationLibraries, err := l.extractApmSingleStepEnvs(act.ComponentEnvs)
 						if err != nil {
 							l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
 							return
 						}
-						go l.installAgentDatadogWithApmSingleStep(ddApiKey, ddSite, version, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries)
+						go l.installAgentDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationLibraries)
 					}
 				} else if act.Mode == "tracing_library" {
 					if datadogAlreadyInstalled {
