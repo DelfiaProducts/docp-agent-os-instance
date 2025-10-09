@@ -76,7 +76,7 @@ func (d *DatadogHttpController) InstallAgent(w http.ResponseWriter, r *http.Requ
 	if datadogInstallDto.Component == "tracer" {
 		if datadogInstallDto.Mode == "single_step" {
 			d.logger.Debug("install agent", "trace", "agent-os-instance.datadog_http_controller.InstallAgent", "datadogInstallDto - single_step", datadogInstallDto)
-			go d.adapter.InstallAgentApmSingleStep(datadogInstallDto.DDSite, datadogInstallDto.DDApiKey, datadogInstallDto.Version, datadogInstallDto.EnvVars)
+			go d.adapter.InstallAgentApmSingleStep(datadogInstallDto.DDSite, datadogInstallDto.DDApiKey, datadogInstallDto.DDApmInstrumentationLibraries)
 		}
 		if datadogInstallDto.Mode == "tracing_library" {
 			d.logger.Debug("install agent", "trace", "agent-os-instance.datadog_http_controller.InstallAgent", "datadogInstallDto - tracing_library", datadogInstallDto)
