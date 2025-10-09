@@ -173,3 +173,16 @@ func HasNonIntegerOrLetterVersionParts(version string) bool {
 	}
 	return false
 }
+
+// GetApmInstrumentationEnabled returns the APM instrumentation setting based on the OS type.
+func GetApmInstrumentationEnabled(typeOs string) string {
+	switch typeOs {
+	case "linux":
+		return "host"
+	case "windows":
+		return "iis"
+	default:
+		return ""
+	}
+
+}
