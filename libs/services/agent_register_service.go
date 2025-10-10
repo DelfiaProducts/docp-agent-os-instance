@@ -3,7 +3,6 @@ package services
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -24,12 +23,15 @@ type AgentRegisterService struct {
 	configFilePath string
 	logger         interfaces.ILogger
 	client         *http.Client
+	json           *pkg.JsonClient
 }
 
 // NewAgentRegisterService return instance of agent the register service
 func NewAgentRegisterService(logger interfaces.ILogger) *AgentRegisterService {
 	return &AgentRegisterService{
-		logger: logger,
+		logger:    logger,
+		json:      pkg.NewJsonClient(),
+		ymlClient: pkg.NewYmlClient(),
 	}
 }
 
@@ -54,75 +56,11 @@ func (ag *AgentRegisterService) Setup() error {
 	ag.workDirPath = workDirPath
 	fileSystem := pkg.NewFileSystem()
 	ag.fileSystem = fileSystem
-	yamlClient := pkg.NewYmlClient()
-	ag.ymlClient = yamlClient
 	client := &http.Client{
 		Timeout: time.Second * 90,
 	}
 	ag.client = client
 	return nil
-}
-
-// marshaller execute marshal the struct for slice the bytes
-func (ag *AgentRegisterService) marshaller(inner any) ([]byte, error) {
-	ag.logger.Debug("execute marshaller", "trace", "agent-os-instance.agent_register_service.marshaller", "inner", inner)
-	resBytes, err := json.Marshal(inner)
-	if err != nil {
-		ag.logger.Error("error in execute marshaller", "trace", "agent-os-instance.agent_register_service.marshaller", "error", err.Error())
-		return nil, err
-	}
-	return resBytes, nil
-}
-
-// unmarshaller execute unmarshal the content bytes
-func (ag *AgentRegisterService) unmarshaller(content []byte, inner any) error {
-	ag.logger.Debug("execute unmarshaller", "trace", "agent-os-instance.agent_register_service.unmarshaller", "content", string(content), "inner", inner)
-	if err := json.Unmarshal(content, inner); err != nil {
-		ag.logger.Error("error in execute unmarshaller", "trace", "agent-os-instance.agent_register_service.unmarshaller", "error", err.Error())
-		return err
-	}
-	return nil
-}
-
-// unmarshalYml exeuct unmarshal the config file
-func (ag *AgentRegisterService) unmarshalYml(content []byte, config *dto.ConfigAgent) error {
-	ag.logger.Debug("unmarshall yml", "trace", "agent-os-instance.agent_register_service.unmarshalYml", "content", string(content), "config", config)
-	if err := ag.ymlClient.Unmarshall(content, config); err != nil {
-		return err
-	}
-	return nil
-}
-
-// prepareToSend exeucte prepare for send data to register service
-func (ag *AgentRegisterService) prepareToSendCreate(metadata []byte) ([]byte, string, error) {
-	ag.logger.Debug("execute prepare to send", "trace", "agent-os-instance.agent_register_service.prepareToSendCreate", "metadata", string(metadata))
-	configFileBytes, err := ag.GetConfigFileContent(ag.configFilePath)
-	if err != nil {
-		ag.logger.Error("error in prepare to send", "trace", "agent-os-instance.agent_register_service.prepareToSend", "error", err.Error())
-		return nil, "", err
-	}
-	injectedMetadataBytes, apiKey, err := ag.InjectClientInfoCreate(configFileBytes, metadata)
-	if err != nil {
-		ag.logger.Error("error in prepare to send", "trace", "agent-os-instance.agent_register_service.prepareToSend", "error", err.Error())
-		return nil, "", err
-	}
-	return injectedMetadataBytes, apiKey, nil
-}
-
-// prepareToSend exeucte prepare for send data to register service
-func (ag *AgentRegisterService) prepareToSendUpdate(metadata []byte) ([]byte, string, error) {
-	ag.logger.Debug("execute prepare to send", "trace", "agent-os-instance.agent_register_service.prepareToSendUpdate", "metadata", string(metadata))
-	configFileBytes, err := ag.GetConfigFileContent(ag.configFilePath)
-	if err != nil {
-		ag.logger.Error("error in prepare to send", "trace", "agent-os-instance.agent_register_service.prepareToSend", "error", err.Error())
-		return nil, "", err
-	}
-	injectedMetadataBytes, apiKey, err := ag.InjectClientInfoUpdate(configFileBytes, metadata)
-	if err != nil {
-		ag.logger.Error("error in prepare to send", "trace", "agent-os-instance.agent_register_service.prepareToSend", "error", err.Error())
-		return nil, "", err
-	}
-	return injectedMetadataBytes, apiKey, nil
 }
 
 // GetConfigFileContent get config file content from local
@@ -147,12 +85,12 @@ func (ag *AgentRegisterService) InjectClientInfoCreate(configFileContent, linuxM
 	var metadata dto.Metadata
 	var agentRegisterDataCreate dto.AgentRegisterDataCreate
 
-	if err := ag.unmarshalYml(configFileContent, &configAgentDto); err != nil {
+	if err := ag.ymlClient.Unmarshall(configFileContent, &configAgentDto); err != nil {
 		ag.logger.Error("error in unmarshaller", "trace", "agent-os-instance.agent_register_service.InjectClientInfo", "error", err.Error())
 		return nil, "", err
 	}
 
-	if err := ag.unmarshaller(linuxMetadataContent, &metadata); err != nil {
+	if err := ag.json.Unmarshall(linuxMetadataContent, &metadata); err != nil {
 		ag.logger.Error("error in unmarshaller", "trace", "agent-os-instance.agent_register_service.InjectClientInfo", "error", err.Error())
 		return nil, "", err
 	}
@@ -169,7 +107,7 @@ func (ag *AgentRegisterService) InjectClientInfoCreate(configFileContent, linuxM
 		VMName:             metadata.ComputeInfo.Computename,
 	}
 
-	registerDataBytes, err := ag.marshaller(agentRegisterDataCreate)
+	registerDataBytes, err := ag.json.Marshall(agentRegisterDataCreate)
 	if err != nil {
 		ag.logger.Error("error in marshaller", "trace", "agent-os-instance.agent_register_service.InjectClientInfo", "error", err.Error())
 		return nil, "", err
@@ -185,12 +123,12 @@ func (ag *AgentRegisterService) InjectClientInfoUpdate(configFileContent, linuxM
 	var metadata dto.Metadata
 	var agentRegisterDataUpdate dto.AgentRegisterDataUpdate
 
-	if err := ag.unmarshalYml(configFileContent, &configAgentDto); err != nil {
+	if err := ag.ymlClient.Unmarshall(configFileContent, &configAgentDto); err != nil {
 		ag.logger.Error("error in unmarshaller", "trace", "agent-os-instance.agent_register_service.InjectClientInfo", "error", err.Error())
 		return nil, "", err
 	}
 
-	if err := ag.unmarshaller(linuxMetadataContent, &metadata); err != nil {
+	if err := ag.json.Unmarshall(linuxMetadataContent, &metadata); err != nil {
 		ag.logger.Error("error in unmarshaller", "trace", "agent-os-instance.agent_register_service.InjectClientInfo", "error", err.Error())
 		return nil, "", err
 	}
@@ -206,7 +144,7 @@ func (ag *AgentRegisterService) InjectClientInfoUpdate(configFileContent, linuxM
 		VMName:   metadata.ComputeInfo.Computename,
 	}
 
-	registerDataBytes, err := ag.marshaller(agentRegisterDataUpdate)
+	registerDataBytes, err := ag.json.Marshall(agentRegisterDataUpdate)
 	if err != nil {
 		ag.logger.Error("error in marshaller", "trace", "agent-os-instance.agent_register_service.InjectClientInfo", "error", err.Error())
 		return nil, "", err
