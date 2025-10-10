@@ -4,7 +4,6 @@ package components
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -368,26 +367,4 @@ func (d *DatadogWindowsOperation) RollbackVersion(version string) error {
 func (d *DatadogWindowsOperation) DPKGConfigure() error {
 	// TODO: not implemented windows
 	return nil
-}
-
-// getVersionDatadogAgentFromSignal return version the datadog agent from signal
-func (d *DatadogWindowsOperation) getVersionDatadogAgentFromSignal() (string, error) {
-	workDir, err := utils.GetWorkDirPath()
-	if err != nil {
-		return "", err
-	}
-
-	receivedPath := filepath.Join(workDir, "state", "received")
-	content, err := d.fileSystem.GetFileContent(receivedPath)
-	if err != nil {
-		return "", err
-	}
-
-	signalDto := dto.StateCheckResponse{}
-	if err := json.Unmarshal(content, &signalDto); err != nil {
-		return "", err
-	}
-
-	return signalDto.Signal.Agents.DatadogAgent.Version, nil
-
 }
