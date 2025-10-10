@@ -3,11 +3,9 @@ package services
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"path/filepath"
 	"time"
 
 	"github.com/OryaHub/agent-os-instance/libs/dto"
@@ -25,12 +23,14 @@ type StateCheckService struct {
 	hostStats     *pkg.HostStats
 	ymlClient     *pkg.YmlClient
 	client        *http.Client
+	json          *pkg.JsonClient
 }
 
 // NewStateCheckService return instance of state check service
 func NewStateCheckService(logger interfaces.ILogger) *StateCheckService {
 	return &StateCheckService{
 		logger: logger,
+		json:   pkg.NewJsonClient(),
 	}
 }
 
@@ -57,27 +57,6 @@ func (s *StateCheckService) Setup() error {
 	ymlClient := pkg.NewYmlClient()
 	s.ymlClient = ymlClient
 	return nil
-}
-
-// marshaller execute marshal the struct for slice the bytes
-func (s *StateCheckService) marshaller(inner any) ([]byte, error) {
-	s.logger.Debug("execute marshaller", "trace", "agent-os-instance.state_check_service.marshaller", "inner", inner)
-	resBytes, err := json.Marshal(inner)
-	if err != nil {
-		s.logger.Error("error in execute marshaller", "trace", "agent-os-instance.state_check_service.marshaller", "error", err.Error())
-		return nil, err
-	}
-	return resBytes, nil
-}
-
-// getContentConfigFile return content of config file
-func (s *StateCheckService) getContentConfigFile() ([]byte, error) {
-	s.logger.Debug("get content config file", "trace", "agent-os-instance.state_check_service.getContentConfigFile")
-	content, err := s.fileSystem.GetFileContent(filepath.Join(s.workDirPath, "config.yml"))
-	if err != nil {
-		return nil, err
-	}
-	return content, nil
 }
 
 // PreparePayload execute prepare the payload
@@ -107,7 +86,7 @@ func (s *StateCheckService) PreparePayloadStatus(transaction dto.TransactionStat
 		return nil, "", err
 	}
 
-	bStateCheckPayloadStatus, err := s.marshaller(&transaction)
+	bStateCheckPayloadStatus, err := s.json.Marshall(&transaction)
 	if err != nil {
 		return nil, "", err
 	}
