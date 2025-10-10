@@ -103,6 +103,32 @@ func TestDatadogAdapterInstallAgent(t *testing.T) {
 	})
 }
 
+func TestDatadogAdapterInstallAgentApmSingleStep(t *testing.T) {
+	bdd.Feature(t, "TestDatadogAdapterInstallAgentApmSingleStep", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
+		Scenario("InstallAgentApmSingleStep não deve retornar erro", func(s *bdd.Scenario) {
+			var datadogAdapter *adapters.DatadogAdapter
+			var logger interfaces.ILogger
+			var err error
+			s.When("logger é criado", func() {
+				logger = utils.NewOryaLoggerText(os.Stdout)
+			})
+			s.Given("DatadogAdapter válido e setup executado", func() {
+				datadogAdapter = adapters.NewDatadogAdapter(logger)
+				err = datadogAdapter.Setup()
+				bdd.AssertNoError(t, err, "Setup não deve retornar erro")
+			})
+			s.When("InstallAgent é chamado", func() {
+				if err == nil {
+					err = datadogAdapter.InstallAgentApmSingleStep("datadoghq.com", "XXXXXXXXXXXXXXXXXXXXXXXX", "dotnet:3")
+				}
+			})
+			s.Then("não deve retornar erro", func(t *testing.T) {
+				bdd.AssertNoError(t, err, "InstallAgent não deve retornar erro")
+			})
+		})
+	})
+}
+
 func TestDatadogAdapterUninstallAgent(t *testing.T) {
 	bdd.Feature(t, "TestDatadogAdapterUninstallAgent", func(t *testing.T, Scenario func(description string, steps func(s *bdd.Scenario))) {
 		Scenario("UninstallAgent não deve retornar erro", func(s *bdd.Scenario) {
