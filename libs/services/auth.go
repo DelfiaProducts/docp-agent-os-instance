@@ -3,7 +3,6 @@ package services
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/OryaHub/agent-os-instance/libs/dto"
 	"github.com/OryaHub/agent-os-instance/libs/interfaces"
+	"github.com/OryaHub/agent-os-instance/libs/pkg"
 	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
@@ -19,12 +19,14 @@ type AuthService struct {
 	urlAuth string
 	logger  interfaces.ILogger
 	client  *http.Client
+	json    *pkg.JsonClient
 }
 
 // NewAuthService return instance the auth service
 func NewAuthService(logger interfaces.ILogger) *AuthService {
 	return &AuthService{
 		logger: logger,
+		json:   pkg.NewJsonClient(),
 	}
 }
 
@@ -42,33 +44,12 @@ func (as *AuthService) Setup() error {
 	return nil
 }
 
-// marshaller execute marshal the struct for slice the bytes
-func (as *AuthService) marshaller(inner any) ([]byte, error) {
-	as.logger.Debug("execute marshaller", "inner", inner)
-	resBytes, err := json.Marshal(inner)
-	if err != nil {
-		as.logger.Error("error in execute marshaller", "error", err.Error())
-		return nil, err
-	}
-	return resBytes, nil
-}
-
-// unmarshaller execute unmarshal the content bytes
-func (as *AuthService) unmarshaller(content []byte, inner any) error {
-	as.logger.Debug("execute unmarshaller", "content", string(content), "inner", inner)
-	if err := json.Unmarshal(content, inner); err != nil {
-		as.logger.Error("error in execute unmarshaller", "error", err.Error())
-		return err
-	}
-	return nil
-}
-
 // AuthCall execute call for auth service
 func (as *AuthService) AuthCall(payload dto.AuthPayload) ([]byte, int, error) {
 	url := fmt.Sprintf("%s/agents/auth/api_key/token", as.urlAuth)
 	apiKey := payload.ApiKey
 
-	payloadBytes, err := as.marshaller(&payload)
+	payloadBytes, err := as.json.Marshall(&payload)
 	if err != nil {
 		return nil, 0, err
 	}
