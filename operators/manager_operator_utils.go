@@ -645,7 +645,7 @@ loopuninstall:
 		l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 		return
 	}
-	go l.adapter.NotifyStatus("uninstall_ORYA_completed", pkg.TransactionEventClose, "uninstall orya completed", ctx)
+	go l.adapter.NotifyStatus("uninstall_orya_completed", pkg.TransactionEventClose, "uninstall orya completed", ctx)
 
 	return
 }
