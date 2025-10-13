@@ -164,7 +164,7 @@ func (ag *AgentRegisterService) SendMetadataCreate(data []byte) ([]byte, int, er
 		return nil, 0, err
 	}
 
-	urlMetadataCreate := fmt.Sprintf("%s/compute/v1/orya", ag.urlRegister)
+	urlMetadataCreate := fmt.Sprintf("%s/compute/v1/docp", ag.urlRegister)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
 
@@ -175,7 +175,7 @@ func (ag *AgentRegisterService) SendMetadataCreate(data []byte) ([]byte, int, er
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("orya-api-key", apiKey)
+	req.Header.Set("docp-api-key", apiKey)
 
 	res, err := ag.client.Do(req)
 	if err != nil {
@@ -205,7 +205,7 @@ func (ag *AgentRegisterService) SendMetadataUpdate(data []byte) ([]byte, int, er
 		return nil, 0, err
 	}
 
-	urlMetadataUpdate := fmt.Sprintf("%s/compute/v1/orya", ag.urlRegister)
+	urlMetadataUpdate := fmt.Sprintf("%s/compute/v1/docp", ag.urlRegister)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPut, urlMetadataUpdate, bytes.NewBuffer(injectedMetadata))
