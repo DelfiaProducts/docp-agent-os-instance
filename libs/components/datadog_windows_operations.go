@@ -90,8 +90,36 @@ func (d *DatadogWindowsOperation) InstallAgent(ddSite, ddApiKey, version string)
 }
 
 // InstallAgentApmSingleStep execute install the agent in linux with apm tracer on mode single step
-func (d *DatadogWindowsOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, version string, datadogEnvVars []dto.DatadogEnvVars) error {
+func (d *DatadogWindowsOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, ddApmInstrumentationLibraries string) error {
 	d.logger.Debug("install agent apm single step", "trace", "agent-os-instance.datadog_windows_operations.InstallAgentApmSingleStep")
+	ddApmInstrumentationEnabled := utils.GetApmInstrumentationEnabled("windows")
+	m, err := mgr.Connect()
+	if err != nil {
+		return err
+	}
+	defer m.Disconnect()
+	s, err := m.OpenService("DatadogAgent")
+	if err != nil {
+		d.logger.Warn("error in install datadog agent", "error", err)
+		if errors.Is(err, windows.ERROR_SERVICE_DOES_NOT_EXIST) {
+			version, err := d.getVersionDatadogAgentFromSignal()
+			if err != nil {
+				d.logger.Error("error in get version datadog agent from signal", "error", err)
+				return err
+			}
+			fileVersionUrl := utils.ChoiceMsiWindowsInstallerFileUrl(version)
+			command := fmt.Sprintf(`Start-Process -Wait msiexec -ArgumentList '/qn /i %s APIKEY="%s" SITE="%s" DD_APM_INSTRUMENTATION_ENABLED="%s" DD_APM_INSTRUMENTATION_LIBRARIES="%s"'`, fileVersionUrl, ddApiKey, ddSite, ddApmInstrumentationEnabled, ddApmInstrumentationLibraries)
+			out, err := d.program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
+			if err != nil {
+				d.logger.Error("error in install datadog agent with apm single step start process", "error", err)
+				return err
+			}
+			d.logger.Debug("install agent datadog with apm single step", "output", out)
+			return nil
+		}
+		return err
+	}
+	defer s.Close()
 	return nil
 }
 

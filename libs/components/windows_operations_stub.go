@@ -15,35 +15,6 @@ func (l *WindowsOperations) Setup() error {
 	return nil
 }
 
-// isAdmin verify if admin
-func (l *WindowsOperations) isAdmin() bool {
-	return false
-}
-
-// runAsAdmin reexecute with admin
-func (l *WindowsOperations) runAsAdmin(args []string) {
-}
-
-// getVersionAgent return version the agent
-func (l *WindowsOperations) getVersionAgent() (string, error) {
-	return "", nil
-}
-
-// downloadFile get binary file from bucket
-func (l *WindowsOperations) downloadFile(url, dest string) error {
-	return nil
-}
-
-// getEnvsForAgent get environments for running agent
-func (l *WindowsOperations) getEnvsForAgent() ([]string, error) {
-	return []string{}, nil
-}
-
-// scheduleServiceStopAndRemoval agenda a remoção do serviço no Task Scheduler
-func (l *WindowsOperations) scheduleServiceStopAndRemoval(serviceName string, delaySeconds int) error {
-	return nil
-}
-
 func (l *WindowsOperations) Status(serviceName string) (string, error) {
 	return "", nil
 }

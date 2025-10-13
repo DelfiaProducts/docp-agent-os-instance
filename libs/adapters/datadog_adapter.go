@@ -89,9 +89,9 @@ func (d *DatadogAdapter) GetApmEnvVarsTracingLibrary(envs []dto.DatadogEnvVars) 
 }
 
 // InstallAgentApmSingleStep execute install the agent in linux with apm tracer on mode single step
-func (d *DatadogAdapter) InstallAgentApmSingleStep(ddSite string, ddApiKey string, version string, datadogEnvVars []dto.DatadogEnvVars) error {
-	d.logger.Debug("install agent apm single step", "trace", "agent-os-instance.datadog_adapter.InstallAgentApmSingleStep", "ddSite", ddSite, "ddApiKey", ddApiKey, "version", version, "datadogEnvVars", datadogEnvVars)
-	if err := d.datadogOperation.InstallAgentApmSingleStep(ddSite, ddApiKey, version, datadogEnvVars); err != nil {
+func (d *DatadogAdapter) InstallAgentApmSingleStep(ddSite string, ddApiKey string, ddApmInstrumentationLibraries string) error {
+	d.logger.Debug("install agent apm single step", "trace", "agent-os-instance.datadog_adapter.InstallAgentApmSingleStep", "ddSite", ddSite, "ddApiKey", ddApiKey, "ddApmInstrumentationLibraries", ddApmInstrumentationLibraries)
+	if err := d.datadogOperation.InstallAgentApmSingleStep(ddSite, ddApiKey, ddApmInstrumentationLibraries); err != nil {
 		return err
 	}
 	return nil

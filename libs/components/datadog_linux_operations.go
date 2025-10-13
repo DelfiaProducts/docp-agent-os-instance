@@ -1,16 +1,11 @@
 package components
 
 import (
-	"bufio"
-	"bytes"
 	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strings"
 
-	"github.com/OryaHub/agent-os-instance/libs/dto"
 	"github.com/OryaHub/agent-os-instance/libs/interfaces"
 	"github.com/OryaHub/agent-os-instance/libs/pkg"
 	"github.com/OryaHub/agent-os-instance/libs/services"
@@ -37,65 +32,6 @@ func NewDatadogLinuxOperation(logger interfaces.ILogger) *DatadogLinuxOperation 
 	return &DatadogLinuxOperation{
 		logger: logger,
 	}
-}
-
-// prepareEnvs return envs the datadog
-func (d *DatadogLinuxOperation) prepareEnvs(ddSite, ddApiKey string) []string {
-	var envs []string
-	envs = append(envs, fmt.Sprintf("DD_API_KEY=%s", ddApiKey))
-	envs = append(envs, fmt.Sprintf("DD_SITE=%s", ddSite))
-	return envs
-}
-
-// getApmEnvVarsSingleStep get envs apm datadog in mode single step
-func (d *DatadogLinuxOperation) getApmEnvVarsSingleStep(envs []dto.DatadogEnvVars) (string, string, string) {
-	var ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries string
-	for _, env := range envs {
-		if env.Name == "DD_APM_INSTRUMENTATION_ENABLED" {
-			ddApmInstrumentationEnabled = env.Value
-		}
-		if env.Name == "DD_ENV" {
-			ddEnv = env.Value
-		}
-		if env.Name == "DD_APM_INSTRUMENTATION_LIBRARIES" {
-			ddApmInstrumentationLibraries = env.Value
-		}
-	}
-	return ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries
-}
-
-// parseDatadogAgentVersion parses the installed version from the output of `apt-cache policy datadog-agent`
-func (d *DatadogLinuxOperation) parseDatadogAgentVersion(output string, prefix string) (string, error) {
-	lines := strings.Split(output, "\n")
-	re := regexp.MustCompile(fmt.Sprintf(`%s\s*([0-9]+:)?([0-9]+\.[0-9]+\.[0-9]+)-[0-9]+`, prefix))
-	for _, line := range lines {
-		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, prefix) {
-			matches := re.FindStringSubmatch(line)
-			if len(matches) >= 3 {
-				return matches[2], nil
-			}
-		}
-	}
-	return "", errors.New("installed version not found")
-}
-
-func (d *DatadogLinuxOperation) getVersionFromOutput(output []byte, version string) (string, error) {
-	scanner := bufio.NewScanner(bytes.NewReader(output))
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.Contains(line, "Installed") || strings.Contains(line, "Candidate") {
-			continue
-		}
-		if strings.Contains(line, version) {
-			fields := strings.Fields(line)
-			if len(fields) > 0 {
-				return fields[0], nil
-			}
-		}
-	}
-
-	return "", utils.ErrDatadogVersionNotFound()
 }
 
 func (d *DatadogLinuxOperation) Setup() error {
@@ -135,16 +71,16 @@ func (d *DatadogLinuxOperation) InstallAgent(ddSite, ddApiKey, version string) e
 }
 
 // InstallAgentApmSingleStep execute install the agent in linux with apm tracer on mode single step
-func (d *DatadogLinuxOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, version string, datadogEnvVars []dto.DatadogEnvVars) error {
+func (d *DatadogLinuxOperation) InstallAgentApmSingleStep(ddSite string, ddApiKey string, ddApmInstrumentationLibraries string) error {
 	envs := d.prepareEnvs(ddSite, ddApiKey)
 	aptOrDpkgIsRunning, err := d.hostStats.AptOrDpkgIsRunning()
 	if err != nil {
 		return err
 	}
-	ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries := d.getApmEnvVarsSingleStep(datadogEnvVars)
+	ddApmInstrumentationEnabled := utils.GetApmInstrumentationEnabled("linux")
 	if !aptOrDpkgIsRunning {
 		d.logger.Debug("install agent apm single step", "trace", "agent-os-instance.datadog_linux_operations.InstallAgentApmSingleStep", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
-		if err := d.program.Execute("bash", envs, "-c", fmt.Sprintf("export DD_API_KEY=%s;export DD_SITE=%s;export DD_APM_INSTRUMENTATION_ENABLED=%s;export DD_ENV=%s;export DD_APM_INSTRUMENTATION_LIBRARIES=%s;%s", ddApiKey, ddSite, ddApmInstrumentationEnabled, ddEnv, ddApmInstrumentationLibraries, CURL_INSTALL_SH)); err != nil {
+		if err := d.program.Execute("bash", envs, "-c", fmt.Sprintf("export DD_API_KEY=%s;export DD_SITE=%s;export DD_APM_INSTRUMENTATION_ENABLED=%s;export DD_APM_INSTRUMENTATION_LIBRARIES=%s;%s", ddApiKey, ddSite, ddApmInstrumentationEnabled, ddApmInstrumentationLibraries, CURL_INSTALL_SH)); err != nil {
 			return err
 		}
 	} else {

@@ -56,8 +56,7 @@ type StateCheckDatadogTracerLibrary struct {
 
 // StateCheckDatadogTracerSingleStep is component for datadog tracer single step
 type StateCheckDatadogTracerSingleStep struct {
-	Version            string              `json:"version"`
-	InstallWithEnvVars []StateCheckEnvVars `json:"install_with_env_vars"`
+	DDApmInstrumentationLibraries string `json:"dd_apm_instrumentation_libraries"`
 }
 
 type StateCheckEnvVars struct {
