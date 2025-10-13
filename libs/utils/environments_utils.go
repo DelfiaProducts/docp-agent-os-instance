@@ -21,11 +21,11 @@ func GetDomainUrl() (string, error) {
 // GetCollectInterval return duration from env collect interval
 func GetCollectInterval() (time.Duration, error) {
 	var interval time.Duration
-	ORYA_collect_interval_env := os.Getenv("ORYA_COLLECT_INTERVAL")
-	if len(ORYA_collect_interval_env) == 0 {
+	orya_collect_interval_env := os.Getenv("ORYA_COLLECT_INTERVAL")
+	if len(orya_collect_interval_env) == 0 {
 		return time.Duration(time.Hour * 24), nil
 	}
-	duration, err := time.ParseDuration(ORYA_collect_interval_env)
+	duration, err := time.ParseDuration(orya_collect_interval_env)
 	if err != nil {
 		return interval, err
 	}
@@ -34,8 +34,8 @@ func GetCollectInterval() (time.Duration, error) {
 
 // GetConfigFilePath return path the config file from env
 func GetConfigFilePath() (string, error) {
-	ORYA_config_file_path_env := os.Getenv("ORYA_CONFIG_FILE_PATH")
-	if len(ORYA_config_file_path_env) == 0 {
+	orya_config_file_path_env := os.Getenv("ORYA_CONFIG_FILE_PATH")
+	if len(orya_config_file_path_env) == 0 {
 		if runtime.GOOS == "windows" {
 			programFiles := os.Getenv("ProgramFiles")
 			return filepath.Join(programFiles, "OryaAgent", "config.yml"), nil
@@ -44,7 +44,7 @@ func GetConfigFilePath() (string, error) {
 			return filepath.Join(string(filepath.Separator), "opt", "orya-agent", "config.yml"), nil
 		}
 	}
-	return ORYA_config_file_path_env, nil
+	return orya_config_file_path_env, nil
 }
 
 // GetLogFilePath return path the log file
@@ -59,8 +59,8 @@ func GetLogFilePath() (string, error) {
 
 // GetWorkDirPath return path the work dir from env
 func GetWorkDirPath() (string, error) {
-	ORYA_workdir_path_env := os.Getenv("ORYA_WORKDIR_PATH")
-	if len(ORYA_workdir_path_env) == 0 {
+	orya_workdir_path_env := os.Getenv("ORYA_WORKDIR_PATH")
+	if len(orya_workdir_path_env) == 0 {
 		if runtime.GOOS == "windows" {
 			programFiles := os.Getenv("ProgramFiles")
 			return filepath.Join(programFiles, "OryaAgent"), nil
@@ -68,7 +68,7 @@ func GetWorkDirPath() (string, error) {
 			return filepath.Join(string(filepath.Separator), "opt", "orya-agent"), nil
 		}
 	}
-	return ORYA_workdir_path_env, nil
+	return orya_workdir_path_env, nil
 }
 
 // GetDatadogBinaryAgentPath return path the binary agent datadog
@@ -83,9 +83,9 @@ func GetDatadogBinaryAgentPath() (string, error) {
 
 // GetPortAgentApi return port the api agent from env
 func GetPortAgentApi() (string, error) {
-	ORYA_agent_port := os.Getenv("ORYA_AGENT_PORT")
-	if len(ORYA_agent_port) == 0 {
+	orya_agent_port := os.Getenv("ORYA_AGENT_PORT")
+	if len(orya_agent_port) == 0 {
 		return pkg.ORYA_AGENT_PORT, nil
 	}
-	return ORYA_agent_port, nil
+	return orya_agent_port, nil
 }
