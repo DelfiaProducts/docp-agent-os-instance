@@ -626,22 +626,22 @@ loopuninstall:
 	transaction := libutils.NewTransactionStatus()
 	ctx := context.WithValue(context.Background(), libdto.ContextTransactionStatus, transaction)
 
-	go l.adapter.NotifyStatus("uninstall_ORYA_received", pkg.TransactionEventOpen, "uninstall orya received", ctx)
+	go l.adapter.NotifyStatus("uninstall_orya_received", pkg.TransactionEventOpen, "uninstall orya received", ctx)
 	time.Sleep(l.delay)
 
-	go l.adapter.NotifyStatus("uninstall_ORYA_processing", pkg.TransactionEventUpdate, "uninstall orya processing", ctx)
+	go l.adapter.NotifyStatus("uninstall_orya_processing", pkg.TransactionEventUpdate, "uninstall orya processing", ctx)
 	time.Sleep(l.delay)
 
 	//get version installed
 	version, err := l.resolveAgentVersion()
 	if err != nil {
-		go l.adapter.NotifyStatus("uninstall_ORYA_error", pkg.TransactionEventClose, "failed uninstall orya", ctx)
+		go l.adapter.NotifyStatus("uninstall_orya_error", pkg.TransactionEventClose, "failed uninstall orya", ctx)
 		l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 		return
 	}
 
 	if err := l.adapter.AutoUninstall(version); err != nil {
-		go l.adapter.NotifyStatus("uninstall_ORYA_error", pkg.TransactionEventClose, "failed uninstall orya", ctx)
+		go l.adapter.NotifyStatus("uninstall_orya_error", pkg.TransactionEventClose, "failed uninstall orya", ctx)
 		l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 		return
 	}
@@ -666,29 +666,29 @@ func (l *ManagerOperator) autoUninstall() {
 		transaction := libutils.NewTransactionStatus()
 		ctx := context.WithValue(context.Background(), libdto.ContextTransactionStatus, transaction)
 
-		go l.adapter.NotifyStatus("uninstall_ORYA_received", pkg.TransactionEventOpen, "uninstall orya received", ctx)
+		go l.adapter.NotifyStatus("uninstall_orya_received", pkg.TransactionEventOpen, "uninstall orya received", ctx)
 		time.Sleep(l.delay)
 
 		defer l.wg.Done()
 
-		go l.adapter.NotifyStatus("uninstall_ORYA_processing", pkg.TransactionEventUpdate, "uninstall orya processing", ctx)
+		go l.adapter.NotifyStatus("uninstall_orya_processing", pkg.TransactionEventUpdate, "uninstall orya processing", ctx)
 		time.Sleep(l.delay)
 
 		//get version
 		version, err := l.resolveAgentVersion()
 		if err != nil {
-			go l.adapter.NotifyStatus("uninstall_ORYA_error", pkg.TransactionEventClose, "failed uninstall orya", ctx)
+			go l.adapter.NotifyStatus("uninstall_orya_error", pkg.TransactionEventClose, "failed uninstall orya", ctx)
 			l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 			return
 		}
 
 		if err := l.adapter.AutoUninstall(version); err != nil {
-			go l.adapter.NotifyStatus("uninstall_ORYA_error", pkg.TransactionEventClose, "failed uninstall orya", ctx)
+			go l.adapter.NotifyStatus("uninstall_orya_error", pkg.TransactionEventClose, "failed uninstall orya", ctx)
 			l.chanErrors <- dto.CommonChanErrors{From: "autoUninstall", Priority: dto.ErrLevelHigh, Err: err}
 			return
 		}
 
-		go l.adapter.NotifyStatus("uninstall_ORYA_completed", pkg.TransactionEventClose, "uninstall orya completed", ctx)
+		go l.adapter.NotifyStatus("uninstall_orya_completed", pkg.TransactionEventClose, "uninstall orya completed", ctx)
 	}
 	return
 }
@@ -899,20 +899,6 @@ func (l *ManagerOperator) validateState() {
 		return
 	}
 	return
-}
-
-// validateDatadogAgentUpdateConfigs execute validation for datadog agent if update configs
-func (l *ManagerOperator) validateDatadogAgentUpdateConfigs() {
-	l.logger.Debug("validate if datadog agent is update configs", "trace", "agent-os-instance.manager_operator.validateDatadogAgentUpdateConfigs")
-	defer l.wg.Done()
-	equals, err := l.adapter.CompareState()
-	if err != nil {
-		l.chanErrors <- dto.CommonChanErrors{From: "validateDatadogAgentUpdateConfigs", Priority: dto.ErrLevelMedium, Err: err}
-		return
-	}
-	if equals {
-	} else {
-	}
 }
 
 // collectGetState collect state from service state check
