@@ -196,33 +196,33 @@ func (l *ManagerOperator) UpdateAgent(version string) error {
 			transaction := libutils.NewTransactionStatus()
 			ctx := context.WithValue(context.Background(), libdto.ContextTransactionStatus, transaction)
 
-			go l.adapter.NotifyStatus("update_ORYA_received", pkg.TransactionEventOpen, "update orya received", ctx)
+			go l.adapter.NotifyStatus("update_orya_received", pkg.TransactionEventOpen, "update orya received", ctx)
 			time.Sleep(l.delay)
 
-			go l.adapter.NotifyStatus("update_ORYA_initiate", pkg.TransactionEventUpdate, "update orya initialized", ctx)
+			go l.adapter.NotifyStatus("update_orya_initiate", pkg.TransactionEventUpdate, "update orya initialized", ctx)
 			time.Sleep(l.delay)
 
 			if err := l.adapter.UpdateAgent(version); err != nil {
-				go l.adapter.NotifyStatus("update_ORYA_error", pkg.TransactionEventClose, "failed update agent version", ctx)
+				go l.adapter.NotifyStatus("update_orya_error", pkg.TransactionEventClose, "failed update agent version", ctx)
 				l.chanErrors <- dto.CommonChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
 				return err
 			}
 
 			//save new version
 			if err := l.adapter.SaveAgentVersion(version); err != nil {
-				go l.adapter.NotifyStatus("update_ORYA_error", pkg.TransactionEventClose, "failed save agent version", ctx)
+				go l.adapter.NotifyStatus("update_orya_error", pkg.TransactionEventClose, "failed save agent version", ctx)
 				l.chanErrors <- dto.CommonChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
 				return err
 			}
 
 			//save rollback version
 			if err := l.adapter.SaveAgentRollbackVersion(agentVersion); err != nil {
-				go l.adapter.NotifyStatus("update_ORYA_error", pkg.TransactionEventClose, "failed save agent version", ctx)
+				go l.adapter.NotifyStatus("update_orya_error", pkg.TransactionEventClose, "failed save agent version", ctx)
 				l.chanErrors <- dto.CommonChanErrors{From: "updateAgent", Priority: dto.ErrLevelHigh, Err: err}
 				return err
 			}
 
-			go l.adapter.NotifyStatus("update_ORYA_completed", pkg.TransactionEventClose, "update orya completed", ctx)
+			go l.adapter.NotifyStatus("update_orya_completed", pkg.TransactionEventClose, "update orya completed", ctx)
 			return nil
 		}
 	}
@@ -457,9 +457,8 @@ func (l *ManagerOperator) Start() {
 	for {
 		select {
 		case <-ticker.C:
-			l.wg.Add(2)
+			l.wg.Add(1)
 			go l.collectGetState()
-			go l.validateDatadogAgentUpdateConfigs()
 
 		case <-l.done:
 			close(l.done)
