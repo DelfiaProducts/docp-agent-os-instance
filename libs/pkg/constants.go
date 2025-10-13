@@ -2,7 +2,7 @@ package pkg
 
 const (
 	ORYA_AGENT_PORT             = "12012"
-	ORYA_DOMAIN                 = "https://msapi.sandbox.oryahq.tech"
+	ORYA_DOMAIN                 = "https://msapi.sandbox.docphq.tech"
 	BUCKET_URL                  = "https://docp-agent.s3.us-east-1.amazonaws.com"
 	URL_RELEASE                 = "https://github.com/OryaHub/agent-os-instance/releases/download"
 	URL_DATADOG_AGENT_WINDOWS   = "https://s3.amazonaws.com/ddagent-windows-stable"
