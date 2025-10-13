@@ -20,7 +20,7 @@ func (l *ManagerAdapter) OryaAgentApiInstallDatadog(ddApiKey, ddSite, version st
 	transaction := utils.NewTransactionStatus()
 	ctx := context.WithValue(context.Background(), dto.ContextTransactionStatus, transaction)
 
-	go l.NotifyStatus("install_ORYA_vendor_received", pkg.TransactionEventOpen, "install orya vendor received", ctx)
+	go l.NotifyStatus("install_orya_vendor_received", pkg.TransactionEventOpen, "install orya vendor received", ctx)
 	time.Sleep(l.delay)
 
 	datadogDto := dto.DatadogInstallDTO{
@@ -30,21 +30,21 @@ func (l *ManagerAdapter) OryaAgentApiInstallDatadog(ddApiKey, ddSite, version st
 	}
 	bDatadogDto, err := l.json.Marshall(&datadogDto)
 	if err != nil {
-		go l.NotifyStatus("install_ORYA_vendor_error", pkg.TransactionEventClose, "failed install orya vendor", ctx)
+		go l.NotifyStatus("install_orya_vendor_error", pkg.TransactionEventClose, "failed install orya vendor", ctx)
 		return nil, err
 	}
-	go l.NotifyStatus("install_ORYA_vendor_processing", pkg.TransactionEventUpdate, "install orya vendor processing", ctx)
+	go l.NotifyStatus("install_orya_vendor_processing", pkg.TransactionEventUpdate, "install orya vendor processing", ctx)
 	time.Sleep(l.delay)
 
 	urlOryaInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/install", l.oryaApiPort)
 	respBytes, err := l.requestForAgentInstallDatadog(urlOryaInstallDatadog, http.MethodPost, bDatadogDto)
 	if err != nil {
-		go l.NotifyStatus("install_ORYA_vendor_error", pkg.TransactionEventClose, "failed install orya vendor", ctx)
+		go l.NotifyStatus("install_orya_vendor_error", pkg.TransactionEventClose, "failed install orya vendor", ctx)
 		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.OryaAgentApiInstallDatadog", "error", err.Error())
 		return nil, err
 	}
 
-	go l.NotifyStatus("install_ORYA_vendor_completed", pkg.TransactionEventClose, "install orya vendor completed", ctx)
+	go l.NotifyStatus("install_orya_vendor_completed", pkg.TransactionEventClose, "install orya vendor completed", ctx)
 	return respBytes, nil
 }
 
@@ -55,7 +55,7 @@ func (l *ManagerAdapter) OryaAgentApiInstallDatadogWithApmSingleStep(ddApiKey, d
 	transaction := utils.NewTransactionStatus()
 	ctx := context.WithValue(context.Background(), dto.ContextTransactionStatus, transaction)
 
-	go l.NotifyStatus("install_ORYA_vendor_tracer_received", pkg.TransactionEventOpen, "install orya vendor tracer single step received", ctx)
+	go l.NotifyStatus("install_orya_vendor_tracer_received", pkg.TransactionEventOpen, "install orya vendor tracer single step received", ctx)
 	time.Sleep(l.delay)
 
 	datadogDto := dto.DatadogInstallDTO{
@@ -67,29 +67,29 @@ func (l *ManagerAdapter) OryaAgentApiInstallDatadogWithApmSingleStep(ddApiKey, d
 	}
 	bDatadogDto, err := l.json.Marshall(&datadogDto)
 	if err != nil {
-		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer single step", ctx)
+		go l.NotifyStatus("install_orya_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer single step", ctx)
 		return nil, err
 	}
 
 	urlOryaInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/install", l.oryaApiPort)
 
-	go l.NotifyStatus("install_ORYA_vendor_tracer_processing", pkg.TransactionEventUpdate, "install orya vendor tracer single step processing", ctx)
+	go l.NotifyStatus("install_orya_vendor_tracer_processing", pkg.TransactionEventUpdate, "install orya vendor tracer single step processing", ctx)
 	time.Sleep(l.delay)
 
 	respBytes, err := l.requestForAgentInstallDatadog(urlOryaInstallDatadog, http.MethodPost, bDatadogDto)
 	if err != nil {
-		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer single step", ctx)
+		go l.NotifyStatus("install_orya_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer single step", ctx)
 		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.OryaAgentApiInstallDatadogWithApmSingleStep", "error", err.Error())
 		return nil, err
 	}
 
 	if err := l.SaveAlreadyTracer(true); err != nil {
 		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.OryaAgentApiInstallDatadogWithApmSingleStep", "error", err.Error())
-		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer single step", ctx)
+		go l.NotifyStatus("install_orya_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer single step", ctx)
 		return nil, err
 	}
 
-	go l.NotifyStatus("install_ORYA_vendor_tracer_completed", pkg.TransactionEventClose, "install orya vendor tracer single step completed", ctx)
+	go l.NotifyStatus("install_orya_vendor_tracer_completed", pkg.TransactionEventClose, "install orya vendor tracer single step completed", ctx)
 	return respBytes, nil
 }
 
@@ -100,7 +100,7 @@ func (l *ManagerAdapter) OryaAgentApiInstallDatadogWithApmTracingLibrary(ddApiKe
 	transaction := utils.NewTransactionStatus()
 	ctx := context.WithValue(context.Background(), dto.ContextTransactionStatus, transaction)
 
-	go l.NotifyStatus("install_ORYA_vendor_tracer_received", pkg.TransactionEventOpen, "install orya vendor tracer library received", ctx)
+	go l.NotifyStatus("install_orya_vendor_tracer_received", pkg.TransactionEventOpen, "install orya vendor tracer library received", ctx)
 	time.Sleep(l.delay)
 
 	datadogDto := dto.DatadogInstallDTO{
@@ -125,27 +125,27 @@ func (l *ManagerAdapter) OryaAgentApiInstallDatadogWithApmTracingLibrary(ddApiKe
 	}
 	bDatadogDto, err := l.json.Marshall(&datadogDto)
 	if err != nil {
-		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer", ctx)
+		go l.NotifyStatus("install_orya_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer", ctx)
 		return nil, err
 	}
 	urlOryaInstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/tracer/install", l.oryaApiPort)
 
-	go l.NotifyStatus("install_ORYA_vendor_tracer_processing", pkg.TransactionEventUpdate, "install orya vendor tracer library processing", ctx)
+	go l.NotifyStatus("install_orya_vendor_tracer_processing", pkg.TransactionEventUpdate, "install orya vendor tracer library processing", ctx)
 	time.Sleep(l.delay)
 
 	respBytes, err := l.requestForAgentInstallDatadog(urlOryaInstallDatadog, http.MethodPost, bDatadogDto)
 	if err != nil {
 		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.OryaAgentApiInstallDatadogWithApmSingleStep", "error", err.Error())
-		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer", ctx)
+		go l.NotifyStatus("install_orya_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer", ctx)
 		return nil, err
 	}
 	if err := l.SaveAlreadyTracer(true); err != nil {
 		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.OryaAgentApiInstallDatadogWithApmSingleStep", "error", err.Error())
-		go l.NotifyStatus("install_ORYA_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer", ctx)
+		go l.NotifyStatus("install_orya_vendor_tracer_error", pkg.TransactionEventClose, "failed install orya vendor tracer", ctx)
 		return nil, err
 	}
 
-	go l.NotifyStatus("install_ORYA_vendor_tracer_completed", pkg.TransactionEventClose, "install orya vendor tracer library completed", ctx)
+	go l.NotifyStatus("install_orya_vendor_tracer_completed", pkg.TransactionEventClose, "install orya vendor tracer library completed", ctx)
 	return respBytes, nil
 }
 
@@ -156,7 +156,7 @@ func (l *ManagerAdapter) OryaAgentApiUninstallDatadog() ([]byte, error) {
 	transaction := utils.NewTransactionStatus()
 	ctxTransaction := context.WithValue(context.Background(), dto.ContextTransactionStatus, transaction)
 
-	go l.NotifyStatus("uninstall_ORYA_vendor_received", pkg.TransactionEventOpen, "uninstall orya vendor received", ctxTransaction)
+	go l.NotifyStatus("uninstall_orya_vendor_received", pkg.TransactionEventOpen, "uninstall orya vendor received", ctxTransaction)
 	time.Sleep(l.delay)
 
 	urlOryaUninstallDatadog := fmt.Sprintf("http://127.0.0.1:%s/datadog/uninstall", l.oryaApiPort)
@@ -164,31 +164,31 @@ func (l *ManagerAdapter) OryaAgentApiUninstallDatadog() ([]byte, error) {
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlOryaUninstallDatadog, nil)
 	if err != nil {
-		go l.NotifyStatus("uninstall_ORYA_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
+		go l.NotifyStatus("uninstall_orya_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
 		l.logger.Error("error in create request", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUninstallDatadog", "error", err.Error())
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	res, err := l.client.Do(req)
 	if err != nil {
-		go l.NotifyStatus("uninstall_ORYA_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
+		go l.NotifyStatus("uninstall_orya_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
 		l.logger.Error("error in execute request", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUninstallDatadog", "error", err.Error())
 		return nil, err
 	}
 
-	go l.NotifyStatus("uninstall_ORYA_vendor_processing", pkg.TransactionEventUpdate, "uninstall orya vendor processing", ctxTransaction)
+	go l.NotifyStatus("uninstall_orya_vendor_processing", pkg.TransactionEventUpdate, "uninstall orya vendor processing", ctxTransaction)
 	time.Sleep(l.delay)
 
-	go l.NotifyStatus("uninstall_ORYA_vendor_complete", pkg.TransactionEventClose, "uninstall orya vendor completed", ctxTransaction)
+	go l.NotifyStatus("uninstall_orya_vendor_complete", pkg.TransactionEventClose, "uninstall orya vendor completed", ctxTransaction)
 	defer res.Body.Close()
 	respBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		go l.NotifyStatus("uninstall_ORYA_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
+		go l.NotifyStatus("uninstall_orya_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
 		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUninstallDatadog", "error", err.Error())
 		return nil, err
 	}
 	if err := l.SaveAlreadyTracer(false); err != nil {
-		go l.NotifyStatus("uninstall_ORYA_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
+		go l.NotifyStatus("uninstall_orya_vendor_error", pkg.TransactionEventClose, "failed uninstall vendor", ctxTransaction)
 		l.logger.Error("error in save already tracer", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUninstallDatadog", "error", err.Error())
 		return nil, err
 	}
@@ -211,30 +211,30 @@ func (l *ManagerAdapter) OryaAgentApiUpdateConfigurationsDatadog(content []byte)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlOryaUpdateConfigurations, bytes.NewBuffer(content))
 	if err != nil {
-		go l.NotifyStatus("update_ORYA_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
+		go l.NotifyStatus("update_orya_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
 		l.logger.Error("error in create request", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUpdateConfigurationsDatadog", "error", err.Error())
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	res, err := l.client.Do(req)
 	if err != nil {
-		go l.NotifyStatus("update_ORYA_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
+		go l.NotifyStatus("update_orya_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
 		l.logger.Error("error in execute request", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUpdateConfigurationsDatadog", "error", err.Error())
 		return nil, err
 	}
 
-	go l.NotifyStatus("update_ORYA_vendor_processing", pkg.TransactionEventUpdate, "update orya vendor processing", ctxTransaction)
+	go l.NotifyStatus("update_orya_vendor_processing", pkg.TransactionEventUpdate, "update orya vendor processing", ctxTransaction)
 	time.Sleep(l.delay)
 
 	defer res.Body.Close()
 	respBytes, err := io.ReadAll(res.Body)
 	if err != nil {
-		go l.NotifyStatus("update_ORYA_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
+		go l.NotifyStatus("update_orya_vendor_error", pkg.TransactionEventClose, "failed update datadog", ctxTransaction)
 		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUpdateConfigurationsDatadog", "error", err.Error())
 		return nil, err
 	}
 
-	go l.NotifyStatus("update_ORYA_vendor_complete", pkg.TransactionEventClose, "update orya vendor completed", ctxTransaction)
+	go l.NotifyStatus("update_orya_vendor_complete", pkg.TransactionEventClose, "update orya vendor completed", ctxTransaction)
 	return respBytes, nil
 }
 
