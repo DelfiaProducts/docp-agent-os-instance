@@ -19,11 +19,11 @@
             <Component Id="AgentBinary" Directory="bindir" Win64="yes" Guid="EF3FEC1A-FDCD-4B8B-AFBF-2AD58A3AC042">
                 <File Id="AgentExe" Name="agent.exe" Source="agent.exe" KeyPath="yes" >
                     <Shortcut 
-                            Id="DesktopShortcut" 
+                            Id="DesktopShortcutAgent" 
                             Directory="INSTALLFOLDER" 
                             Name="OryaAgent" 
                             Description="Inicia o Seu App" 
-                            Icon="AppIcon.ico" />
+                            Icon="AppIconAgent.ico" />
                 </File>
                 <ServiceInstall Id="ServiceInstall"
                                 Name="OryaAgent"
@@ -47,7 +47,7 @@
             </Directory>
         </Directory>
 
-        <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
+        <Property Id="ARPPRODUCTICON" Value="AppIconAgent.ico" />
 
         <Binary Id="AgentExe" SourceFile="agent.exe" />
 
@@ -63,6 +63,6 @@
         </InstallExecuteSequence>
     </Product>
      <Fragment>
-        <Icon Id="AppIcon.ico" SourceFile="app.ico" />
+        <Icon Id="AppIconAgent.ico" SourceFile="app.ico" />
     </Fragment>
 </Wix>
