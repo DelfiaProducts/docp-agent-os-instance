@@ -203,20 +203,23 @@ jobs:
 
       - name: Build Windows Installers
         run: |
+          # Copy icon App
+          copy assets\app.ico installers\app.ico
+
           # Enter installers directory
           cd installers
           
           # Build Manager MSI
           # Use candle.exe to compile manager XML to wixobj
-          candle.exe install_manager_windows.xml -o install_manager_windows.wixobj
+          candle.exe -ext WixUtilExtension install_manager_windows.xml -o install_manager_windows.wixobj
           # Use light.exe with WixUIExtension to create MSI
-          light.exe -ext WixUIExtension install_manager_windows.wixobj -o install_manager_windows.msi
+          light.exe -ext WixUIExtension -ext WixUtilExtension install_manager_windows.wixobj -o install_manager_windows.msi
           
           # Build Agent MSI  
           # Use candle.exe to compile agent XML to wixobj
-          candle.exe install_agent_windows.xml -o install_agent_windows.wixobj
+          candle.exe -ext WixUtilExtension install_agent_windows.xml -o install_agent_windows.wixobj
           # Use light.exe with WixUIExtension to create MSI
-          light.exe -ext WixUIExtension install_agent_windows.wixobj -o install_agent_windows.msi
+          light.exe -ext WixUIExtension -ext WixUtilExtension install_agent_windows.wixobj -o install_agent_windows.msi
           
           # List generated files
           dir *.msi
