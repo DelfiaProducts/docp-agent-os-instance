@@ -20,7 +20,7 @@
                 <File Id="AgentExe" Name="agent.exe" Source="agent.exe" KeyPath="yes" >
                     <Shortcut 
                             Id="DesktopShortcutAgent" 
-                            Directory="ProgramMenuFolder" 
+                            Directory="INSTALLFOLDER" 
                             Name="OryaAgent" 
                             Description="Inicia o Seu App" 
                             Icon="AppIconAgent.ico" />
