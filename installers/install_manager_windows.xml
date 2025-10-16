@@ -30,11 +30,11 @@
             <Component Id="ManagerBinary" Directory="bindir" Win64="yes" Guid="EF3FEC1A-FDCD-4B8B-AFBF-2AD58A3AC042">
                 <File Id="ManagerExe" Name="manager.exe" Source="manager.exe" KeyPath="yes" >
                     <Shortcut 
-                        Id="DesktopShortcut" 
+                        Id="DesktopShortcutManager" 
                         Directory="INSTALLFOLDER" 
                         Name="OryaManager" 
                         Description="Inicia o Seu App" 
-                        Icon="AppIcon.ico" />
+                        Icon="AppIconManager.ico" />
                 </File>
                 <ServiceInstall Id="ServiceInstall"
                                 Name="OryaManager"
@@ -60,10 +60,6 @@
             <Component Id="ConfigFilesComponent" Directory="INSTALLFOLDER" Win64="yes" Guid="12B2F0A1-9A2A-4EF3-8888-000000000003">
                 <RemoveFile Id="RemoveConfig" Name="config.yml" On="uninstall" />
                 <RemoveFile Id="RemoveEnvironments" Name="environments" On="uninstall" />
-            </Component>
-            <Component Id="LinksFilesComponent" Directory="INSTALLFOLDER" Win64="yes" Guid="12B2F0A1-9A2B-5EF4-8888-000000000003">
-                <RemoveFile Id="RemoveOryaManagerLink" Name="OryaManager" On="uninstall" />
-                <RemoveFile Id="RemoveOryaAgentLink" Name="OryaAgent" On="uninstall" />
             </Component>
 
         </ComponentGroup>
@@ -96,7 +92,7 @@
         <Property Id="NO_GROUP_ASSOCIATION" Value="false" />
         <Property Id="ORYA_SITE" Value="https://msapi.orya.tech" />
 
-        <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
+        <Property Id="ARPPRODUCTICON" Value="AppIconManager.ico" />
         
         <CustomAction Id="SetOryaDomainEnv" Property="ORYA_DOMAIN" Value="[ORYA_SITE]" Execute="immediate" />
         <CustomAction Id="SetEnvironmentVariable"
@@ -119,6 +115,6 @@
         </InstallExecuteSequence>
     </Product>
      <Fragment>
-        <Icon Id="AppIcon.ico" SourceFile="app.ico" />
+        <Icon Id="AppIconManager.ico" SourceFile="app.ico" />
     </Fragment>
 </Wix>
