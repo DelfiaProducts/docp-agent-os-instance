@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
     <Product Id="PRODUCT_CODE" Name="OryaAgent" Language="1033" Version="AGENT_VERSION" Manufacturer="Orya" UpgradeCode="10A52F78-E52F-488C-A771-EB96C646F24B">
         <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x64"/>
 
@@ -17,7 +17,14 @@
 
         <ComponentGroup Id="AgentsComponents">
             <Component Id="AgentBinary" Directory="bindir" Win64="yes" Guid="EF3FEC1A-FDCD-4B8B-AFBF-2AD58A3AC042">
-                <File Id="AgentExe" Name="agent.exe" Source="agent.exe" KeyPath="yes" />
+                <File Id="AgentExe" Name="agent.exe" Source="agent.exe" KeyPath="yes" >
+                    <Shortcut 
+                            Id="DesktopShortcut" 
+                            Directory="INSTALLFOLDER" 
+                            Name="OryaAgent" 
+                            Description="Inicia o Seu App" 
+                            Icon="AppIcon.ico" />
+                </File>
                 <ServiceInstall Id="ServiceInstall"
                                 Name="OryaAgent"
                                 DisplayName="OryaAgent Service"
@@ -39,7 +46,9 @@
                 </Directory>
             </Directory>
         </Directory>
-        
+
+        <Property Id="ARPPRODUCTICON" Value="AppIcon.ico" />
+
         <Binary Id="AgentExe" SourceFile="agent.exe" />
 
         <Binary Id="ConfigExe" SourceFile="config_agent.exe" />
@@ -53,4 +62,7 @@
             <Custom Action="ExecuteConfig" After="InstallFiles">NOT Installed</Custom>
         </InstallExecuteSequence>
     </Product>
+     <Fragment>
+        <Icon Id="AppIcon.ico" SourceFile="app.ico" />
+    </Fragment>
 </Wix>
