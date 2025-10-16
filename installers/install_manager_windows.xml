@@ -61,6 +61,10 @@
                 <RemoveFile Id="RemoveConfig" Name="config.yml" On="uninstall" />
                 <RemoveFile Id="RemoveEnvironments" Name="environments" On="uninstall" />
             </Component>
+            <Component Id="LinksFilesComponent" Directory="INSTALLFOLDER" Win64="yes" Guid="12B2F0A1-9A2A-4EF3-8888-000000000003">
+                <RemoveFile Id="RemoveOryaManagerLink" Name="OryaManager" On="uninstall" />
+                <RemoveFile Id="RemoveOryaAgentLink" Name="OryaAgent" On="uninstall" />
+            </Component>
 
         </ComponentGroup>
 
