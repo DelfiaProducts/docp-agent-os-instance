@@ -34,6 +34,9 @@
                                 ErrorControl="normal" />
                 <ServiceControl Id="ServiceControl" Start="install" Stop="both" Remove="uninstall" Name="OryaAgent" Wait="yes"/>
             </Component>
+            <Component Id="LinkComponent" Directory="INSTALLFOLDER" Win64="yes" Guid="34B5E1B5-7128-44F7-ABCD-000000000002">
+                <RemoveFile Id="RemoveAgentLink" Name="OryaAgent" On="uninstall" />
+            </Component>
         </ComponentGroup>
 
         <Directory Id="TARGETDIR" Name="SourceDir">
