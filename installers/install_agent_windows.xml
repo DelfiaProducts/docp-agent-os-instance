@@ -20,7 +20,6 @@
                 <File Id="AgentExe" Name="agent.exe" Source="agent.exe" KeyPath="yes" >
                     <Shortcut 
                             Id="DesktopShortcutAgent" 
-                            Directory="INSTALLFOLDER" 
                             Name="OryaAgent" 
                             Description="Inicia o Seu App" 
                             Icon="AppIconAgent.ico" />
@@ -35,7 +34,7 @@
                 <ServiceControl Id="ServiceControl" Start="install" Stop="both" Remove="uninstall" Name="OryaAgent" Wait="yes"/>
             </Component>
             <Component Id="LinkComponent" Directory="INSTALLFOLDER" Win64="yes" Guid="34B5E1B5-7128-44F7-ABCD-000000000002">
-                <RemoveFile Id="RemoveAgentLink" Name="OryaAgent" On="uninstall" />
+                <RemoveFile Id="RemoveAgentLink" Name="OryaAgent.lnk" On="uninstall" />
             </Component>
         </ComponentGroup>
 

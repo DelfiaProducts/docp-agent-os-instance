@@ -31,7 +31,6 @@
                 <File Id="ManagerExe" Name="manager.exe" Source="manager.exe" KeyPath="yes" >
                     <Shortcut 
                         Id="DesktopShortcutManager" 
-                        Directory="INSTALLFOLDER" 
                         Name="OryaManager" 
                         Description="Inicia o Seu App" 
                         Icon="AppIconManager.ico" />
