@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
     <Product Id="PRODUCT_CODE" Name="OryaManager" Language="1033" Version="MANAGER_VERSION" Manufacturer="Orya" UpgradeCode="10A52F68-E52F-488C-A771-EB96C646F23B">
         <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Platform="x64"/>
 
@@ -28,7 +28,14 @@
 
         <ComponentGroup Id="ManagerComponents">
             <Component Id="ManagerBinary" Directory="bindir" Win64="yes" Guid="EF3FEC1A-FDCD-4B8B-AFBF-2AD58A3AC042">
-                <File Id="ManagerExe" Name="manager.exe" Source="manager.exe" KeyPath="yes" />
+                <File Id="ManagerExe" Name="manager.exe" Source="manager.exe" KeyPath="yes" >
+                    <Shortcut 
+                        Id="DesktopShortcutManager" 
+                        Directory="INSTALLFOLDER" 
+                        Name="OryaManager" 
+                        Description="Inicia o Seu App" 
+                        Icon="AppIconManager.ico" />
+                </File>
                 <ServiceInstall Id="ServiceInstall"
                                 Name="OryaManager"
                                 DisplayName="OryaManager Service"
@@ -82,8 +89,21 @@
         <Property Id="API_KEY" Admin="yes" />
         <Property Id="TAGS" Admin="yes"/>
         <Property Id="VERSION" Value="latest" />
-        <Property Id="NO_GROUP_ASSOCIATION" Value="true" />
+        <Property Id="NO_GROUP_ASSOCIATION" Value="false" />
+        <Property Id="ORYA_SITE" Value="https://msapi.orya.tech" />
 
+        <Property Id="ARPPRODUCTICON" Value="AppIconManager.ico" />
+        
+        <CustomAction Id="SetOryaDomainEnv" Property="ORYA_DOMAIN" Value="[ORYA_SITE]" Execute="immediate" />
+        <CustomAction Id="SetEnvironmentVariable"
+                  Directory="INSTALLFOLDER"
+                  Execute="deferred"
+                  Impersonate="no"
+                  ExeCommand="setx ORYA_DOMAIN &quot;[ORYA_SITE]&quot;" />
+
+        <InstallExecuteSequence>
+            <Custom Action="SetEnvironmentVariable" After="InstallFiles">NOT Installed</Custom>
+        </InstallExecuteSequence>
         <Binary Id="ConfigExe" SourceFile="config_manager.exe" />
         <CustomAction Id="ExecuteConfig"
                       BinaryKey="ConfigExe"
@@ -94,4 +114,7 @@
             <Custom Action="ExecuteConfig" After="InstallFiles">NOT Installed</Custom>
         </InstallExecuteSequence>
     </Product>
+     <Fragment>
+        <Icon Id="AppIconManager.ico" SourceFile="app.ico" />
+    </Fragment>
 </Wix>

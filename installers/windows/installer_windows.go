@@ -16,11 +16,12 @@ import (
 )
 
 // parseParams parse params
-func parseParams(apiKey, tags, version, noGroupAssociation *string) {
+func parseParams(apiKey, tags, version, noGroupAssociation, oryaSite *string) {
 	flag.StringVar(apiKey, "API_KEY", "", "orya api key")
 	flag.StringVar(tags, "TAGS", "", "orya tags")
 	flag.StringVar(version, "VERSION", "latest", "orya version")
-	flag.StringVar(noGroupAssociation, "NO_GROUP_ASSOCIATION", "true", "no group association")
+	flag.StringVar(noGroupAssociation, "NO_GROUP_ASSOCIATION", "false", "no group association")
+	flag.StringVar(oryaSite, "ORYA_SITE", "", "orya site for services")
 	flag.Parse()
 }
 
@@ -73,7 +74,11 @@ func main() {
 	var tags string
 	var version string
 	var noGroupAssociation string
-	parseParams(&apiKey, &tags, &version, &noGroupAssociation)
+	var oryaSite string 
+	parseParams(&apiKey, &tags, &version, &noGroupAssociation,&oryaSite)
+	if len(oryaSite) == 0{
+		oryaSite = "https://msapi.sandbox.docphq.tech"
+	}
 	baseUrl := "https://github.com/OryaHub/agent-os-instance/releases/download"
 	fileName := "install_manager_windows.msi"
 	//verify if version latest
@@ -104,7 +109,7 @@ func main() {
 	}
 
 	program := pkg.NewExecProgram()
-	command := fmt.Sprintf(`start-process -Wait msiexec -ArgumentList '/qn /i "%s" VERSION="%s" API_KEY="%s" TAGS="%s" NO_GROUP_ASSOCIATION="%s"'`, destFile, version, apiKey, tags, noGroupAssociation)
+	command := fmt.Sprintf(`start-process -Wait msiexec -ArgumentList '/qn /i "%s" VERSION="%s" API_KEY="%s" TAGS="%s" NO_GROUP_ASSOCIATION="%s" ORYA_SITE="%s"'`, destFile, version, apiKey, tags, noGroupAssociation, oryaSite)
 
 	_, err = program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
 	if err != nil {

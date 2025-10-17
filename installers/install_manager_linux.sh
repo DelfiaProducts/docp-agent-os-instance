@@ -22,6 +22,7 @@ fi
 apiKey=""
 tags=""
 noGroupAssociation="false"
+oryaSite="https://msapi.sandbox.docphq.tech"
 #usage show default usage mode 
 function usage() {
     echo "USAGE: $0 --apiKey <apikey> --tags <tag:1,tag:2>"
@@ -44,6 +45,11 @@ while [[ $# -gt 0 ]]; do
         ;;
       --version)
         VERSION="$2"
+        shift
+        shift
+        ;;
+      --orya-site)
+        oryaSite="$2"
         shift
         shift
         ;;
@@ -140,11 +146,12 @@ function create_workdir(){
   [[ ! -f $ORYA_FILES_PATH/state/received ]] && $sudo_cmd touch $ORYA_FILES_PATH/state/received 
 }
 
-#save apiKey and tags in directory
-function save_api_key_and_tags(){
+#save environments in directory
+function save_environments(){
   api_key=$1
   tgs=$2
-  printf "ORYA_API_KEY=$api_key\nORYA_TAGS=$tgs\nORYA_DOMAIN=https://msapi.sandbox.docphq.tech\nORYA_AGENT_PORT=12012\n" | sudo tee $ORYA_FILES_PATH/environments > /dev/null
+  orya_site=$3
+  printf "ORYA_API_KEY=$api_key\nORYA_TAGS=$tgs\nORYA_DOMAIN=$orya_site\nORYA_AGENT_PORT=12012\n" | sudo tee $ORYA_FILES_PATH/environments > /dev/null
 }
 
 # Corrige a função resolve_version para extrair corretamente o campo "latest" do JSON
@@ -239,7 +246,7 @@ verify_script
 setup
 create_workdir
 create_config_yml
-save_api_key_and_tags $apiKey $tags
+save_environments $apiKey $tags $oryaSite
 verify_architecture
 create_link_simbolic
 add_content_config_yml $apiKey $tags $VERSION $noGroupAssociation
