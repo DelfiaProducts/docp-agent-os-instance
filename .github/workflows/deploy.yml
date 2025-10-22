@@ -33,12 +33,6 @@ jobs:
           GOOS=linux GOARCH=arm64 go build -o agent-linux-arm64 main.go
           GOOS=linux GOARCH=amd64 go build -o agent-linux-amd64 main.go
       
-      - name: Build Agent Binaries - macOS amd64 and arm64
-        run: |
-          cd cmd/agent
-          GOOS=darwin GOARCH=arm64 go build -o agent-macos-arm64 main.go
-          GOOS=darwin GOARCH=amd64 go build -o agent-macos-amd64 main.go
-
       - name: Build Manager Binaries - Windows amd64
         run: |
           cd cmd/manager
@@ -52,12 +46,6 @@ jobs:
           GOOS=linux GOARCH=arm64 go build -o manager-linux-arm64 main.go
           GOOS=linux GOARCH=amd64 go build -o manager-linux-amd64 main.go
 
-      - name: Build Manager Binaries - macOS amd64 and arm64
-        run: |
-          cd cmd/manager
-          GOOS=darwin GOARCH=arm64 go build -o manager-macos-arm64 main.go
-          GOOS=darwin GOARCH=amd64 go build -o manager-macos-amd64 main.go
-
       - name: Build Updater Binaries - Windows amd64
         run: |
           cd cmd/updater
@@ -68,12 +56,6 @@ jobs:
           cd cmd/updater
           GOOS=linux GOARCH=arm64 go build -o updater-linux-arm64 main.go
           GOOS=linux GOARCH=amd64 go build -o updater-linux-amd64 main.go
-
-      - name: Build Updater Binaries - macOS amd64 and arm64
-        run: |
-          cd cmd/updater
-          GOOS=darwin GOARCH=arm64 go build -o updater-macos-arm64 main.go
-          GOOS=darwin GOARCH=amd64 go build -o updater-macos-amd64 main.go
 
       - name: List built binaries
         run: |
@@ -269,46 +251,28 @@ jobs:
           cp binaries/manager/manager-windows-amd64.exe release/manager/
           cp binaries/manager/manager-linux-amd64 release/manager/
           cp binaries/manager/manager-linux-arm64 release/manager/
-          cp binaries/manager/manager-macos-amd64 release/manager/
-          cp binaries/manager/manager-macos-arm64 release/manager/
           
           # Copy agent binaries with organized structure
           cp binaries/agent/agent-windows-amd64.exe release/agent/
           cp binaries/agent/agent-linux-amd64 release/agent/
           cp binaries/agent/agent-linux-arm64 release/agent/
-          cp binaries/agent/agent-macos-amd64 release/agent/
-          cp binaries/agent/agent-macos-arm64 release/agent/
 
           # Copy updater binaries with organized structure
           cp binaries/updater/updater-windows-amd64.exe release/updater/
           cp binaries/updater/updater-linux-amd64 release/updater/
           cp binaries/updater/updater-linux-arm64 release/updater/
-          cp binaries/updater/updater-macos-arm64 release/updater/
-          cp binaries/updater/updater-macos-amd64 release/updater/
 
           # Copy manager installers linux
           cp installers/install_manager_linux.sh release/installer/
           cp installers/uninstall_manager_linux.sh release/installer/
 
-          # Copy manager installers macos
-          cp installers/install_manager_macos.sh release/installer/
-          cp installers/uninstall_manager_macos.sh release/installer/
-
           # Copy agent installers linux
           cp installers/install_agent_linux.sh release/installer/
           cp installers/uninstall_agent_linux.sh release/installer/
 
-          # Copy agent installers macos
-          cp installers/install_agent_macos.sh release/installer/
-          cp installers/uninstall_agent_macos.sh release/installer/
-
           # Copy updater installers linux
           cp installers/install_updater_linux.sh release/installer/
           cp installers/uninstall_updater_linux.sh release/installer/
-
-          # Copy updater installers macos
-          cp installers/install_updater_macos.sh release/installer/
-          cp installers/uninstall_updater_macos.sh release/installer/
 
           # Copy Windows installers
           cp windows-installers/*.msi release/installer/
@@ -321,30 +285,18 @@ jobs:
             release/manager/manager-windows-amd64.exe
             release/manager/manager-linux-amd64
             release/manager/manager-linux-arm64
-            release/manager/manager-macos-amd64
-            release/manager/manager-macos-arm64
             release/agent/agent-windows-amd64.exe
             release/agent/agent-linux-amd64
             release/agent/agent-linux-arm64
-            release/agent/agent-macos-amd64
-            release/agent/agent-macos-arm64
             release/updater/updater-windows-amd64.exe
             release/updater/updater-linux-amd64
             release/updater/updater-linux-arm64
-            release/updater/updater-macos-amd64
-            release/updater/updater-macos-arm64
             release/installer/install_manager_linux.sh
             release/installer/uninstall_manager_linux.sh
-            release/installer/install_manager_macos.sh
-            release/installer/uninstall_manager_macos.sh
             release/installer/install_agent_linux.sh
             release/installer/uninstall_agent_linux.sh
-            release/installer/install_agent_macos.sh
-            release/installer/uninstall_agent_macos.sh
             release/installer/install_updater_linux.sh
             release/installer/uninstall_updater_linux.sh
-            release/installer/install_updater_macos.sh
-            release/installer/uninstall_updater_macos.sh
             release/installer/install_manager_windows.msi
             release/installer/install_agent_windows.msi
             release/installer/installer_windows.exe
