@@ -74,10 +74,10 @@ func main() {
 	var tags string
 	var version string
 	var noGroupAssociation string
-	var oryaSite string 
-	parseParams(&apiKey, &tags, &version, &noGroupAssociation,&oryaSite)
-	if len(oryaSite) == 0{
-		oryaSite = "https://msapi.sandbox.docphq.tech"
+	var oryaSite string
+	parseParams(&apiKey, &tags, &version, &noGroupAssociation, &oryaSite)
+	if len(oryaSite) == 0 {
+		oryaSite = "https://msapi.orya.tech"
 	}
 	baseUrl := "https://github.com/OryaHub/agent-os-instance/releases/download"
 	fileName := "install_manager_windows.msi"
