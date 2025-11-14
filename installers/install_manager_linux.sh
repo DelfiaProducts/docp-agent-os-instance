@@ -22,7 +22,7 @@ fi
 apiKey=""
 tags=""
 noGroupAssociation="false"
-oryaSite="https://msapi.sandbox.docphq.tech"
+oryaSite="https://msapi.orya.tech"
 #usage show default usage mode 
 function usage() {
     echo "USAGE: $0 --apiKey <apikey> --tags <tag:1,tag:2>"
