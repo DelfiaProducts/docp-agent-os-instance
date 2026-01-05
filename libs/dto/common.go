@@ -29,6 +29,7 @@ type ConfigAgent struct {
 	AlreadyTracer      bool     `yaml:"already_tracer"`
 	TracerLanguages    []string `yaml:"tracer_languages"`
 	NoGroupAssociation bool     `yaml:"no_group_association,omitempty"`
+	VMName             string   `yaml:"vm_name,omitempty"`
 	Agent              Agent    `yaml:"agent"`
 	AccessToken        string   `json:"access_token"`
 	ComputeId          string   `json:"compute_id"`
