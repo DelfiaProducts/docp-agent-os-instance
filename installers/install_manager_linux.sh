@@ -21,6 +21,7 @@ fi
 #initalize options
 apiKey=""
 tags=""
+vmName=""
 noGroupAssociation="false"
 oryaSite="https://msapi.orya.tech"
 #usage show default usage mode 
@@ -50,6 +51,11 @@ while [[ $# -gt 0 ]]; do
         ;;
       --orya-site)
         oryaSite="$2"
+        shift
+        shift
+        ;;
+      --vm-name)
+        vmName="$2"
         shift
         shift
         ;;
@@ -227,6 +233,7 @@ function add_content_config_yml(){
   tags=$(process_tags "$2")
   version="$3"
   noGroupAssociation="$4"
+  vmName="$5"
 $sudo_cmd tee $ORYA_FILES_PATH/config.yml > /dev/null <<EOF  
 # Orya file for agent configuration that contains
 # information used to perform configuration and service.
@@ -234,6 +241,7 @@ $sudo_cmd tee $ORYA_FILES_PATH/config.yml > /dev/null <<EOF
 no_group_association: $noGroupAssociation
 version: $version 
 
+vm_name: $vmName
 agent:
   apiKey: $api_key 
   tags: 
@@ -249,7 +257,7 @@ create_config_yml
 save_environments $apiKey $tags $oryaSite
 verify_architecture
 create_link_simbolic
-add_content_config_yml $apiKey $tags $VERSION $noGroupAssociation
+add_content_config_yml $apiKey $tags $VERSION $noGroupAssociation $vmName
 add_perm_work_dir
 set_content_service
 prepare_systemd
