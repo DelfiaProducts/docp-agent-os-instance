@@ -8,7 +8,7 @@ func (ag *AgentRegisterService) prepareToSendCreate(metadata []byte) ([]byte, st
 		ag.logger.Error("error in prepare to send", "trace", "agent-os-instance.agent_register_service.prepareToSend", "error", err.Error())
 		return nil, "", err
 	}
-	injectedMetadataBytes, apiKey, err := ag.InjectClientInfoCreate(configFileBytes, metadata)
+	injectedMetadataBytes, apiKey, err := ag.InjectClientInfo(configFileBytes, metadata, true)
 	if err != nil {
 		ag.logger.Error("error in prepare to send", "trace", "agent-os-instance.agent_register_service.prepareToSend", "error", err.Error())
 		return nil, "", err
@@ -24,10 +24,10 @@ func (ag *AgentRegisterService) prepareToSendUpdate(metadata []byte) ([]byte, st
 		ag.logger.Error("error in prepare to send", "trace", "agent-os-instance.agent_register_service.prepareToSend", "error", err.Error())
 		return nil, "", err
 	}
-	injectedMetadataBytes, apiKey, err := ag.InjectClientInfoUpdate(configFileBytes, metadata)
+	injectedMetadataBytes, token, err := ag.InjectClientInfo(configFileBytes, metadata, false)
 	if err != nil {
 		ag.logger.Error("error in prepare to send", "trace", "agent-os-instance.agent_register_service.prepareToSend", "error", err.Error())
 		return nil, "", err
 	}
-	return injectedMetadataBytes, apiKey, nil
+	return injectedMetadataBytes, token, nil
 }
