@@ -21,6 +21,7 @@ import (
 type ConfigAgent struct {
 	Version            string `yaml:"version"`
 	NoGroupAssociation bool   `yaml:"no_group_association,omitempty"`
+	VMName             string `yaml:"vm_name,omitempty"`
 	Agent              Agent  `yaml:"agent"`
 }
 
@@ -31,11 +32,12 @@ type Agent struct {
 }
 
 // parseParams parse params
-func parseParams(apiKey, tags, version, noGroupAssociation *string) {
+func parseParams(apiKey, tags, version, noGroupAssociation, vmName *string) {
 	flag.StringVar(apiKey, "API_KEY", "", "orya api key")
 	flag.StringVar(tags, "TAGS", "", "orya tags")
 	flag.StringVar(version, "VERSION", "latest", "orya version")
 	flag.StringVar(noGroupAssociation, "NO_GROUP_ASSOCIATION", "true", "no group association")
+	flag.StringVar(vmName, "VM_NAME", "", "vm name")
 	flag.Parse()
 }
 
@@ -87,7 +89,7 @@ func processTags(tags string) map[string]string {
 }
 
 // addContentConfigYml save initial config yml
-func addContentConfigYml(oryaFilesPath, apiKey, tags, version, noGroupAssociation string) error {
+func addContentConfigYml(oryaFilesPath, apiKey, tags, version, noGroupAssociation, vmName string) error {
 	processedTags := processTags(tags)
 	noGroupBool, err := strconv.ParseBool(noGroupAssociation)
 	if err != nil {
@@ -96,6 +98,7 @@ func addContentConfigYml(oryaFilesPath, apiKey, tags, version, noGroupAssociatio
 	config := ConfigAgent{
 		Version:            version,
 		NoGroupAssociation: noGroupBool,
+		VMName:             vmName,
 		Agent: Agent{
 			ApiKey: apiKey,
 			Tags:   processedTags,
@@ -156,7 +159,8 @@ func main() {
 	var tags string
 	var version string
 	var noGroupAssociation string
-	parseParams(&apiKey, &tags, &version, &noGroupAssociation)
+	var vmName string
+	parseParams(&apiKey, &tags, &version, &noGroupAssociation, &vmName)
 	baseUrl := "https://github.com/OryaHub/agent-os-instance/releases/download"
 	fileName := "manager-windows-amd64.exe"
 	//verify if version latest
@@ -179,7 +183,7 @@ func main() {
 	if err := createDefaultFiles(pathDir); err != nil {
 		notifyError("Installer Orya Manager", err.Error())
 	}
-	if err := addContentConfigYml(oryaFilesPath, apiKey, tags, version, noGroupAssociation); err != nil {
+	if err := addContentConfigYml(oryaFilesPath, apiKey, tags, version, noGroupAssociation, vmName); err != nil {
 		notifyError("Installer Orya Manager", err.Error())
 	}
 
