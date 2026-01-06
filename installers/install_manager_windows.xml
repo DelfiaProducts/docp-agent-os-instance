@@ -91,7 +91,7 @@
         <Property Id="VERSION" Value="latest" />
         <Property Id="NO_GROUP_ASSOCIATION" Value="false" />
         <Property Id="ORYA_SITE" Value="https://msapi.orya.tech" />
-        <Property Id="VM_NAME" Value="" />
+        <Property Id="VM_NAME" Secure="yes" />
 
         <Property Id="ARPPRODUCTICON" Value="AppIconManager.ico" />
         
