@@ -32,12 +32,13 @@ type Agent struct {
 }
 
 // parseParams parse params
-func parseParams(apiKey, tags, version, noGroupAssociation, vmName *string) {
+func parseParams(apiKey, tags, version, noGroupAssociation, oryaSite, vmName *string) {
 	flag.StringVar(apiKey, "API_KEY", "", "orya api key")
 	flag.StringVar(tags, "TAGS", "", "orya tags")
 	flag.StringVar(version, "VERSION", "latest", "orya version")
 	flag.StringVar(noGroupAssociation, "NO_GROUP_ASSOCIATION", "true", "no group association")
-	flag.StringVar(vmName, "VM_NAME", "", "vm name")
+	flag.StringVar(oryaSite, "ORYA_SITE", "https://msapi.orya.tech", "orya site")
+	flag.StringVar(vmName, "VM_NAME", "vm-name", "vm name")
 	flag.Parse()
 }
 
@@ -159,8 +160,9 @@ func main() {
 	var tags string
 	var version string
 	var noGroupAssociation string
+	var oryaSite string
 	var vmName string
-	parseParams(&apiKey, &tags, &version, &noGroupAssociation, &vmName)
+	parseParams(&apiKey, &tags, &version, &noGroupAssociation, &oryaSite, &vmName)
 	baseUrl := "https://github.com/OryaHub/agent-os-instance/releases/download"
 	fileName := "manager-windows-amd64.exe"
 	//verify if version latest
@@ -182,6 +184,10 @@ func main() {
 	oryaFilesPath := filepath.Join(pathDir, "OryaAgent")
 	if err := createDefaultFiles(pathDir); err != nil {
 		notifyError("Installer Orya Manager", err.Error())
+	}
+	//force clear vmName default
+	if vmName == "vm-name" {
+		vmName = ""
 	}
 	if err := addContentConfigYml(oryaFilesPath, apiKey, tags, version, noGroupAssociation, vmName); err != nil {
 		notifyError("Installer Orya Manager", err.Error())
