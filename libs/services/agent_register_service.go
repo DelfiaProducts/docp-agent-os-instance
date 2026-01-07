@@ -79,11 +79,11 @@ func (ag *AgentRegisterService) GetConfigFileContent(filePath string) ([]byte, e
 }
 
 // InjectClientInfo execute injection the client info in metadata content
-func (ag *AgentRegisterService) InjectClientInfoCreate(configFileContent, linuxMetadataContent []byte) ([]byte, string, error) {
-	ag.logger.Debug("execute inject client info", "trace", "agent-os-instance.agent_register_service.InjectClientInfoCreate", "configFileContent", string(configFileContent), "linuxMetadataContent", string(linuxMetadataContent))
+func (ag *AgentRegisterService) InjectClientInfo(configFileContent []byte, linuxMetadataContent []byte, isCreate bool) ([]byte, string, error) {
+	ag.logger.Debug("execute inject client info", "trace", "agent-os-instance.agent_register_service.InjectClientInfo", "configFileContent", string(configFileContent), "linuxMetadataContent", string(linuxMetadataContent))
 	var configAgentDto dto.ConfigAgent
 	var metadata dto.Metadata
-	var agentRegisterDataCreate dto.AgentRegisterDataCreate
+	var agentRegisterDataCreateOrUpdate dto.AgentRegisterDataCreateOrUpdate
 
 	if err := ag.ymlClient.Unmarshall(configFileContent, &configAgentDto); err != nil {
 		ag.logger.Error("error in unmarshaller", "trace", "agent-os-instance.agent_register_service.InjectClientInfo", "error", err.Error())
@@ -100,57 +100,35 @@ func (ag *AgentRegisterService) InjectClientInfoCreate(configFileContent, linuxM
 		return nil, "", err
 	}
 
-	agentRegisterDataCreate = dto.AgentRegisterDataCreate{
-		NoGroupAssociation: configAgentDto.NoGroupAssociation,
-		Tags:               slcTags,
-		Metadata:           metadata,
-		VMName:             metadata.ComputeInfo.Computename,
+	var vmName string
+	if configAgentDto.VMName != "" {
+		vmName = configAgentDto.VMName
+	} else {
+		vmName = metadata.ComputeInfo.Computename
 	}
 
-	registerDataBytes, err := ag.json.Marshall(agentRegisterDataCreate)
-	if err != nil {
-		ag.logger.Error("error in marshaller", "trace", "agent-os-instance.agent_register_service.InjectClientInfo", "error", err.Error())
-		return nil, "", err
-	}
-
-	return registerDataBytes, configAgentDto.Agent.ApiKey, nil
-}
-
-// InjectClientInfo execute injection the client info in metadata content
-func (ag *AgentRegisterService) InjectClientInfoUpdate(configFileContent, linuxMetadataContent []byte) ([]byte, string, error) {
-	ag.logger.Debug("execute inject client info", "trace", "agent-os-instance.agent_register_service.InjectClientInfoUpdate", "configFileContent", string(configFileContent), "linuxMetadataContent", string(linuxMetadataContent))
-	var configAgentDto dto.ConfigAgent
-	var metadata dto.Metadata
-	var agentRegisterDataUpdate dto.AgentRegisterDataUpdate
-
-	if err := ag.ymlClient.Unmarshall(configFileContent, &configAgentDto); err != nil {
-		ag.logger.Error("error in unmarshaller", "trace", "agent-os-instance.agent_register_service.InjectClientInfo", "error", err.Error())
-		return nil, "", err
-	}
-
-	if err := ag.json.Unmarshall(linuxMetadataContent, &metadata); err != nil {
-		ag.logger.Error("error in unmarshaller", "trace", "agent-os-instance.agent_register_service.InjectClientInfo", "error", err.Error())
-		return nil, "", err
-	}
-
-	slcTags, err := utils.TransformMapToSlice(configAgentDto.Agent.Tags)
-	if err != nil {
-		return nil, "", err
-	}
-
-	agentRegisterDataUpdate = dto.AgentRegisterDataUpdate{
+	agentRegisterDataCreateOrUpdate = dto.AgentRegisterDataCreateOrUpdate{
 		Tags:     slcTags,
 		Metadata: metadata,
-		VMName:   metadata.ComputeInfo.Computename,
+		VMName:   vmName,
+	}
+	if isCreate {
+		agentRegisterDataCreateOrUpdate.NoGroupAssociation = configAgentDto.NoGroupAssociation
 	}
 
-	registerDataBytes, err := ag.json.Marshall(agentRegisterDataUpdate)
+	registerDataBytes, err := ag.json.Marshall(agentRegisterDataCreateOrUpdate)
 	if err != nil {
 		ag.logger.Error("error in marshaller", "trace", "agent-os-instance.agent_register_service.InjectClientInfo", "error", err.Error())
 		return nil, "", err
 	}
+	var apiKeyOrToken string
+	if isCreate {
+		apiKeyOrToken = configAgentDto.Agent.ApiKey
+	} else {
+		apiKeyOrToken = configAgentDto.AccessToken
+	}
 
-	return registerDataBytes, configAgentDto.AccessToken, nil
+	return registerDataBytes, apiKeyOrToken, nil
 }
 
 // SendMetadataCreate execute send metadata to create initial host in

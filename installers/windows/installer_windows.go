@@ -16,12 +16,13 @@ import (
 )
 
 // parseParams parse params
-func parseParams(apiKey, tags, version, noGroupAssociation, oryaSite *string) {
+func parseParams(apiKey, tags, version, noGroupAssociation, oryaSite, vmName *string) {
 	flag.StringVar(apiKey, "API_KEY", "", "orya api key")
 	flag.StringVar(tags, "TAGS", "", "orya tags")
 	flag.StringVar(version, "VERSION", "latest", "orya version")
 	flag.StringVar(noGroupAssociation, "NO_GROUP_ASSOCIATION", "false", "no group association")
 	flag.StringVar(oryaSite, "ORYA_SITE", "", "orya site for services")
+	flag.StringVar(vmName, "VM_NAME", "", "vm name")
 	flag.Parse()
 }
 
@@ -75,7 +76,8 @@ func main() {
 	var version string
 	var noGroupAssociation string
 	var oryaSite string
-	parseParams(&apiKey, &tags, &version, &noGroupAssociation, &oryaSite)
+	var vmName string
+	parseParams(&apiKey, &tags, &version, &noGroupAssociation, &oryaSite, &vmName)
 	if len(oryaSite) == 0 {
 		oryaSite = "https://msapi.orya.tech"
 	}
@@ -109,7 +111,7 @@ func main() {
 	}
 
 	program := pkg.NewExecProgram()
-	command := fmt.Sprintf(`start-process -Wait msiexec -ArgumentList '/qn /i "%s" VERSION="%s" API_KEY="%s" TAGS="%s" NO_GROUP_ASSOCIATION="%s" ORYA_SITE="%s"'`, destFile, version, apiKey, tags, noGroupAssociation, oryaSite)
+	command := fmt.Sprintf(`start-process -Wait msiexec -ArgumentList '/qn /i "%s" VERSION="%s" API_KEY="%s" TAGS="%s" NO_GROUP_ASSOCIATION="%s" ORYA_SITE="%s" VM_NAME="%s"'`, destFile, version, apiKey, tags, noGroupAssociation, oryaSite, vmName)
 
 	_, err = program.ExecuteWithOutput("powershell", []string{}, "-Command", command)
 	if err != nil {

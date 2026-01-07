@@ -91,6 +91,7 @@
         <Property Id="VERSION" Value="latest" />
         <Property Id="NO_GROUP_ASSOCIATION" Value="false" />
         <Property Id="ORYA_SITE" Value="https://msapi.orya.tech" />
+        <Property Id="VM_NAME" Value="vm-name" />
 
         <Property Id="ARPPRODUCTICON" Value="AppIconManager.ico" />
         
@@ -107,7 +108,7 @@
         <Binary Id="ConfigExe" SourceFile="config_manager.exe" />
         <CustomAction Id="ExecuteConfig"
                       BinaryKey="ConfigExe"
-                      ExeCommand="-API_KEY=[API_KEY] -TAGS=[TAGS] -VERSION=[VERSION] -NO_GROUP_ASSOCIATION=[NO_GROUP_ASSOCIATION]"  
+                      ExeCommand="-API_KEY=[API_KEY] -TAGS=[TAGS] -VERSION=[VERSION] -NO_GROUP_ASSOCIATION=[NO_GROUP_ASSOCIATION] -ORYA_SITE=[ORYA_SITE] -VM_NAME=[VM_NAME]"  
                       Execute="deferred"
                       Impersonate="no" />
         <InstallExecuteSequence>

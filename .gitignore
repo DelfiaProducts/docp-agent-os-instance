@@ -25,5 +25,3 @@ go.work.sum
 .env
 .vscode/
 
-#make file dev
-Makefile.dev

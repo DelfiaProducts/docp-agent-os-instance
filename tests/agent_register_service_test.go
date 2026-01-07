@@ -97,7 +97,7 @@ func TestAgentRegisterServiceInjectClientInfo(t *testing.T) {
 					err = errRead
 					return
 				}
-				contentBytes, _, err = agRegister.InjectClientInfoUpdate(configFileContent, bytesLinuxMetadata)
+				contentBytes, _, err = agRegister.InjectClientInfo(configFileContent, bytesLinuxMetadata, false)
 			})
 			s.Then("não deve retornar erro e deve retornar conteúdo", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "InjectClientInfoUpdate não deve retornar erro")
