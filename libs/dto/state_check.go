@@ -8,6 +8,7 @@ type StateCheckResponse struct {
 // StateCheckSignal is struct for signal
 type StateCheckSignal struct {
 	TypeSignal         string           `json:"type"`
+	TraceId            string           `json:"trace_id"`
 	Agents             StateCheckAgents `json:"agents"`
 	Duration           string           `json:"duration"`
 	RemoveOtherVendors []string         `json:"remove_other_vendors"`
@@ -79,6 +80,7 @@ const ContextTransactionStatus ctxKey = "transactionStatus"
 // TransactionStatus is struct for transaction status
 type TransactionStatus struct {
 	ID        string `json:"id"`
+	TraceId   string `json:"trace_id,omitempty"`
 	UlidEvent string `json:"ulid_event"`
 	TypeEvent string `json:"type"`
 	Status    string `json:"status"`

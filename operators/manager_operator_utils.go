@@ -171,25 +171,6 @@ func (l *ManagerOperator) sendMetadataUpdate() {
 
 			l.logger.Debug("execute send metadata update", "trace", "agent-os-instance.linux_manager_operator.sendMetadataUpdate", "statusCode", statusCode)
 			switch statusCode {
-			case 202:
-				configAgent, err := l.adapter.GetConfigAgent()
-				if err != nil {
-					l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataUpdate", Priority: dto.ErrLevelMedium, Err: err}
-				}
-
-				var agentRegisterResponse libdto.AgentRegisterDataResponseSuccess
-				if err := l.json.Unmarshall(result, &agentRegisterResponse); err != nil {
-					l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataUpdate", Priority: dto.ErrLevelMedium, Err: err}
-				}
-
-				if len(agentRegisterResponse.AccessToken) > 0 {
-					configAgent.AccessToken = agentRegisterResponse.AccessToken
-				}
-
-				if err := l.adapter.UpdateConfigAgent(configAgent); err != nil {
-					l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataUpdate", Priority: dto.ErrLevelMedium, Err: err}
-				}
-
 			case 401:
 				if err := l.executeAuthCall(); err != nil {
 					l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataUpdate", Priority: dto.ErrLevelMedium, Err: err}

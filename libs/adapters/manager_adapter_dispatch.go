@@ -53,6 +53,16 @@ func (l *ManagerAdapter) NotifyStatus(status string, typeEvent string, message s
 	if err := l.ymlClient.Unmarshall(content, &config); err != nil {
 		return err
 	}
+	//get tracer id from state check response
+	signalReceivedBytes, err := l.GetStateReceived()
+	if err != nil {
+		return err
+	}
+	var signalResponse dto.StateCheckResponse
+	if err := l.json.Unmarshall(signalReceivedBytes, &signalResponse); err != nil {
+		return err
+	}
+
 	accessToken := config.AccessToken
 	if len(accessToken) > 0 {
 		transactionStatus := utils.GetTransactionFromContext(ctx)
@@ -61,6 +71,10 @@ func (l *ManagerAdapter) NotifyStatus(status string, typeEvent string, message s
 			transactionStatus.Message = message
 			transactionStatus.TypeEvent = typeEvent
 			transactionStatus.UlidEvent = utils.GetUlid()
+			//populate tracer id if exist
+			if signalResponse.Signal.TraceId != "" {
+				transactionStatus.TraceId = signalResponse.Signal.TraceId
+			}
 			if l.LockedEvents {
 				l.pendingTransactionEvents = append(l.pendingTransactionEvents, transactionStatus)
 			} else {
