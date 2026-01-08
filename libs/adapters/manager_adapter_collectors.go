@@ -109,6 +109,9 @@ func (l *ManagerAdapter) GetStateReceived() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(res) == 0 {
+		res = []byte("{}")
+	}
 	return res, nil
 }
 
@@ -118,6 +121,9 @@ func (l *ManagerAdapter) GetStateCurrent() ([]byte, error) {
 	res, err := l.fileSystem.GetFileContent(filepath.Join(l.agentWorkDir, "state", "current"))
 	if err != nil {
 		return nil, err
+	}
+	if len(res) == 0 {
+		res = []byte("{}")
 	}
 	return res, nil
 }
