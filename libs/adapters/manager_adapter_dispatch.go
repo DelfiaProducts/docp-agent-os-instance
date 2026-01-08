@@ -72,8 +72,8 @@ func (l *ManagerAdapter) NotifyStatus(status string, typeEvent string, message s
 			transactionStatus.TypeEvent = typeEvent
 			transactionStatus.UlidEvent = utils.GetUlid()
 			//populate tracer id if exist
-			if signalResponse.TraceId != "" {
-				transactionStatus.TraceId = signalResponse.TraceId
+			if signalResponse.Signal.TraceId != "" {
+				transactionStatus.TraceId = signalResponse.Signal.TraceId
 			}
 			if l.LockedEvents {
 				l.pendingTransactionEvents = append(l.pendingTransactionEvents, transactionStatus)

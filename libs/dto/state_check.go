@@ -2,13 +2,13 @@ package dto
 
 // StateCheckResponse is struct for response the state check
 type StateCheckResponse struct {
-	Signal  StateCheckSignal `json:"signal"`
-	TraceId string           `json:"trace_id"`
+	Signal StateCheckSignal `json:"signal"`
 }
 
 // StateCheckSignal is struct for signal
 type StateCheckSignal struct {
 	TypeSignal         string           `json:"type"`
+	TraceId            string           `json:"trace_id"`
 	Agents             StateCheckAgents `json:"agents"`
 	Duration           string           `json:"duration"`
 	RemoveOtherVendors []string         `json:"remove_other_vendors"`
