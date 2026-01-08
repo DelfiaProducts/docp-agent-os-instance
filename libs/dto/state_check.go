@@ -2,8 +2,8 @@ package dto
 
 // StateCheckResponse is struct for response the state check
 type StateCheckResponse struct {
-	Signal   StateCheckSignal `json:"signal"`
-	TracerId string           `json:"tracer_id"`
+	Signal  StateCheckSignal `json:"signal"`
+	TraceId string           `json:"trace_id"`
 }
 
 // StateCheckSignal is struct for signal
@@ -80,7 +80,7 @@ const ContextTransactionStatus ctxKey = "transactionStatus"
 // TransactionStatus is struct for transaction status
 type TransactionStatus struct {
 	ID        string `json:"id"`
-	TracerId  string `json:"tracer_id,omitempty"`
+	TraceId   string `json:"trace_id,omitempty"`
 	UlidEvent string `json:"ulid_event"`
 	TypeEvent string `json:"type"`
 	Status    string `json:"status"`
