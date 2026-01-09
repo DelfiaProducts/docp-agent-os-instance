@@ -15,10 +15,11 @@ uninstall-datadog:
 #ORYA_API_KEY -> ORYA api key
 #ORYA_AGENT_TAGS -> ORYA agent tags
 #ORYA_SITE -> ORYA site backend
+#ORYA_VERSION -> version the agent
 #VM_NAME -> custom vm name
 install-manager-linux-local:
 	@echo "Install manager linux local"
-	@bash -c "./installers/install_manager_linux.sh --apiKey $(ORYA_API_KEY) --tags $(ORYA_AGENT_TAGS) --orya-site $(ORYA_SITE) --vm-name $(VM_NAME)"
+	@bash -c "./installers/install_manager_linux.sh --version $(ORYA_VERSION) --apiKey $(ORYA_API_KEY) --tags $(ORYA_AGENT_TAGS) --orya-site $(ORYA_SITE) --vm-name $(VM_NAME)"
 	@echo "Manager linux local installed"
 
 #uninstall manager linux local

@@ -80,7 +80,7 @@ const ContextTransactionStatus ctxKey = "transactionStatus"
 // TransactionStatus is struct for transaction status
 type TransactionStatus struct {
 	ID        string `json:"id"`
-	TraceId   string `json:"trace_id,omitempty"`
+	TraceId   string `json:"trace_id"`
 	UlidEvent string `json:"ulid_event"`
 	TypeEvent string `json:"type"`
 	Status    string `json:"status"`
