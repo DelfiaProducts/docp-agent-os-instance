@@ -52,29 +52,3 @@ func (d *DatadogLinuxOperation) getVersionFromOutput(output []byte, version stri
 
 	return "", utils.ErrDatadogVersionNotFound()
 }
-
-func (d *DatadogLinuxOperation) parseValueByPrefix(output string, prefix string) string {
-	lines := strings.Split(output, "\n")
-	for _, line := range lines {
-		trimmedLine := strings.TrimSpace(line)
-		if strings.HasPrefix(trimmedLine, prefix) {
-			value := strings.TrimPrefix(trimmedLine, prefix)
-			return strings.TrimSpace(value)
-		}
-	}
-	return ""
-}
-
-func (d *DatadogLinuxOperation) removeLinesByPrefix(prefixs []string, output string) string {
-	lines := strings.Split(output, "\n")
-	var filteredLines []string
-	for _, line := range lines {
-		for _, prefix := range prefixs {
-			if !strings.Contains(line, prefix) {
-				filteredLines = append(filteredLines, line)
-			}
-		}
-	}
-	output = strings.Join(filteredLines, "\n")
-	return output
-}
