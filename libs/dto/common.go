@@ -13,6 +13,7 @@ type Metadata struct {
 	MemoryInfo   MemoryInfo    `json:"memory_info"`
 	DiskInfo     DiskInfo      `json:"disk_info"`
 	ProcessInfos []ProcessInfo `json:"process_infos"`
+	VendorsInfo  VendorInfo    `json:"vendors_info"`
 }
 
 // LinuxAgent is struct for agent
