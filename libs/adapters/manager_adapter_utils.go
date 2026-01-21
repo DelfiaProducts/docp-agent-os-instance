@@ -41,6 +41,23 @@ func (l *ManagerAdapter) getInfos() {
 		DiskInfo:     diskInfo,
 		ProcessInfos: processInfo,
 	}
+	datadogStatus, err := l.osOperation.Status("datadog")
+	if err != nil {
+		l.logger.Error("error datadog status", "trace", "agent-os-instance.manager_adapter.getInfos", "error", err.Error())
+	}
+	if datadogStatus == "active" {
+		infosBytes, err := l.vendorOperation.GetInfos()
+		if err != nil {
+			l.logger.Error("error get datadog infos", "trace", "agent-os-instance.manager_adapter.getInfos", "error", err.Error())
+		}
+		var datadogInfos dto.DatadogInfos
+		if err := l.json.Unmarshall(infosBytes, &datadogInfos); err != nil {
+			l.logger.Error("error unmarshal datadog infos", "trace", "agent-os-instance.manager_adapter.getInfos", "error", err.Error())
+		} else {
+			linuxMetadata.VendorsInfo.Datadog = datadogInfos
+		}
+	}
+
 	if !l.isClosed {
 		metadataBytes, err := l.json.Marshall(linuxMetadata)
 		if err != nil {
