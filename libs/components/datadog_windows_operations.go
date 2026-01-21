@@ -29,6 +29,7 @@ type DatadogWindowsOperation struct {
 	utilityService   *services.UtilityService
 	fileSystem       *pkg.FileSystem
 	ymlClient        *pkg.YmlClient
+	json             *pkg.JsonClient
 	datadogApmTracer *DatadogWindowsAPMTracer
 }
 
@@ -371,5 +372,28 @@ func (d *DatadogWindowsOperation) DPKGConfigure() error {
 
 // GetInfos fetch datadog infos
 func (d *DatadogWindowsOperation) GetInfos() ([]byte, error) {
-	return nil, nil
+	output, err := d.program.ExecuteWithOutput("powershell", []string{},"-NoProfile","-Command",`& "$env:ProgramFiles\\Datadog\\Datadog Agent\\bin\\agent.exe"`, "status")
+	if err != nil {
+		return nil, err
+	}
+	output = utils.RemoveLinesByPrefix([]string{"ERROR", "Error"}, output)
+	datadogInfos := dto.DatadogInfos{
+		HostId:                        utils.ParseValueByPrefix(output, "hostId:"),
+		Hostname:                      utils.ParseValueByPrefix(output, "hostname:"),
+		KernelArch:                    utils.ParseValueByPrefix(output, "kernelArch:"),
+		KernelVersion:                 utils.ParseValueByPrefix(output, "kernelVersion:"),
+		Os:                            utils.ParseValueByPrefix(output, "os:"),
+		Platform:                      utils.ParseValueByPrefix(output, "platform:"),
+		PlatformFamily:                utils.ParseValueByPrefix(output, "platformFamily:"),
+		PlatformVersion:               utils.ParseValueByPrefix(output, "platformVersion:"),
+		AgentVersion:                  utils.ParseValueByPrefix(output, "agent_version:"),
+		Flavor:                        utils.ParseValueByPrefix(output, "flavor:"),
+		InfrastructureMode:            utils.ParseValueByPrefix(output, "infrastructure_mode:"),
+		InstallMethodInstallerVersion: utils.ParseValueByPrefix(output, "install_method_installer_version:"),
+		InstallMethodTool:             utils.ParseValueByPrefix(output, "install_method_tool:"),
+		InstallMethodToolVersion:      utils.ParseValueByPrefix(output, "install_method_tool_version:"),
+	}
+
+	data, err := d.json.Marshall(datadogInfos)
+	return data, err
 }
