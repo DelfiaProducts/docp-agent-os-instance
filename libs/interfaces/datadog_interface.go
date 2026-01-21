@@ -17,4 +17,5 @@ type IDatadogOperation interface {
 	UpdateVersion(version string) error
 	RollbackVersion(version string) error
 	DPKGConfigure() error
+	GetInfos() ([]byte, error)
 }
