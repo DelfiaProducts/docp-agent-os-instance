@@ -91,3 +91,8 @@ func (d *DatadogWindowsOperation) DPKGConfigure() error {
 	// TODO: not implemented windows
 	return nil
 }
+
+// GetInfos fetch datadog infos
+func (d *DatadogWindowsOperation) GetInfos() ([]byte, error) {
+	return nil, nil
+}
