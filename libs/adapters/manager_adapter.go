@@ -24,6 +24,7 @@ type ManagerAdapter struct {
 	logger                   interfaces.ILogger
 	program                  *pkg.ExecProgram
 	osOperation              interfaces.IOSOperation
+	vendorOperation          interfaces.IDatadogOperation
 	fileSystem               *pkg.FileSystem
 	ymlClient                *pkg.YmlClient
 	json                     *pkg.JsonClient
@@ -80,6 +81,14 @@ func (l *ManagerAdapter) Prepare() error {
 		return err
 	}
 	l.osOperation = osOperation
+	vendorOperation, err := components.DatadogOperation(l.logger)
+	if err != nil {
+		return err
+	}
+	if err := vendorOperation.Setup(); err != nil {
+		return err
+	}
+	l.vendorOperation = vendorOperation
 	fileSystem := pkg.NewFileSystem()
 	l.fileSystem = fileSystem
 	apiPort, err := utils.GetPortAgentApi()
