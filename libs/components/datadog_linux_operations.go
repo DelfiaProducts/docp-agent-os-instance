@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/OryaHub/agent-os-instance/libs/dto"
 	"github.com/OryaHub/agent-os-instance/libs/interfaces"
 	"github.com/OryaHub/agent-os-instance/libs/pkg"
 	"github.com/OryaHub/agent-os-instance/libs/services"
@@ -25,6 +26,9 @@ type DatadogLinuxOperation struct {
 	hostStats        *pkg.HostStats
 	stateCheck       *services.StateCheckService
 	fileSystem       *pkg.FileSystem
+	systemdClient    *pkg.SystemdClient
+	json             *pkg.JsonClient
+	yml              *pkg.YmlClient
 	datadogApmTracer *DatadogAPMTracer
 }
 
@@ -48,6 +52,7 @@ func (d *DatadogLinuxOperation) Setup() error {
 	d.datadogApmTracer = datadogApmTracer
 	fileSystem := pkg.NewFileSystem()
 	d.fileSystem = fileSystem
+	d.json = pkg.NewJsonClient()
 	return nil
 }
 
@@ -247,4 +252,32 @@ func (d *DatadogLinuxOperation) DPKGConfigure() error {
 		return err
 	}
 	return nil
+}
+
+// GetInfos fetch datadog infos
+func (d *DatadogLinuxOperation) GetInfos() ([]byte, error) {
+	output, err := d.program.ExecuteWithOutput("sudo", []string{}, "-u", "dd-agent", "datadog-agent", "status")
+	if err != nil {
+		return nil, err
+	}
+	output = utils.RemoveLinesByPrefix([]string{"ERROR", "Error"}, output)
+	datadogInfos := dto.DatadogInfos{
+		HostId:                        utils.ParseValueByPrefix(output, "hostId:"),
+		Hostname:                      utils.ParseValueByPrefix(output, "hostname:"),
+		KernelArch:                    utils.ParseValueByPrefix(output, "kernelArch:"),
+		KernelVersion:                 utils.ParseValueByPrefix(output, "kernelVersion:"),
+		Os:                            utils.ParseValueByPrefix(output, "os:"),
+		Platform:                      utils.ParseValueByPrefix(output, "platform:"),
+		PlatformFamily:                utils.ParseValueByPrefix(output, "platformFamily:"),
+		PlatformVersion:               utils.ParseValueByPrefix(output, "platformVersion:"),
+		AgentVersion:                  utils.ParseValueByPrefix(output, "agent_version:"),
+		Flavor:                        utils.ParseValueByPrefix(output, "flavor:"),
+		InfrastructureMode:            utils.ParseValueByPrefix(output, "infrastructure_mode:"),
+		InstallMethodInstallerVersion: utils.ParseValueByPrefix(output, "install_method_installer_version:"),
+		InstallMethodTool:             utils.ParseValueByPrefix(output, "install_method_tool:"),
+		InstallMethodToolVersion:      utils.ParseValueByPrefix(output, "install_method_tool_version:"),
+	}
+
+	data, err := d.json.Marshall(datadogInfos)
+	return data, err
 }

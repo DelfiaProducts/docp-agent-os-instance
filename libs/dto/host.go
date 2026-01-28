@@ -61,3 +61,7 @@ type ProcessInfo struct {
 	ExecPath   string `json:"exec_path"`
 	Background bool   `json:"background"`
 }
+
+type VendorInfo struct {
+	Datadog DatadogInfos `json:"datadog"`
+}
