@@ -289,6 +289,22 @@ func (l *ManagerAdapter) GetAlreadyTracer() (bool, error) {
 	return configAgent.AlreadyTracer, nil
 }
 
+// GetAlreadyTracer return already created agent from config file
+func (l *ManagerAdapter) GetAlreadyCreated() (bool, error) {
+	l.logger.Debug("get already tracer", "trace", "agent-os-instance.manager_adapter.GetAlreadyCreated")
+	var configAgent dto.ConfigAgent
+	pathConfigFile := filepath.Join(l.agentWorkDir, "config.yml")
+	contentConfigAgent, err := l.fileSystem.GetFileContent(pathConfigFile)
+	if err != nil {
+		return false, err
+	}
+	if err := l.ymlClient.Unmarshall(contentConfigAgent, &configAgent); err != nil {
+		return false, err
+	}
+
+	return configAgent.AlreadyCreated, nil
+}
+
 // GetConfigAgent get config agent from file
 func (l *ManagerAdapter) GetConfigAgent() (dto.ConfigAgent, error) {
 	l.logger.Debug("get config agent", "trace", "agent-os-instance.manager_adapter.GetConfigAgent")
