@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/OryaHub/agent-os-instance/libs/dto"
@@ -135,6 +136,24 @@ func (l *ManagerOperator) sendMetadataCreate() {
 					l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataCreate", Priority: dto.ErrLevelMedium, Err: err}
 					return
 				}
+			case 400:
+				isRateLimit, err := l.validateRateLimitInstallAgentError(result)
+				if err != nil {
+					l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataCreate", Priority: dto.ErrLevelMedium, Err: err}
+					return
+				}
+				if isRateLimit {
+					l.logger.Debug("rate limit install agent exceeded", "trace", "agent-os-instance.linux_manager_operator.sendMetadataCreate")
+					version, err := l.adapter.GetAgentVersion()
+					if err != nil {
+						l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataCreate", Priority: dto.ErrLevelMedium, Err: err}
+						return
+					}
+					if err := l.adapter.AutoUninstall(version); err != nil {
+						l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataCreate", Priority: dto.ErrLevelMedium, Err: err}
+						return
+					}
+				}
 			default:
 				l.logger.Info("result from register service", "trace", "agent-os-instance.linux_manager_operator.sendMetadata", "result", string(result))
 				if l.retryRegister <= l.maxRetry {
@@ -209,6 +228,22 @@ func (l *ManagerOperator) validateDuplicatedSignal(signalBytes []byte) error {
 		return utils.ErrSignalAlreadyExists()
 	}
 	return nil
+}
+
+// validateDuplicatedSignal execute validate rate limit for install agent
+func (l *ManagerOperator) validateRateLimitInstallAgentError(data []byte) (bool, error) {
+	l.logger.Debug("validate rate limit install agent", "trace", "agent-os-instance.manager_operator.validateRateLimitInstallAgent")
+	// Implement rate limit validation logic here
+	var response dto.StateCheckRequestResponseError
+	if err := l.json.Unmarshall(data, &response); err != nil {
+		return false, err
+	}
+
+	if response.Detail.ErrorId == pkg.ErrIdRateLimitInstallAgent && response.Detail.Service == pkg.ErrServiceRateLimitInstallAgent && strings.Contains(response.Detail.Message, pkg.ErrMsgRateLimitInstallAgent) {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 // getMetadata return metadata from host
@@ -882,16 +917,24 @@ func (l *ManagerOperator) validateState() {
 	return
 }
 
-// collectGetState collect state from service state check
+// collectGetState collect signal from compute service
 func (l *ManagerOperator) collectGetState() {
-	l.logger.Debug("collect get actions", "trace", "agent-os-instance.manager_operator.collectGetActions")
+	l.logger.Debug("collect get state", "trace", "agent-os-instance.manager_operator.collectGetState")
 	defer l.wg.Done()
-	err := l.GetSignalFromStateCheck()
+	alreadyCreated, err := l.adapter.GetAlreadyCreated()
+	if err != nil {
+		l.chanErrors <- dto.CommonChanErrors{From: "GetAlreadyCreated", Priority: dto.ErrLevelMedium, Err: err}
+		return
+	}
+	if !alreadyCreated {
+		l.logger.Debug("agent first time created", "trace", "agent-os-instance.manager_operator.GetSignalFromStateCheck", "alreadyCreated", alreadyCreated)
+		return
+	}
+	err = l.GetSignalFromStateCheck()
 	if err != nil {
 		l.chanErrors <- dto.CommonChanErrors{From: "collectGetState", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
-	return
 }
 
 // collectGetActions collect actions from service state check
