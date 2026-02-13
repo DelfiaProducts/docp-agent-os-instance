@@ -3,5 +3,5 @@ package pkg
 const (
 	ErrIdRateLimitInstallAgent      = "ERR_03_DOMAIN_03"
 	ErrServiceRateLimitInstallAgent = "GATEWAY"
-	ErrMsgRateLimitInstallAgent     = "Account integration limit reached"
+	ErrMsgRateLimitInstallAgent     = "Agent limit reached"
 )
