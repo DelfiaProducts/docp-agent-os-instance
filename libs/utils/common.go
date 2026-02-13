@@ -152,3 +152,8 @@ func ErrFailedGetLatestVersionDatadog() error {
 func ErrDatadogVersionInvalidFormat() error {
 	return pkg.ErrDatadogVersionInvalidFormat
 }
+
+// ErrFailedCheckUsageLimit return error the failed check usage limit
+func ErrFailedCheckUsageLimit() error {
+	return pkg.ErrFailedCheckUsageLimit
+}
