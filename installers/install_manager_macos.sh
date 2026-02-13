@@ -22,7 +22,9 @@ fi
 #initalize options
 apiKey=""
 tags=""
+vmName=""
 noGroupAssociation="false"
+oryaSite="https://msapi.orya.tech"
 #usage show default usage mode 
 function usage() {
     echo "USAGE: $0 --apiKey <apikey> --tags <tag:1,tag:2>"
@@ -45,6 +47,16 @@ while [[ $# -gt 0 ]]; do
         ;;
       --version)
         VERSION="$2"
+        shift
+        shift
+        ;;
+      --orya-site)
+        oryaSite="$2"
+        shift
+        shift
+        ;;
+      --vm-name)
+        vmName="$2"
         shift
         shift
         ;;
@@ -86,6 +98,24 @@ if [[ "$KERNEL_NAME" != "Darwin" ]]; then
   printf "\033[31mInvalid installer for machine\033[0m\n"
   exit 0
 fi
+}
+
+function verify_usage_limit(){
+  url="$oryaSite/usage-tracking/usage-limit/orya/check"
+  resp=$(curl -s "$url" -H "docp-api-key: $apiKey")
+
+  has_limit=$(echo "$resp" | grep -o '"has_limit":[^,]*' | cut -d: -f2)
+  current_usage=$(echo "$resp" | grep -o '"current_usage":[^,]*' | cut -d: -f2)
+  limit=$(echo "$resp" | grep -o '"limit":[^,]*' | cut -d: -f2)
+  configured_limit=$(echo "$resp" | grep -o '"configured_limit":[^}]*' | cut -d: -f2)
+
+  if [[ "$has_limit" == "" ]]; then
+    printf "\033[31mfailed check usage limit\033[0m"
+    exit 0
+  elif [[ "$has_limit" == "false" ]]; then
+    printf "\033[33musage limit exceeded, cannot install the agent. actual usage/limit: $current_usage/$limit\033[0m"
+    exit 0
+  fi
 }
 
 #get binary arm64
@@ -239,6 +269,7 @@ EOF
 #actions
 VERSION=$(resolve_version "$VERSION")
 verify_script
+verify_usage_limit
 setup
 create_workdir
 create_config_yml
