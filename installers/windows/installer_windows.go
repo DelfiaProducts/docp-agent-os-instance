@@ -83,13 +83,22 @@ func main() {
 	}
 	baseUrl := "https://github.com/OryaHub/agent-os-instance/releases/download"
 	fileName := "install_manager_windows.msi"
+
+	logger := utils.NewOryaLoggerText(os.Stdout)
+	utilityService := services.NewUtilityService(logger)
+	if err := utilityService.Setup(); err != nil {
+		notifyError("Installer Windows", err.Error())
+	}
+	//verify usage limit
+	usageLimitResponse, err := utilityService.ValidateUsageLimit(apiKey, oryaSite)
+	if err != nil {
+		notifyError("Installer Windows", err.Error())
+	}
+	if !usageLimitResponse.HasLimit {
+		notifyError("Installer Windows", fmt.Sprintf("usage limit exceeded: cannot install the agent.  actual usage/limit: %d/%d", usageLimitResponse.CurrentUsage, usageLimitResponse.Limit))
+	}
 	//verify if version latest
 	if version == "latest" {
-		logger := utils.NewOryaLoggerText(os.Stdout)
-		utilityService := services.NewUtilityService(logger)
-		if err := utilityService.Setup(); err != nil {
-			notifyError("Installer Windows", err.Error())
-		}
 		agentVersions, err := utilityService.FetchAgentVersions()
 		if err != nil {
 			notifyError("Installer Windows", err.Error())
