@@ -113,8 +113,7 @@ function verify_usage_limit(){
     printf "\033[31mFailed check usage limit\033[0m"
     exit 0
   elif [[ "$has_limit" == "false" ]]; then
-    printf "\033[33mUsage limit exceeded: Cannot install the agent.\033[0m"
-    printf "\033[33mCurrent limit: $limit\033[0m"
+    printf "\033[33mUsage limit exceeded: Cannot install the agent.\nCurrent limit: $limit\033[0m"
     exit 0
   fi
 }
