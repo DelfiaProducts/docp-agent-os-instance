@@ -95,7 +95,7 @@ func main() {
 		notifyError("Installer Windows", err.Error())
 	}
 	if !usageLimitResponse.HasLimit {
-		notifyError("Installer Windows", fmt.Sprintf("usage limit exceeded: cannot install the agent.  actual usage/limit: %d/%d", usageLimitResponse.CurrentUsage, usageLimitResponse.Limit))
+		notifyError("Installer Windows", fmt.Sprintf("Usage limit exceeded: Cannot install the agent.\nCurrent limit: %d", usageLimitResponse.Limit))
 	}
 	//verify if version latest
 	if version == "latest" {

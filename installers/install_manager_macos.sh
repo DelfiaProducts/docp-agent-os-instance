@@ -110,10 +110,11 @@ function verify_usage_limit(){
   configured_limit=$(echo "$resp" | grep -o '"configured_limit":[^}]*' | cut -d: -f2)
 
   if [[ "$has_limit" == "" ]]; then
-    printf "\033[31mfailed check usage limit\033[0m"
+    printf "\033[31mFailed check usage limit\033[0m"
     exit 0
   elif [[ "$has_limit" == "false" ]]; then
-    printf "\033[33musage limit exceeded, cannot install the agent. actual usage/limit: $current_usage/$limit\033[0m"
+    printf "\033[33mUsage limit exceeded: Cannot install the agent.\033[0m"
+    printf "\033[33mCurrent limit: $limit\033[0m"
     exit 0
   fi
 }
