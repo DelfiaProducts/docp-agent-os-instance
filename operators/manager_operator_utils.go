@@ -137,13 +137,13 @@ func (l *ManagerOperator) sendMetadataCreate() {
 					return
 				}
 			case 400:
-				isRateLimit, err := l.validateRateLimitInstallAgentError(result)
+				isUsageLimit, err := l.validateUsageLimitInstallAgentError(result)
 				if err != nil {
 					l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataCreate", Priority: dto.ErrLevelMedium, Err: err}
 					return
 				}
-				if isRateLimit {
-					l.logger.Debug("rate limit install agent exceeded", "trace", "agent-os-instance.linux_manager_operator.sendMetadataCreate")
+				if isUsageLimit {
+					l.logger.Debug("usage limit install agent exceeded", "trace", "agent-os-instance.linux_manager_operator.sendMetadataCreate")
 					version, err := l.adapter.GetAgentVersion()
 					if err != nil {
 						l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataCreate", Priority: dto.ErrLevelMedium, Err: err}
@@ -230,10 +230,10 @@ func (l *ManagerOperator) validateDuplicatedSignal(signalBytes []byte) error {
 	return nil
 }
 
-// validateDuplicatedSignal execute validate rate limit for install agent
-func (l *ManagerOperator) validateRateLimitInstallAgentError(data []byte) (bool, error) {
-	l.logger.Debug("validate rate limit install agent", "trace", "agent-os-instance.manager_operator.validateRateLimitInstallAgent")
-	// Implement rate limit validation logic here
+// validateUsageLimitInstallAgentError execute validate usage limit for install agent
+func (l *ManagerOperator) validateUsageLimitInstallAgentError(data []byte) (bool, error) {
+	l.logger.Debug("validate usage limit install agent", "trace", "agent-os-instance.manager_operator.validateUsageLimitInstallAgent")
+	// Implement usage limit validation logic here
 	var response dto.StateCheckRequestResponseError
 	if err := l.json.Unmarshall(data, &response); err != nil {
 		return false, err
@@ -730,6 +730,9 @@ func (l *ManagerOperator) consumeActionsOryaAgent() {
 		} else if act.Action == "uninstall" {
 			l.wg.Add(1)
 			go l.autoUninstall()
+		} else if act.Action == "standby" {
+			l.wg.Add(1)
+			go l.handlerStandbyOryaAgent(time.Duration(act.Sleep) * time.Minute)
 		} else {
 			continue
 		}
@@ -1044,4 +1047,15 @@ func (l *ManagerOperator) comunicateSCM() error {
 		return err
 	}
 	return nil
+}
+
+// handlerStandbyOryaAgent execute handler standby orya agent
+func (l *ManagerOperator) handlerStandbyOryaAgent(sleep time.Duration) {
+	defer l.wg.Done()
+	l.logger.Debug("handler standby orya agent", "trace", "agent-os-instance.manager_operator.handlerStandbyOryaAgent", "sleep", sleep)
+	//protect for invalid value sleep
+	if sleep <= time.Duration(0) {
+		sleep = l.intervalGetSignal
+	}
+	l.tickerSignal.Reset(sleep)
 }
