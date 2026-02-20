@@ -131,6 +131,28 @@ func (l *ManagerAdapter) prepareOryaAgentAction(stateCheckSignal dto.StateCheckS
 	return dto.StateAction{}
 }
 
+func (l *ManagerAdapter) prepareOryaStandbyAgentAction(stateCheckSignal dto.StateCheckSignal) dto.StateAction {
+	l.logger.Debug("prepare orya standby agent action", "trace", "agent-os-instance.manager_adapter.prepareOryaStandbyAgentAction", "stateCheckSignal", stateCheckSignal)
+	if stateCheckSignal.TypeSignal == "standby" {
+		if len(stateCheckSignal.Mode) > 0 {
+			standbyAction := dto.StateAction{
+				Type:   "orya-agent",
+				Action: "standby",
+			}
+			mode := stateCheckSignal.Mode
+			switch mode {
+			case "start":
+				standbyAction.Sleep = stateCheckSignal.Sleep
+			case "stop":
+				standbyAction.Sleep = 1
+			}
+			return standbyAction
+
+		}
+	}
+	return dto.StateAction{}
+}
+
 // getActionsFiles return slice the files from configurations
 func (l *ManagerAdapter) getActionsFiles(configurations dto.StateCheckDatadogConfigurations) []dto.StateActionFiles {
 	l.logger.Debug("get actions files", "trace", "agent-os-instance.manager_adapter.getActionsFiles", "configurations", configurations)
