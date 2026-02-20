@@ -237,6 +237,22 @@ func (l *ManagerAdapter) GetActions(stateCheckResponse *dto.StateCheckResponse) 
 		}
 	}
 
+	//prepare orya standby agent action
+	oryaStandbyAgentAction := l.prepareOryaStandbyAgentAction(stateCheckResponse.Signal)
+	lastOryaStandbyAgentActionHash := l.GetStore("action.orya.standby")
+	oryaStandbyAgentActionBytes, err := l.json.Marshall(&oryaStandbyAgentAction)
+	if err != nil {
+		return nil, err
+	}
+
+	newOryaStandbyAgentActionHash := utils.GenerateMd5Hash(oryaStandbyAgentActionBytes)
+	if newOryaStandbyAgentActionHash != lastOryaStandbyAgentActionHash {
+		arrStateActions = append(arrStateActions, oryaStandbyAgentAction)
+		if err := l.SetStore("action.orya.standby", newOryaStandbyAgentActionHash); err != nil {
+			return nil, err
+		}
+	}
+
 	arrStateActionsFiltered := l.removeAgentDatadogIfTracerSingleStepExists(arrStateActions)
 	l.logger.Debug("get actions", "trace", "agent-os-instance.manager_adapter.GetActions", "oryaAgentAction", oryaAgentAction, "agentDatadogAction", agentDatadogAction, "agentDatadogUpdateAction", agentDatadogUpdateAction, "tracerDatadogLibraryAction", tracerDatadogLibraryAction, "tracerDatadogSingleStepAction", tracerDatadogSingleStepAction)
 	l.logger.Debug("get actions", "trace", "agent-os-instance.manager_adapter.GetActions", "arrStateActions", arrStateActions)
