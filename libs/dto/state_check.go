@@ -86,3 +86,14 @@ type TransactionStatus struct {
 	Status    string `json:"status"`
 	Message   string `json:"message"`
 }
+
+type StateCheckRequestResponseErrorDetail struct {
+	ErrorId string `json:"error_id"`
+	Service string `json:"service"`
+	Message string `json:"message"`
+}
+
+// StateCheckRequestResponseError is struct for response error the state check
+type StateCheckRequestResponseError struct {
+	Detail StateCheckRequestResponseErrorDetail `json:"detail"`
+}

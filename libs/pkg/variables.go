@@ -14,6 +14,7 @@ var (
 	ErrDatadogVersionNotFound        = errors.New("datadog version not found")
 	ErrDatadogVersionInvalidFormat   = errors.New("datadog version invalid format")
 	ErrContextExpired                = errors.New("context expired")
+	ErrFailedCheckUsageLimit         = errors.New("failed check usage limit")
 
 	// transactions events
 	TransactionEventOpen   = "open"

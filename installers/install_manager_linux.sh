@@ -99,6 +99,24 @@ if [[ "$KERNEL_NAME" != "Linux" ]]; then
 fi
 }
 
+function verify_usage_limit(){
+  url="$oryaSite/usage-tracking/usage-limit/orya/check"
+  resp=$(curl -s "$url" -H "docp-api-key: $apiKey")
+
+  has_limit=$(echo "$resp" | grep -o '"has_limit":[^,]*' | cut -d: -f2)
+  current_usage=$(echo "$resp" | grep -o '"current_usage":[^,]*' | cut -d: -f2)
+  limit=$(echo "$resp" | grep -o '"limit":[^,]*' | cut -d: -f2)
+  configured_limit=$(echo "$resp" | grep -o '"configured_limit":[^}]*' | cut -d: -f2)
+
+  if [[ "$has_limit" == "" ]]; then
+    printf "\033[31mFailed check usage limit\033[0m"
+    exit 0
+  elif [[ "$has_limit" == "false" ]]; then
+    printf "\033[33mUsage limit exceeded: Cannot install the agent.\nCurrent limit: $limit\033[0m"
+    exit 0
+  fi
+}
+
 #verify is architecture and get binary
 function verify_architecture(){
 if [[ "$ARCHITECTURE" == "aarch64" ]]; then
@@ -251,6 +269,7 @@ EOF
 #actions
 VERSION=$(resolve_version "$VERSION")
 verify_script
+verify_usage_limit
 setup
 create_workdir
 create_config_yml

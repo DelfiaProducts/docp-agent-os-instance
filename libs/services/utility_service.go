@@ -78,6 +78,34 @@ func (u *UtilityService) FetchAgentVersions() (dto.AgentVersions, error) {
 	return versions, nil
 }
 
+// ValidateUsageLimit checks if the usage limit for installing the agent has been exceeded.
+func (u *UtilityService) ValidateUsageLimit(apiKey, oryaSite string) (dto.UsageLimitResponse, error) {
+	url := fmt.Sprintf("%s/usage-tracking/usage-limit/orya/check", oryaSite)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return dto.UsageLimitResponse{}, err
+	}
+	req.Header.Set("docp-api-key", apiKey)
+	res, err := u.client.Do(req)
+	if err != nil {
+		return dto.UsageLimitResponse{}, err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return dto.UsageLimitResponse{}, utils.ErrFailedCheckUsageLimit()
+	}
+
+	var usageLimitResponse dto.UsageLimitResponse
+	if err := json.NewDecoder(res.Body).Decode(&usageLimitResponse); err != nil {
+		return dto.UsageLimitResponse{}, err
+	}
+
+	return usageLimitResponse, nil
+}
+
 // GetDatadogLastVersionFromGithub fetches the latest version of Datadog from GitHub.
 func (u *UtilityService) GetDatadogLastVersionFromGithub() (string, error) {
 	url := fmt.Sprintf("%s/latest", utils.GetDatadogGithubUrlVersions())
