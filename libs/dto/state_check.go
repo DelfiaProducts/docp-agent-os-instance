@@ -8,6 +8,8 @@ type StateCheckResponse struct {
 // StateCheckSignal is struct for signal
 type StateCheckSignal struct {
 	TypeSignal         string           `json:"type"`
+	Mode               string           `json:"mode"`
+	Sleep              int              `json:"sleep"`
 	TraceId            string           `json:"trace_id"`
 	Agents             StateCheckAgents `json:"agents"`
 	Duration           string           `json:"duration"`
