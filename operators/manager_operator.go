@@ -42,6 +42,8 @@ type ManagerOperator struct {
 	retryRegister        int
 	maxRetry             int
 	delay                time.Duration
+	intervalGetSignal    time.Duration
+	tickerSignal         *time.Ticker
 }
 
 // NewManagerOperator return instance of manager operator
@@ -59,6 +61,7 @@ func NewManagerOperator() *ManagerOperator {
 		retryRegister:        0,
 		maxRetry:             10,
 		delay:                time.Second * 1,
+		intervalGetSignal:    time.Minute * 1,
 	}
 }
 
@@ -103,6 +106,9 @@ func (l *ManagerOperator) Setup() error {
 		return err
 	}
 	l.filePath = filePath
+
+	ticker := time.NewTicker(l.intervalGetSignal)
+	l.tickerSignal = ticker
 	return nil
 }
 
@@ -451,12 +457,11 @@ func (l *ManagerOperator) Start() {
 	l.wg.Add(1)
 	go l.installAgent()
 
-	ticker := time.NewTicker(1 * time.Minute)
-	defer ticker.Stop()
+	defer l.tickerSignal.Stop()
 
 	for {
 		select {
-		case <-ticker.C:
+		case <-l.tickerSignal.C:
 			l.wg.Add(1)
 			go l.collectGetState()
 

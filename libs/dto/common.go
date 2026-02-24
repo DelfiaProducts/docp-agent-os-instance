@@ -48,6 +48,7 @@ type StateAction struct {
 	Type          string             `json:"type"`
 	Action        string             `json:"action"`
 	Version       string             `json:"version"`
+	Sleep         int                `json:"sleep"`
 	Mode          string             `json:"mode,omitempty"`
 	Component     string             `json:"component"`
 	ComponentEnvs []StateActionEnvs  `json:"component_envs,omitempty"`
