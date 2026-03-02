@@ -1053,9 +1053,15 @@ func (l *ManagerOperator) comunicateSCM() error {
 func (l *ManagerOperator) handlerStandbyOryaAgent(sleep time.Duration) {
 	defer l.wg.Done()
 	l.logger.Debug("handler standby orya agent", "trace", "agent-os-instance.manager_operator.handlerStandbyOryaAgent", "sleep", sleep)
+	transaction := libutils.NewTransactionStatus()
+	ctx := context.WithValue(context.Background(), libdto.ContextTransactionStatus, transaction)
+
+	go l.adapter.NotifyStatus("orya_standby_received", pkg.TransactionEventOpen, "orya standby received", ctx)
+	time.Sleep(l.delay)
 	//protect for invalid value sleep
 	if sleep <= time.Duration(0) {
 		sleep = l.intervalGetSignal
 	}
 	l.tickerSignal.Reset(sleep)
+	go l.adapter.NotifyStatus("orya_standy_complete", pkg.TransactionEventClose, "orya standy complete", ctx)
 }
