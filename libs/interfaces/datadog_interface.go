@@ -18,4 +18,5 @@ type IDatadogOperation interface {
 	RollbackVersion(version string) error
 	DPKGConfigure() error
 	GetInfos() ([]byte, error)
+	WriteEnvironmentFile(ddSite, ddApiKey string) error
 }
