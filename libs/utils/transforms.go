@@ -27,17 +27,15 @@ func TransformMapToSlice(mapp map[string]interface{}) ([]string, error) {
 
 // GetBaseUrlSite return base url from site
 func GetBaseUrlSite(site string) (string, error) {
+	if !strings.HasPrefix(site, "http://") && !strings.HasPrefix(site, "https://") {
+		site = "https://" + site
+	}
 	u, err := url.Parse(site)
 	if err != nil {
 		return "", err
 	}
 
-	host := u.Host
-
-	parts := strings.Split(host, ".")
-	if len(parts) >= 2 {
-		host = strings.Join(parts[len(parts)-2:], ".")
-	}
+	host := u.Hostname()
 	return host, nil
 }
 
