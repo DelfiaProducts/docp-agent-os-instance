@@ -138,8 +138,13 @@ func (d *DatadogLinuxOperation) UninstallAgent() error {
 // so credentials persist even when datadog.yaml is overwritten by cloud config
 func (d *DatadogLinuxOperation) WriteEnvironmentFile(ddSite, ddApiKey string) error {
 	d.logger.Debug("write environment file", "trace", "agent-os-instance.datadog_linux_operations.WriteEnvironmentFile")
+	datadogPath, err := d.DiscoverDatadogConfigPath()
+	if err != nil {
+		return err
+	}
+	envFilePath := filepath.Join(datadogPath, "environment")
 	content := fmt.Sprintf("DD_API_KEY=%s\nDD_SITE=%s\n", ddApiKey, ddSite)
-	if err := d.program.Execute("sudo", []string{}, "bash", "-c", fmt.Sprintf("echo '%s' | tee /etc/datadog-agent/environment > /dev/null", content)); err != nil {
+	if err := d.program.Execute("sudo", []string{}, "bash", "-c", fmt.Sprintf("echo '%s' | tee %s > /dev/null", content, envFilePath)); err != nil {
 		return err
 	}
 	return nil
