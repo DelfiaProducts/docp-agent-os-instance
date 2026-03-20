@@ -68,6 +68,9 @@ func (d *DatadogLinuxOperation) InstallAgent(ddSite, ddApiKey, version string) e
 		if err := d.program.Execute("bash", envs, "-c", fmt.Sprintf("export DD_API_KEY=%s;export DD_SITE=%s;%s", ddApiKey, ddSite, CURL_INSTALL_SH)); err != nil {
 			return err
 		}
+		if err := d.WriteEnvironmentFile(ddSite, ddApiKey); err != nil {
+			return err
+		}
 	} else {
 		d.logger.Debug("install agent", "trace", "agent-os-instance.datadog_linux_operations.InstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
 	}
@@ -86,6 +89,9 @@ func (d *DatadogLinuxOperation) InstallAgentApmSingleStep(ddSite string, ddApiKe
 	if !aptOrDpkgIsRunning {
 		d.logger.Debug("install agent apm single step", "trace", "agent-os-instance.datadog_linux_operations.InstallAgentApmSingleStep", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
 		if err := d.program.Execute("bash", envs, "-c", fmt.Sprintf("export DD_API_KEY=%s;export DD_SITE=%s;export DD_APM_INSTRUMENTATION_ENABLED=%s;export DD_APM_INSTRUMENTATION_LIBRARIES=%s;%s", ddApiKey, ddSite, ddApmInstrumentationEnabled, ddApmInstrumentationLibraries, CURL_INSTALL_SH)); err != nil {
+			return err
+		}
+		if err := d.WriteEnvironmentFile(ddSite, ddApiKey); err != nil {
 			return err
 		}
 	} else {
@@ -125,6 +131,22 @@ func (d *DatadogLinuxOperation) UninstallAgent() error {
 		d.logger.Debug("uninstall agent", "trace", "agent-os-instance.datadog_linux_operations.UninstallAgent", "aptOrDpkgIsRunning", aptOrDpkgIsRunning)
 	}
 
+	return nil
+}
+
+// WriteEnvironmentFile write DD_API_KEY and DD_SITE to /etc/datadog-agent/environment
+// so credentials persist even when datadog.yaml is overwritten by cloud config
+func (d *DatadogLinuxOperation) WriteEnvironmentFile(ddSite, ddApiKey string) error {
+	d.logger.Debug("write environment file", "trace", "agent-os-instance.datadog_linux_operations.WriteEnvironmentFile")
+	datadogPath, err := d.DiscoverDatadogConfigPath()
+	if err != nil {
+		return err
+	}
+	envFilePath := filepath.Join(datadogPath, "environment")
+	content := fmt.Sprintf("DD_API_KEY=%s\nDD_SITE=%s\n", ddApiKey, ddSite)
+	if err := d.program.Execute("sudo", []string{}, "bash", "-c", fmt.Sprintf("echo '%s' | tee %s > /dev/null", content, envFilePath)); err != nil {
+		return err
+	}
 	return nil
 }
 

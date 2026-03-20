@@ -82,6 +82,9 @@ func (d *DatadogWindowsOperation) InstallAgent(ddSite, ddApiKey, version string)
 				return err
 			}
 			d.logger.Debug("install agent datadog", "output", out)
+			if err := d.WriteEnvironmentFile(ddSite, ddApiKey); err != nil {
+				return err
+			}
 			return nil
 		}
 		return err
@@ -116,6 +119,9 @@ func (d *DatadogWindowsOperation) InstallAgentApmSingleStep(ddSite string, ddApi
 				return err
 			}
 			d.logger.Debug("install agent datadog with apm single step", "output", out)
+			if err := d.WriteEnvironmentFile(ddSite, ddApiKey); err != nil {
+				return err
+			}
 			return nil
 		}
 		return err
@@ -372,7 +378,7 @@ func (d *DatadogWindowsOperation) DPKGConfigure() error {
 
 // GetInfos fetch datadog infos
 func (d *DatadogWindowsOperation) GetInfos() ([]byte, error) {
-	output, err := d.program.ExecuteWithOutput("powershell", []string{},"-NoProfile","-Command",`& "$env:ProgramFiles\\Datadog\\Datadog Agent\\bin\\agent.exe"`, "status")
+	output, err := d.program.ExecuteWithOutput("powershell", []string{}, "-NoProfile", "-Command", `& "$env:ProgramFiles\\Datadog\\Datadog Agent\\bin\\agent.exe"`, "status")
 	if err != nil {
 		return nil, err
 	}
@@ -396,4 +402,26 @@ func (d *DatadogWindowsOperation) GetInfos() ([]byte, error) {
 
 	data, err := d.json.Marshall(datadogInfos)
 	return data, err
+}
+
+// WriteEnvironmentFile write DD_API_KEY and DD_SITE to C:\ProgramData\Datadog\environment
+// so credentials persist even when datadog.yaml is overwritten by cloud config
+func (d *DatadogWindowsOperation) WriteEnvironmentFile(ddSite, ddApiKey string) error {
+	d.logger.Debug("write environment file", "trace", "agent-os-instance.datadog_windows_operations.WriteEnvironmentFile")
+	datadogPath, err := d.DiscoverDatadogConfigPath()
+	if err != nil {
+		return err
+	}
+	envFilePath := filepath.Join(datadogPath, "environment")
+	if err := d.fileSystem.VerifyFileExist(envFilePath); err != nil {
+		if errCrt := d.fileSystem.CreateFile(envFilePath); errCrt != nil {
+			return errCrt
+		}
+	}
+	content := fmt.Sprintf("DD_API_KEY=%s\nDD_SITE=%s\n", ddApiKey, ddSite)
+	command := fmt.Sprintf(`Set-Content -Path '%s' -Value '%s' -Force`, envFilePath, content)
+	if _, err := d.program.ExecuteWithOutput("powershell", []string{}, "-NoProfile", "-Command", command); err != nil {
+		return err
+	}
+	return nil
 }

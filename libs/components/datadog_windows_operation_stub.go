@@ -96,3 +96,8 @@ func (d *DatadogWindowsOperation) DPKGConfigure() error {
 func (d *DatadogWindowsOperation) GetInfos() ([]byte, error) {
 	return nil, nil
 }
+
+// WriteEnvironmentFile write DD_API_KEY and DD_SITE to environment file
+func (d *DatadogWindowsOperation) WriteEnvironmentFile(ddSite, ddApiKey string) error {
+	return nil
+}
