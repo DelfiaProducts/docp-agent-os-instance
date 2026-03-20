@@ -172,9 +172,13 @@ func (l *ManagerAdapter) getActionsFiles(configurations dto.StateCheckDatadogCon
 // parseSiteDatadog execute parse the site datadog
 func (l *ManagerAdapter) parseSiteDatadog(site string) string {
 	l.logger.Debug("parse site datadog", "trace", "agent-os-instance.manager_adapter.parseSiteDatadog", "site", site)
+	defaultSite := "datadoghq.com"
 	host, err := utils.GetBaseUrlSite(site)
 	if err != nil {
-		return "datadoghq.com"
+		return defaultSite
+	}
+	if len(host) == 0 {
+		return defaultSite
 	}
 	return host
 }
