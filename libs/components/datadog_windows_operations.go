@@ -378,7 +378,7 @@ func (d *DatadogWindowsOperation) DPKGConfigure() error {
 
 // GetInfos fetch datadog infos
 func (d *DatadogWindowsOperation) GetInfos() ([]byte, error) {
-	output, err := d.program.ExecuteWithOutput("powershell", []string{},"-NoProfile","-Command",`& "$env:ProgramFiles\\Datadog\\Datadog Agent\\bin\\agent.exe"`, "status")
+	output, err := d.program.ExecuteWithOutput("powershell", []string{}, "-NoProfile", "-Command", `& "$env:ProgramFiles\\Datadog\\Datadog Agent\\bin\\agent.exe"`, "status")
 	if err != nil {
 		return nil, err
 	}
@@ -413,6 +413,11 @@ func (d *DatadogWindowsOperation) WriteEnvironmentFile(ddSite, ddApiKey string) 
 		return err
 	}
 	envFilePath := filepath.Join(datadogPath, "environment")
+	if err := d.fileSystem.VerifyFileExist(envFilePath); err != nil {
+		if errCrt := d.fileSystem.CreateFile(envFilePath); errCrt != nil {
+			return errCrt
+		}
+	}
 	content := fmt.Sprintf("DD_API_KEY=%s\nDD_SITE=%s\n", ddApiKey, ddSite)
 	command := fmt.Sprintf(`Set-Content -Path '%s' -Value '%s' -Force`, envFilePath, content)
 	if _, err := d.program.ExecuteWithOutput("powershell", []string{}, "-NoProfile", "-Command", command); err != nil {
