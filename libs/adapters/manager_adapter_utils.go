@@ -225,6 +225,7 @@ func (l *ManagerAdapter) prepareTracerDatadogSingleStepAction(stateCheckSignal d
 				Mode:          "single_step",
 				Component:     "tracer",
 				Version:       version,
+				HostTags:      stateCheckSignal.HostTags,
 				ComponentEnvs: componetEnvVars,
 				Envs:          envVars,
 				Files:         files,
@@ -282,6 +283,7 @@ func (l *ManagerAdapter) prepareTracerDatadogLibraryAction(stateCheckSignal dto.
 				Mode:          "tracing_library",
 				Component:     "tracer",
 				ComponentEnvs: componetEnvVars,
+				HostTags:      stateCheckSignal.HostTags,
 				Envs:          envVars,
 				Files:         files,
 			}
@@ -327,6 +329,7 @@ func (l *ManagerAdapter) prepareAgentDatadogAction(stateCheckSignal dto.StateChe
 				Envs:          envVars,
 				Files:         files,
 				Version:       version,
+				HostTags:      stateCheckSignal.HostTags,
 			}
 		}
 	} else if stateCheckSignal.TypeSignal == "uninstall" {
@@ -369,6 +372,7 @@ func (l *ManagerAdapter) prepareAgentDatadogUpdateAction(stateCheckSignal dto.St
 				Envs:          envVars,
 				Files:         files,
 				Version:       datadogAgent.Version,
+				HostTags:      stateCheckSignal.HostTags,
 			}
 			action = act
 		}
