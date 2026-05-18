@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/OryaHub/agent-os-instance/libs/dto"
@@ -177,9 +178,11 @@ func (l *ManagerAdapter) parseSiteDatadog(site string) string {
 	if err != nil {
 		return defaultSite
 	}
-	if len(host) == 0 {
+	splited := strings.Split(host, ".")
+	if len(splited) > 2 || len(host) == 0 {
 		return defaultSite
 	}
+
 	return host
 }
 
