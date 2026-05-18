@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/OryaHub/agent-os-instance/libs/bdd"
-	"github.com/OryaHub/agent-os-instance/libs/components"
+	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
 // ---------------------------------------------------------------------------
@@ -17,7 +17,7 @@ func TestExtractTagKey(t *testing.T) {
 		Scenario("tag com separador key:value", func(s *bdd.Scenario) {
 			var key string
 			s.When("ExtractTagKey é chamado com 'env:prod'", func() {
-				key = components.ExtractTagKey("env:prod")
+				key = utils.ExtractTagKey("env:prod")
 			})
 			s.Then("deve retornar apenas 'env'", func(t *testing.T) {
 				bdd.AssertEqual(t, "env", key, "chave deve ser 'env'")
@@ -27,7 +27,7 @@ func TestExtractTagKey(t *testing.T) {
 		Scenario("tag sem separador", func(s *bdd.Scenario) {
 			var key string
 			s.When("ExtractTagKey é chamado com 'standalone'", func() {
-				key = components.ExtractTagKey("standalone")
+				key = utils.ExtractTagKey("standalone")
 			})
 			s.Then("deve retornar a tag inteira", func(t *testing.T) {
 				bdd.AssertEqual(t, "standalone", key, "chave deve ser a tag inteira")
@@ -45,7 +45,7 @@ func TestMergeTagsByKeyPriority(t *testing.T) {
 		Scenario("tag existente tem prioridade sobre tag nova com mesma chave", func(s *bdd.Scenario) {
 			var merged []string
 			s.When("existing tem 'env:prod' e incoming tem 'env:stage'", func() {
-				merged = components.MergeTagsByKeyPriority([]string{"env:prod"}, []string{"env:stage"})
+				merged = utils.MergeTagsByKeyPriority([]string{"env:prod"}, []string{"env:stage"})
 			})
 			s.Then("merged deve conter apenas 'env:prod'", func(t *testing.T) {
 				bdd.AssertEqual(t, 1, len(merged), "deve ter exatamente 1 tag")
@@ -56,7 +56,7 @@ func TestMergeTagsByKeyPriority(t *testing.T) {
 		Scenario("nova tag com chave diferente é adicionada", func(s *bdd.Scenario) {
 			var merged []string
 			s.When("existing tem 'env:prod' e incoming tem 'service:web'", func() {
-				merged = components.MergeTagsByKeyPriority([]string{"env:prod"}, []string{"service:web"})
+				merged = utils.MergeTagsByKeyPriority([]string{"env:prod"}, []string{"service:web"})
 			})
 			s.Then("merged deve conter as duas tags", func(t *testing.T) {
 				bdd.AssertEqual(t, 2, len(merged), "deve ter 2 tags")
@@ -66,7 +66,7 @@ func TestMergeTagsByKeyPriority(t *testing.T) {
 		Scenario("incoming vazio não altera existing", func(s *bdd.Scenario) {
 			var merged []string
 			s.When("incoming é vazio", func() {
-				merged = components.MergeTagsByKeyPriority([]string{"env:prod"}, []string{})
+				merged = utils.MergeTagsByKeyPriority([]string{"env:prod"}, []string{})
 			})
 			s.Then("merged deve ser igual ao existing", func(t *testing.T) {
 				bdd.AssertEqual(t, 1, len(merged), "deve ter 1 tag")
@@ -77,7 +77,7 @@ func TestMergeTagsByKeyPriority(t *testing.T) {
 		Scenario("existing vazio resulta apenas nas incoming tags", func(s *bdd.Scenario) {
 			var merged []string
 			s.When("existing é vazio e incoming tem 'env:prod'", func() {
-				merged = components.MergeTagsByKeyPriority([]string{}, []string{"env:prod"})
+				merged = utils.MergeTagsByKeyPriority([]string{}, []string{"env:prod"})
 			})
 			s.Then("merged deve conter 'env:prod'", func(t *testing.T) {
 				bdd.AssertEqual(t, 1, len(merged), "deve ter 1 tag")
@@ -96,7 +96,7 @@ func TestParseInlineTagLine(t *testing.T) {
 		Scenario("linha ativa com duas tags", func(s *bdd.Scenario) {
 			var tags []string
 			s.When("ParseInlineTagLine é chamado com linha ativa", func() {
-				tags = components.ParseInlineTagLine(`tags: ["env:prod", "service:web"]`)
+				tags = utils.ParseInlineTagLine(`tags: ["env:prod", "service:web"]`)
 			})
 			s.Then("deve retornar as duas tags", func(t *testing.T) {
 				bdd.AssertEqual(t, 2, len(tags), "deve ter 2 tags")
@@ -108,7 +108,7 @@ func TestParseInlineTagLine(t *testing.T) {
 		Scenario("linha comentada com uma tag", func(s *bdd.Scenario) {
 			var tags []string
 			s.When("ParseInlineTagLine é chamado com linha comentada", func() {
-				tags = components.ParseInlineTagLine(`# tags: ["env:prod"]`)
+				tags = utils.ParseInlineTagLine(`# tags: ["env:prod"]`)
 			})
 			s.Then("deve retornar a tag", func(t *testing.T) {
 				bdd.AssertEqual(t, 1, len(tags), "deve ter 1 tag")
@@ -119,7 +119,7 @@ func TestParseInlineTagLine(t *testing.T) {
 		Scenario("lista vazia retorna nil", func(s *bdd.Scenario) {
 			var tags []string
 			s.When("ParseInlineTagLine é chamado com lista vazia", func() {
-				tags = components.ParseInlineTagLine(`tags: []`)
+				tags = utils.ParseInlineTagLine(`tags: []`)
 			})
 			s.Then("deve retornar lista vazia", func(t *testing.T) {
 				bdd.AssertEqual(t, 0, len(tags), "deve retornar lista vazia")
@@ -137,7 +137,7 @@ func TestParseBlockTagItemLine(t *testing.T) {
 		Scenario("item de bloco ativo", func(s *bdd.Scenario) {
 			var tag string
 			s.When("ParseBlockTagItemLine é chamado com item ativo", func() {
-				tag = components.ParseBlockTagItemLine(`  - "env:prod"`)
+				tag = utils.ParseBlockTagItemLine(`  - "env:prod"`)
 			})
 			s.Then("deve retornar 'env:prod'", func(t *testing.T) {
 				bdd.AssertEqual(t, "env:prod", tag, "tag deve ser 'env:prod'")
@@ -147,7 +147,7 @@ func TestParseBlockTagItemLine(t *testing.T) {
 		Scenario("item de bloco comentado", func(s *bdd.Scenario) {
 			var tag string
 			s.When("ParseBlockTagItemLine é chamado com item comentado", func() {
-				tag = components.ParseBlockTagItemLine(`#   - "env:prod"`)
+				tag = utils.ParseBlockTagItemLine(`#   - "env:prod"`)
 			})
 			s.Then("deve retornar 'env:prod'", func(t *testing.T) {
 				bdd.AssertEqual(t, "env:prod", tag, "tag deve ser 'env:prod'")
@@ -170,7 +170,7 @@ func TestMergeTagsInDatadogConfig(t *testing.T) {
 tags: ["env:prod", "service:web"]
 api_key: abc123`
 			s.When("MergeTagsInDatadogConfig é chamado com nova tag 'env:stage'", func() {
-				result, err = components.MergeTagsInDatadogConfig(content, []string{"env:stage", "region:us-east-1"})
+				result, err = utils.MergeTagsInDatadogConfig(content, []string{"env:stage", "region:us-east-1"})
 			})
 			s.Then("nenhum erro deve ocorrer", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "não deve retornar erro")
@@ -197,7 +197,7 @@ api_key: abc123`
 # tags: ["env:prod"]
 api_key: abc123`
 			s.When("MergeTagsInDatadogConfig é chamado com nova tag 'service:web'", func() {
-				result, err = components.MergeTagsInDatadogConfig(content, []string{"service:web"})
+				result, err = utils.MergeTagsInDatadogConfig(content, []string{"service:web"})
 			})
 			s.Then("nenhum erro deve ocorrer", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "não deve retornar erro")
@@ -222,7 +222,7 @@ tags:
   - "service:web"
 api_key: abc123`
 			s.When("MergeTagsInDatadogConfig é chamado com 'env:stage' e 'region:us-east-1'", func() {
-				result, err = components.MergeTagsInDatadogConfig(content, []string{"env:stage", "region:us-east-1"})
+				result, err = utils.MergeTagsInDatadogConfig(content, []string{"env:stage", "region:us-east-1"})
 			})
 			s.Then("nenhum erro deve ocorrer", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "não deve retornar erro")
@@ -246,7 +246,7 @@ api_key: abc123`
 #   - "env:prod"
 api_key: abc123`
 			s.When("MergeTagsInDatadogConfig é chamado com 'service:web'", func() {
-				result, err = components.MergeTagsInDatadogConfig(content, []string{"service:web"})
+				result, err = utils.MergeTagsInDatadogConfig(content, []string{"service:web"})
 			})
 			s.Then("nenhum erro deve ocorrer", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "não deve retornar erro")
@@ -268,7 +268,7 @@ api_key: abc123`
 			content := `hostname: myhost
 api_key: abc123`
 			s.When("MergeTagsInDatadogConfig é chamado em arquivo sem seção tags", func() {
-				result, err = components.MergeTagsInDatadogConfig(content, []string{"env:prod"})
+				result, err = utils.MergeTagsInDatadogConfig(content, []string{"env:prod"})
 			})
 			s.Then("nenhum erro deve ocorrer", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "não deve retornar erro")
@@ -285,7 +285,7 @@ api_key: abc123`
 # tags: ["env:prod"]
 api_key: abc123`
 			s.When("MergeTagsInDatadogConfig é chamado com newTags vazio", func() {
-				result, err = components.MergeTagsInDatadogConfig(content, []string{})
+				result, err = utils.MergeTagsInDatadogConfig(content, []string{})
 			})
 			s.Then("nenhum erro deve ocorrer", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "não deve retornar erro")
