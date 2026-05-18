@@ -235,8 +235,19 @@ func (d *DatadogWindowsOperation) UpdateConfigFileDatadog(filePath string) error
 	return nil
 }
 
-// UpdateConfigFileDatadogContent execute update the config file datadog with content
+// UpdateConfigFileDatadogContent execute update the config file datadog with content.
+// The caller is responsible for restarting the service if needed.
+//
+// Supported fields:
+//   - HostTags: merged with the existing tags in the file (existing tags win on key conflict).
 func (d *DatadogWindowsOperation) UpdateConfigFileDatadogContent(filePath string, config dto.DatadogConfigDTO) error {
+	d.logger.Debug("update config file datadog content", "trace", "agent-os-instance.datadog_windows_operations.UpdateConfigFileDatadogContent", "filePath", filePath)
+
+	if len(config.HostTags) > 0 {
+		if _, err := d.applyHostTags(filePath, config.HostTags); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
