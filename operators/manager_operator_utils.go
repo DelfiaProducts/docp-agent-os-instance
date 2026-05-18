@@ -411,6 +411,47 @@ loopinstalldatadog:
 	}
 }
 
+// handlerUpdateAgentDatadogHostTagsAfterInstall execute update host tags after agent active
+func (l *ManagerOperator) handlerUpdateAgentDatadogHostTagsAfterInstall(hostTags []string) {
+	l.logger.Debug("handler update agent datadog host tags", "trace", "agent-os-instance.manager_operator.handlerUpdateAgentDatadogHostTagsAfterInstall")
+	defer l.wg.Done()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	ticker := time.NewTicker(20 * time.Second)
+	defer ticker.Stop()
+
+loopinstalldatadog:
+	for {
+		select {
+		case <-ctx.Done():
+			l.logger.Error("Context timeout or cancellation reached")
+			l.chanErrors <- dto.CommonChanErrors{From: "handlerUpdateAgentDatadogHostTagsAfterInstall", Priority: dto.ErrLevelMedium, Err: fmt.Errorf("installation process timed out")}
+			return
+
+		case <-ticker.C:
+			datadogActive, err := l.adapter.Status("datadog")
+			if err != nil {
+				l.logger.Error("failed to get datadog agent service already installed", "error", err)
+				l.chanErrors <- dto.CommonChanErrors{From: "handlerUpdateAgentDatadogHostTagsAfterInstall", Priority: dto.ErrLevelMedium, Err: err}
+				continue
+			}
+
+			if datadogActive == "active" {
+				break loopinstalldatadog
+			}
+
+			l.logger.Debug("datadog agent service is already active")
+		}
+	}
+
+	// delay for datadog agent configure all files terminated
+	time.Sleep(time.Minute * 1)
+	l.wg.Add(1)
+	go l.upsertAgentDatadogHostTags(hostTags)
+}
+
 func (l *ManagerOperator) handlerInstallDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationLibraries string) {
 	l.logger.Debug("handle install datadog agent with APM single step", "trace", "agent-os-instance.manager_operator.handlerInstallDatadogWithApmSingleStep", "ddApiKey", ddApiKey, "ddSite", ddSite, "ddApmInstrumentationLibraries", ddApmInstrumentationLibraries)
 	defer l.wg.Done()
@@ -576,6 +617,32 @@ func (l *ManagerOperator) updateAgentDatadog(content []byte) {
 		return
 	}
 
+	return
+}
+
+// upsertAgentDatadogHostTags execute call to api orya agent
+// to upsert datadog agent host tags
+func (l *ManagerOperator) upsertAgentDatadogHostTags(tags []string) {
+	l.logger.Debug("upsert datadog agent host tags", "trace", "agent-os-instance.manager_operator.upsertAgentDatadogHostTags", "tags", tags)
+	defer l.wg.Done()
+
+	config := dto.DatadogConfigDTO{
+		HostTags: tags,
+	}
+	result, err := l.adapter.OryaAgentApiUpdateConfigDatadog(config)
+	if err != nil {
+		l.chanErrors <- dto.CommonChanErrors{From: "upsertAgentDatadogHostTags", Priority: dto.ErrLevelMedium, Err: err}
+		return
+	}
+	l.chanResultsApi <- result
+	if err := l.adapter.DaemonReload(); err != nil {
+		l.chanErrors <- dto.CommonChanErrors{From: "upsertAgentDatadogHostTags", Priority: dto.ErrLevelMedium, Err: err}
+		return
+	}
+	if err := l.adapter.RestartService("datadog"); err != nil {
+		l.chanErrors <- dto.CommonChanErrors{From: "upsertAgentDatadogHostTags", Priority: dto.ErrLevelMedium, Err: err}
+		return
+	}
 	return
 }
 
@@ -756,6 +823,11 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 		l.logger.Debug("consumer actions datadog", "trace", "agent-os-instance.manager_operator.consumerActionsDatadog", "action", act)
 		// action update configurations datadog
 		if act.Action == "update" {
+			//update host tags if exist and agent already installed
+			if datadogAlreadyInstalled && len(act.HostTags) > 0 {
+				l.wg.Add(1)
+				go l.upsertAgentDatadogHostTags(act.HostTags)
+			}
 			for _, fls := range act.Files {
 				flsBytes, err := l.json.Marshall(&fls)
 				if err != nil {
@@ -812,6 +884,11 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 						}
 						go l.installAgentDatadogWithApmSingleStep(ddApiKey, ddSite, ddApmInstrumentationLibraries)
 					}
+					//update host tags if exist and agent already installed
+					if len(act.HostTags) > 0 {
+						l.wg.Add(1)
+						go l.handlerUpdateAgentDatadogHostTagsAfterInstall(act.HostTags)
+					}
 				} else if act.Mode == "tracing_library" {
 					if datadogAlreadyInstalled {
 						language, pathTracer, version, err := l.extractApmTracingLibrayEnvs(act.ComponentEnvs)
@@ -826,12 +903,15 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 			} else if act.Component == "agent" {
 				if !datadogAlreadyInstalled {
 					if len(act.Files) > 0 {
-						l.wg.Add(2)
+						l.wg.Add(3)
 						go l.installAgentDatadog(ddApiKey, ddSite, version)
 						go l.handlerUpdateAgentDatadogAfterInstall(act.Files)
+						go l.handlerUpdateAgentDatadogHostTagsAfterInstall(act.HostTags)
+
 					} else {
-						l.wg.Add(1)
+						l.wg.Add(2)
 						go l.installAgentDatadog(ddApiKey, ddSite, version)
+						go l.handlerUpdateAgentDatadogHostTagsAfterInstall(act.HostTags)
 					}
 				}
 			}
