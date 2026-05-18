@@ -13,6 +13,7 @@ type StateCheckSignal struct {
 	TraceId            string           `json:"trace_id"`
 	Agents             StateCheckAgents `json:"agents"`
 	Duration           string           `json:"duration"`
+	HostTags           []string         `json:"host_tags"`
 	RemoveOtherVendors []string         `json:"remove_other_vendors"`
 }
 
