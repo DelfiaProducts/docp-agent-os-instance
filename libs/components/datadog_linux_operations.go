@@ -217,6 +217,24 @@ func (d *DatadogLinuxOperation) UpdateConfigFileDatadog(filePath string) error {
 	return nil
 }
 
+// UpdateConfigFileDatadogContent reads the current datadog-agent.yaml as dd-agent,
+// applies any supported configuration fields from config, and writes the result back
+// as dd-agent. The caller is responsible for restarting the service if needed.
+//
+// Supported fields:
+//   - HostTags: merged with the existing tags in the file (existing tags win on key conflict).
+func (d *DatadogLinuxOperation) UpdateConfigFileDatadogContent(filePath string, config dto.DatadogConfigDTO) error {
+	d.logger.Debug("update config file datadog content", "trace", "agent-os-instance.datadog_linux_operations.UpdateConfigFileDatadogContent", "filePath", filePath)
+
+	if len(config.HostTags) > 0 {
+		if _, err := d.applyHostTags(filePath, config.HostTags); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // UpdateRepository execute update repository local
 func (d *DatadogLinuxOperation) UpdateRepository() error {
 	if err := d.program.Execute("sudo", []string{}, "bash", "-c", "apt-get update"); err != nil {
