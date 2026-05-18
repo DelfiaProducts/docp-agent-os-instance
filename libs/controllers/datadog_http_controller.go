@@ -159,6 +159,50 @@ func (d *DatadogHttpController) UpdateAgentConfigurations(w http.ResponseWriter,
 	}
 }
 
+// UpdateAgentConfigFile execute update the agent config file datadog
+func (d *DatadogHttpController) UpdateAgentConfigFile(w http.ResponseWriter, r *http.Request) {
+	d.logger.Debug("update agent config file", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentConfigFile")
+	var datadogConfigDto dto.DatadogConfigDTO
+
+	defer r.Body.Close()
+	if err := json.NewDecoder(r.Body).Decode(&datadogConfigDto); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		if errMarshal := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "error", Code: "DATADOG_UPDATE_CONFIG_FILE_ERR", Message: err.Error()}); errMarshal != nil {
+			d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentConfigFile", "error", errMarshal.Error())
+			return
+		}
+		return
+	}
+
+	datadogFilePath, err := d.adapter.DiscoverDatadogConfigPath()
+	d.logger.Debug("update agent config file", "datadogFilePath", datadogFilePath)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		if errMarshal := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "error", Code: "DATADOG_UPDATE_CONFIG_FILE_ERR", Message: err.Error()}); errMarshal != nil {
+			d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentConfigFile", "error", errMarshal.Error())
+			return
+		}
+		return
+	}
+	configPath := filepath.Join(datadogFilePath, "datadog.yaml")
+	d.logger.Debug("update agent config file", "configPath", configPath)
+
+	if err := d.adapter.UpdateConfigFileDatadogContent(configPath, datadogConfigDto); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		if errMarshal := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "error", Code: "DATADOG_UPDATE_CONFIG_FILE_ERR", Message: err.Error()}); errMarshal != nil {
+			d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentConfigFile", "error", errMarshal.Error())
+			return
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusAccepted)
+	if err := json.NewEncoder(w).Encode(&dto.DatadogResponse{Status: "accepted", Code: "DATADOG_UPDATED_CONFIG_FILE_ACCEPTED", Message: "accepted update config file"}); err != nil {
+		d.logger.Error("error in marshal response datadog", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentConfigFile", "error", err.Error())
+		return
+	}
+}
+
 // UpdateAgentVersion execute update the agent version datadog
 func (d *DatadogHttpController) UpdateAgentVersion(w http.ResponseWriter, r *http.Request) {
 	d.logger.Debug("update agent version", "trace", "agent-os-instance.datadog_http_controller.UpdateAgentVersion")
