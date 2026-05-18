@@ -56,6 +56,10 @@ func (d *DatadogRoutes) UpdateAgentVersion(w http.ResponseWriter, r *http.Reques
 	d.controller.UpdateAgentVersion(w, r)
 }
 
+func (d *DatadogRoutes) UpdateAgentConfigFile(w http.ResponseWriter, r *http.Request) {
+	d.controller.UpdateAgentConfigFile(w, r)
+}
+
 // BuildRoutes execute build the routes datadog
 func (d *DatadogRoutes) BuildRoutes(router *mux.Router) error {
 	route := router.PathPrefix("/datadog").Subrouter()
@@ -64,5 +68,6 @@ func (d *DatadogRoutes) BuildRoutes(router *mux.Router) error {
 	route.HandleFunc("/tracer/install", d.InstallTracer).Methods("POST")
 	route.HandleFunc("/configurations", d.UpdateAgentConfigurations).Methods("POST")
 	route.HandleFunc("/update/version", d.UpdateAgentVersion).Methods("POST")
+	route.HandleFunc("/config", d.UpdateAgentConfigFile).Methods("POST")
 	return nil
 }
