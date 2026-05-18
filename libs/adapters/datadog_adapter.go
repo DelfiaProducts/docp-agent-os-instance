@@ -169,6 +169,15 @@ func (d *DatadogAdapter) UpdateConfigFileDatadog(filePath string) error {
 	return nil
 }
 
+// UpdateConfigFileDatadogContent execute update the config file datadog
+func (d *DatadogAdapter) UpdateConfigFileDatadogContent(filePath string, config dto.DatadogConfigDTO) error {
+	d.logger.Debug("update config file datadog", "trace", "agent-os-instance.datadog_adapter.UpdateConfigFileDatadogContent", "filePath", filePath)
+	if err := d.datadogOperation.UpdateConfigFileDatadogContent(filePath, config); err != nil {
+		return err
+	}
+	return nil
+}
+
 // UpdateRepository execute update repository local
 func (d *DatadogAdapter) UpdateRepository() error {
 	d.logger.Debug("update repository", "trace", "agent-os-instance.datadog_adapter.UpdateRepository")
