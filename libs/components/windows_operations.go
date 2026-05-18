@@ -116,6 +116,34 @@ func (l *WindowsOperations) RestartService(serviceName string) error {
 		return err
 	}
 	defer s.Close()
+	dependsSrv, err := s.ListDependentServices(svc.Active)
+	if err != nil {
+		return err
+	}
+	if len(dependsSrv) > 0 {
+		for _, dep := range dependsSrv {
+			depService, err := m.OpenService(dep)
+			if err != nil {
+				return err
+			}
+			defer depService.Close()
+			_, errDep := depService.Control(svc.Stop)
+			if errDep != nil {
+				return errDep
+			}
+			for {
+				time.Sleep(time.Second * 1)
+				statusDep, errDep := depService.Query()
+				if errDep != nil {
+					return errDep
+				}
+
+				if statusDep.State == svc.Stopped {
+					break
+				}
+			}
+		}
+	}
 	status, err := s.Query()
 	if err != nil {
 		return err
