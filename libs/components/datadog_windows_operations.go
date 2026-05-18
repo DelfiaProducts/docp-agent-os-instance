@@ -235,6 +235,12 @@ func (d *DatadogWindowsOperation) UpdateConfigFileDatadog(filePath string) error
 	return nil
 }
 
+// UpdateConfigFileDatadogContent execute update the config file datadog with content
+func (d *DatadogWindowsOperation) UpdateConfigFileDatadogContent(filePath string, config dto.DatadogConfigDTO) error {
+
+	return nil
+}
+
 // UpdateRepository execute update repository local
 func (d *DatadogWindowsOperation) UpdateRepository() error {
 	return nil

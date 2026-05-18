@@ -3,6 +3,7 @@
 package components
 
 import (
+	"github.com/OryaHub/agent-os-instance/libs/dto"
 	"github.com/OryaHub/agent-os-instance/libs/interfaces"
 )
 
@@ -58,6 +59,11 @@ func (d *DatadogWindowsOperation) BackupConfigFileDatadog(filePath string, conte
 
 // UpdateConfigFileDatadog execute update the config file datadog
 func (d *DatadogWindowsOperation) UpdateConfigFileDatadog(filePath string) error {
+	return nil
+}
+
+// UpdateConfigFileDatadogContent execute update the config file datadog with content
+func (d *DatadogWindowsOperation) UpdateConfigFileDatadogContent(filePath string, config dto.DatadogConfigDTO) error {
 	return nil
 }
 
