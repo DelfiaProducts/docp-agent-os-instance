@@ -50,3 +50,7 @@ type DatadogInfos struct {
 	InstallMethodTool             string `yaml:"install_method_tool" json:"install_method_tool"`
 	InstallMethodToolVersion      string `yaml:"install_method_tool_version" json:"install_method_tool_version"`
 }
+
+type DatadogConfigDTO struct {
+	HostTags []string `json:"host_tags"`
+}
