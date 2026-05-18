@@ -4,6 +4,8 @@ package components
 
 import (
 	"encoding/json"
+	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/OryaHub/agent-os-instance/libs/dto"
@@ -29,5 +31,25 @@ func (d *DatadogWindowsOperation) getVersionDatadogAgentFromSignal() (string, er
 	}
 
 	return signalDto.Signal.Agents.DatadogAgent.Version, nil
+}
 
+// applyHostTags reads the current content of filePath, merges the existing tags
+// with newTags (existing tags win on key conflict), and writes the result back.
+// It does NOT restart the service — that is the caller's responsibility.
+func (d *DatadogWindowsOperation) applyHostTags(filePath string, newTags []string) (string, error) {
+	raw, err := os.ReadFile(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read datadog config file %s: %w", filePath, err)
+	}
+
+	newContent, err := utils.MergeTagsInDatadogConfig(string(raw), newTags)
+	if err != nil {
+		return "", fmt.Errorf("failed to merge tags in datadog config: %w", err)
+	}
+
+	if err := os.WriteFile(filePath, []byte(newContent), 0o644); err != nil {
+		return "", fmt.Errorf("failed to write datadog config file %s: %w", filePath, err)
+	}
+
+	return newContent, nil
 }
