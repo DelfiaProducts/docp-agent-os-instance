@@ -1,5 +1,7 @@
 package interfaces
 
+import "github.com/OryaHub/agent-os-instance/libs/dto"
+
 type IDatadogOperation interface {
 	Setup() error
 	InstallAgent(ddSite, ddApiKey, version string) error
@@ -11,6 +13,7 @@ type IDatadogOperation interface {
 	DatadogAddPermitionUser() error
 	BackupConfigFileDatadog(filePath string, content []byte) error
 	UpdateConfigFileDatadog(filePath string) error
+	UpdateConfigFileDatadogContent(filePath string, config dto.DatadogConfigDTO) error
 	UpdateRepository() error
 	GetVersion() (string, error)
 	GetLatestVersion() (string, error)

@@ -196,6 +196,40 @@ func (l *ManagerAdapter) OryaAgentApiUninstallDatadog() ([]byte, error) {
 	return respBytes, nil
 }
 
+// OryaAgentApiUpdateConfigDatadog execute call to api orya for update config datadog yaml file
+func (l *ManagerAdapter) OryaAgentApiUpdateConfigDatadog(config dto.DatadogConfigDTO) ([]byte, error) {
+	content, err := l.json.Marshall(config)
+	if err != nil {
+		return nil, err
+	}
+	l.logger.Debug("execute send request for update config in datadog agent", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUpdateConfigDatadog", "content", string(content))
+
+	urlOryaUpdateConfig := fmt.Sprintf("http://127.0.0.1:%s/datadog/config", l.oryaApiPort)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, urlOryaUpdateConfig, bytes.NewBuffer(content))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	res, err := l.client.Do(req)
+	if err != nil {
+		l.logger.Error("error in execute request", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUpdateConfigDatadog", "error", err.Error())
+		return nil, err
+	}
+
+	defer res.Body.Close()
+	respBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		l.logger.Error("error in read body response", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUpdateConfigDatadog", "error", err.Error())
+		return nil, err
+	}
+
+	l.logger.Debug("update orya vendor config file completed", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUpdateConfigDatadog")
+
+	return respBytes, nil
+}
+
 // OryaAgentApiUpdateConfigurationsDatadog execute call to api orya for update datadog configurations
 func (l *ManagerAdapter) OryaAgentApiUpdateConfigurationsDatadog(content []byte) ([]byte, error) {
 	l.logger.Debug("execute send request for update configurations in datadog agent", "trace", "agent-os-instance.manager_adapter.OryaAgentApiUpdateConfigurationsDatadog", "content", string(content))
