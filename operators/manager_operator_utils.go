@@ -396,7 +396,7 @@ loopinstalldatadog:
 	}
 
 	// delay for datadog agent configure all files terminated
-	time.Sleep(time.Minute * 1)
+	time.Sleep(time.Second * 30)
 
 	// update configurations datadog
 	for _, fls := range files {
@@ -823,11 +823,6 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 		l.logger.Debug("consumer actions datadog", "trace", "agent-os-instance.manager_operator.consumerActionsDatadog", "action", act)
 		// action update configurations datadog
 		if act.Action == "update" {
-			//update host tags if exist and agent already installed
-			if datadogAlreadyInstalled && len(act.HostTags) > 0 {
-				l.wg.Add(1)
-				go l.upsertAgentDatadogHostTags(act.HostTags)
-			}
 			for _, fls := range act.Files {
 				flsBytes, err := l.json.Marshall(&fls)
 				if err != nil {
@@ -851,6 +846,11 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 					//dispatch update version
 					go l.UpdateAgentVersionDatadog(act.Version)
 				}
+			}
+			//update host tags if exist and agent already installed
+			if datadogAlreadyInstalled && len(act.HostTags) > 0 {
+				l.wg.Add(1)
+				go l.upsertAgentDatadogHostTags(act.HostTags)
 			}
 		}
 

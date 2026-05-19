@@ -78,9 +78,16 @@ func MergeTagsInDatadogConfig(content string, newTags []string) (string, error) 
 		}
 	}
 
-	// No tags section found — nothing to change.
+	// No tags section found — create it at the end of the file with newTags.
 	if tagsStartIdx == -1 {
-		return content, nil
+		if len(newTags) == 0 {
+			return content, nil
+		}
+		block := []string{"tags:"}
+		for _, t := range newTags {
+			block = append(block, fmt.Sprintf(`  - "%s"`, t))
+		}
+		return content + "\n" + strings.Join(block, "\n"), nil
 	}
 
 	// Merge: existing tags win on key conflict only when the section was active.

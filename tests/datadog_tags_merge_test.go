@@ -262,13 +262,37 @@ api_key: abc123`
 			})
 		})
 
-		Scenario("sem seção tags — conteúdo retornado inalterado", func(s *bdd.Scenario) {
+		Scenario("sem seção tags — seção criada ao final com newTags", func(s *bdd.Scenario) {
 			var result string
 			var err error
 			content := `hostname: myhost
 api_key: abc123`
 			s.When("MergeTagsInDatadogConfig é chamado em arquivo sem seção tags", func() {
-				result, err = utils.MergeTagsInDatadogConfig(content, []string{"env:prod"})
+				result, err = utils.MergeTagsInDatadogConfig(content, []string{"env:prod", "region:us-east-1"})
+			})
+			s.Then("nenhum erro deve ocorrer", func(t *testing.T) {
+				bdd.AssertNoError(t, err, "não deve retornar erro")
+			})
+			s.Then("seção tags deve ser criada no resultado", func(t *testing.T) {
+				bdd.AssertTrue(t, strings.Contains(result, "tags:"), "deve conter a seção tags:")
+			})
+			s.Then("tags devem estar presentes", func(t *testing.T) {
+				bdd.AssertTrue(t, strings.Contains(result, `"env:prod"`), "deve conter env:prod")
+				bdd.AssertTrue(t, strings.Contains(result, `"region:us-east-1"`), "deve conter region:us-east-1")
+			})
+			s.Then("conteúdo original deve ser preservado", func(t *testing.T) {
+				bdd.AssertTrue(t, strings.Contains(result, "hostname: myhost"), "deve conter hostname")
+				bdd.AssertTrue(t, strings.Contains(result, "api_key: abc123"), "deve conter api_key")
+			})
+		})
+
+		Scenario("sem seção tags e newTags vazio — conteúdo retornado inalterado", func(s *bdd.Scenario) {
+			var result string
+			var err error
+			content := `hostname: myhost
+api_key: abc123`
+			s.When("MergeTagsInDatadogConfig é chamado com newTags vazio e sem seção tags", func() {
+				result, err = utils.MergeTagsInDatadogConfig(content, []string{})
 			})
 			s.Then("nenhum erro deve ocorrer", func(t *testing.T) {
 				bdd.AssertNoError(t, err, "não deve retornar erro")
