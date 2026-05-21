@@ -396,7 +396,7 @@ loopinstalldatadog:
 	}
 
 	// delay for datadog agent configure all files terminated
-	time.Sleep(time.Minute * 1)
+	time.Sleep(time.Second * 30)
 
 	// update configurations datadog
 	for _, fls := range files {
@@ -792,6 +792,10 @@ func (l *ManagerOperator) consumeActionsOryaAgent() {
 	defer l.wg.Done()
 	for act := range l.chanOryaAgent {
 		if act.Action == "update" {
+			if !act.AutoUpdate {
+				l.logger.Info("consume actions orya agent update skipped by auto_update=false")
+				continue
+			}
 			l.wg.Add(1)
 			go l.UpdateAgent(act.Version)
 		} else if act.Action == "uninstall" {
@@ -823,11 +827,6 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 		l.logger.Debug("consumer actions datadog", "trace", "agent-os-instance.manager_operator.consumerActionsDatadog", "action", act)
 		// action update configurations datadog
 		if act.Action == "update" {
-			//update host tags if exist and agent already installed
-			if datadogAlreadyInstalled && len(act.HostTags) > 0 {
-				l.wg.Add(1)
-				go l.upsertAgentDatadogHostTags(act.HostTags)
-			}
 			for _, fls := range act.Files {
 				flsBytes, err := l.json.Marshall(&fls)
 				if err != nil {
@@ -837,20 +836,30 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 
 				// if agent already installed execute update configurations
 				if datadogAlreadyInstalled {
-					l.wg.Add(2)
+					l.wg.Add(1)
 					go l.updateAgentDatadog(flsBytes)
-					//validate if version is latest
-					if act.Version == "latest" {
-						latestVersion, err := l.getVendorLatestVersion()
-						if err != nil {
-							l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
-							return
+					//validate if version is latest and auto_update is enabled
+					if act.AutoUpdate {
+						if act.Version == "latest" {
+							latestVersion, err := l.getVendorLatestVersion()
+							if err != nil {
+								l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+								return
+							}
+							act.Version = latestVersion
 						}
-						act.Version = latestVersion
+						//dispatch update version
+						l.wg.Add(1)
+						go l.UpdateAgentVersionDatadog(act.Version)
+					} else {
+						l.logger.Info("consumer actions datadog version update skipped by auto_update=false")
 					}
-					//dispatch update version
-					go l.UpdateAgentVersionDatadog(act.Version)
 				}
+			}
+			//update host tags if exist and agent already installed
+			if datadogAlreadyInstalled && len(act.HostTags) > 0 {
+				l.wg.Add(1)
+				go l.upsertAgentDatadogHostTags(act.HostTags)
 			}
 		}
 
