@@ -259,6 +259,16 @@ func (l *ManagerOperator) AutoUpdateAgentVersion() error {
 		return err
 	}
 	l.logger.Info("auto update agent version", "received", string(received))
+
+	var stateCheck dto.StateCheckResponse
+	if err := l.json.Unmarshall(received, &stateCheck); err != nil {
+		return err
+	}
+	if !stateCheck.Signal.Agents.OryaAgent.AutoUpdate {
+		l.logger.Info("auto update agent version disabled by auto_update=false, skipping")
+		return nil
+	}
+
 	applyVersion, err := l.adapter.GetAgentVersionFromSignalBytes(received)
 	if err != nil {
 		return err
@@ -385,6 +395,16 @@ func (l *ManagerOperator) AutoUpdateAgentDatadogVersion() error {
 		return err
 	}
 	l.logger.Info("auto update agent datadog version", "received", string(received))
+
+	var stateCheck dto.StateCheckResponse
+	if err := l.json.Unmarshall(received, &stateCheck); err != nil {
+		return err
+	}
+	if !stateCheck.Signal.Agents.DatadogAgent.AutoUpdate {
+		l.logger.Info("auto update agent datadog version disabled by auto_update=false, skipping")
+		return nil
+	}
+
 	applyVersion, err := l.adapter.GetAgentVersionDatadogFromSignalBytes(received)
 	if err != nil {
 		return err
