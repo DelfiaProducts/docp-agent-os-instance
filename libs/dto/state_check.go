@@ -27,12 +27,14 @@ type StateCheckAgents struct {
 
 // StateCheckOryaAgent is component for orya agents
 type StateCheckOryaAgent struct {
-	Version string `json:"version"`
+	Version    string `json:"version"`
+	AutoUpdate bool   `json:"auto_update"`
 }
 
 // StateCheckDatadogAgent is component for datadog agent
 type StateCheckDatadogAgent struct {
 	Version        string                          `json:"version"`
+	AutoUpdate     bool                            `json:"auto_update"`
 	Enabled        *bool                           `json:"enabled,omitempty"`
 	ApiKey         string                          `json:"api-key"`
 	AppKey         string                          `json:"app-key"`

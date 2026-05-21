@@ -49,6 +49,7 @@ type StateAction struct {
 	Action        string             `json:"action"`
 	Version       string             `json:"version"`
 	Sleep         int                `json:"sleep"`
+	AutoUpdate    bool               `json:"auto_update"`
 	HostTags      []string           `json:"host_tags,omitempty"`
 	Mode          string             `json:"mode,omitempty"`
 	Component     string             `json:"component"`
