@@ -192,17 +192,126 @@ func (l *ManagerAdapter) prepareTracerDatadogSingleStepAction(stateCheckSignal d
 	var action dto.StateAction
 	var envVars []dto.StateActionEnvs
 	if stateCheckSignal.TypeSignal == "update" {
-		if len(stateCheckSignal.Agents.DatadogTracerSingleStep.DDApmInstrumentationLibraries) > 0 && len(stateCheckSignal.Agents.DatadogTracerLibrary.Version) == 0 {
-			tracerSingleStep := stateCheckSignal.Agents.DatadogTracerSingleStep
-			var version string
-			var files []dto.StateActionFiles
-			var componetEnvVars []dto.StateActionEnvs
+		if stateCheckSignal.Agents.DatadogAgent.Enabled {
+			if len(stateCheckSignal.Agents.DatadogTracerSingleStep.DDApmInstrumentationLibraries) > 0 && len(stateCheckSignal.Agents.DatadogTracerLibrary.Version) == 0 {
+				tracerSingleStep := stateCheckSignal.Agents.DatadogTracerSingleStep
+				var version string
+				var files []dto.StateActionFiles
+				var componetEnvVars []dto.StateActionEnvs
 
-			componetEnvVars = append(componetEnvVars, dto.StateActionEnvs{
-				Name:  "DD_APM_INSTRUMENTATION_LIBRARIES",
-				Value: tracerSingleStep.DDApmInstrumentationLibraries,
-			})
+				componetEnvVars = append(componetEnvVars, dto.StateActionEnvs{
+					Name:  "DD_APM_INSTRUMENTATION_LIBRARIES",
+					Value: tracerSingleStep.DDApmInstrumentationLibraries,
+				})
 
+				if len(stateCheckSignal.Agents.DatadogAgent.Version) > 0 {
+					datadogAgent := stateCheckSignal.Agents.DatadogAgent
+
+					envVars = append(envVars, dto.StateActionEnvs{
+						Name:  "DD_API_KEY",
+						Value: datadogAgent.ApiKey,
+					})
+					envVars = append(envVars, dto.StateActionEnvs{
+						Name:  "DD_APP_KEY",
+						Value: datadogAgent.AppKey,
+					})
+					envVars = append(envVars, dto.StateActionEnvs{
+						Name:  "DD_SITE",
+						Value: l.parseSiteDatadog(datadogAgent.Site),
+					})
+					files = l.getActionsFiles(datadogAgent.Configurations)
+					version = datadogAgent.Version
+				}
+
+				action = dto.StateAction{
+					Type:          "datadog",
+					Action:        "install",
+					Mode:          "single_step",
+					Component:     "tracer",
+					Version:       version,
+					HostTags:      stateCheckSignal.HostTags,
+					ComponentEnvs: componetEnvVars,
+					Envs:          envVars,
+					Files:         files,
+				}
+			}
+		}
+
+	}
+	return action
+}
+
+// prepareTracerDatadogLibraryAction execute prepare for tracer datadog tracer library action
+func (l *ManagerAdapter) prepareTracerDatadogLibraryAction(stateCheckSignal dto.StateCheckSignal) dto.StateAction {
+	l.logger.Debug("prepare tracer datadog library action", "trace", "agent-os-instance.manager_adapter.prepareTracerDatadogLibraryAction", "stateCheckSignal", stateCheckSignal)
+	var action dto.StateAction
+	var envVars []dto.StateActionEnvs
+	if stateCheckSignal.TypeSignal == "update" {
+		if stateCheckSignal.Agents.DatadogAgent.Enabled {
+			if len(stateCheckSignal.Agents.DatadogTracerLibrary.Version) > 0 && len(stateCheckSignal.Agents.DatadogTracerSingleStep.DDApmInstrumentationLibraries) == 0 {
+				tracerLibrary := stateCheckSignal.Agents.DatadogTracerLibrary
+				var files []dto.StateActionFiles
+				var componetEnvVars []dto.StateActionEnvs
+
+				componetEnvVars = append(componetEnvVars, dto.StateActionEnvs{
+					Name:  "language",
+					Value: tracerLibrary.Language,
+				})
+				componetEnvVars = append(componetEnvVars, dto.StateActionEnvs{
+					Name:  "path_tracer",
+					Value: tracerLibrary.PathTracer,
+				})
+				componetEnvVars = append(componetEnvVars, dto.StateActionEnvs{
+					Name:  "version",
+					Value: tracerLibrary.Version,
+				})
+
+				if len(stateCheckSignal.Agents.DatadogAgent.Version) > 0 {
+					datadogAgent := stateCheckSignal.Agents.DatadogAgent
+
+					envVars = append(envVars, dto.StateActionEnvs{
+						Name:  "DD_API_KEY",
+						Value: datadogAgent.ApiKey,
+					})
+					envVars = append(envVars, dto.StateActionEnvs{
+						Name:  "DD_APP_KEY",
+						Value: datadogAgent.AppKey,
+					})
+					envVars = append(envVars, dto.StateActionEnvs{
+						Name:  "DD_SITE",
+						Value: l.parseSiteDatadog(datadogAgent.Site),
+					})
+					files = l.getActionsFiles(datadogAgent.Configurations)
+				}
+
+				action = dto.StateAction{
+					Type:          "datadog",
+					Action:        "install",
+					Mode:          "tracing_library",
+					Component:     "tracer",
+					ComponentEnvs: componetEnvVars,
+					HostTags:      stateCheckSignal.HostTags,
+					Envs:          envVars,
+					Files:         files,
+				}
+			}
+		}
+
+	}
+	return action
+}
+
+// prepareAgentDatadogAction execute prepare for agent datadog action
+func (l *ManagerAdapter) prepareAgentDatadogAction(stateCheckSignal dto.StateCheckSignal) dto.StateAction {
+	l.logger.Debug("prepare agent datadog action", "trace", "agent-os-instance.manager_adapter.prepareAgentDatadogAction", "stateCheckSignal", stateCheckSignal)
+	var action dto.StateAction
+	var envVars []dto.StateActionEnvs
+	var componetEnvVars []dto.StateActionEnvs
+	var files []dto.StateActionFiles
+	var version string
+
+	if stateCheckSignal.TypeSignal == "update" {
+		if stateCheckSignal.Agents.DatadogAgent.Enabled {
 			if len(stateCheckSignal.Agents.DatadogAgent.Version) > 0 {
 				datadogAgent := stateCheckSignal.Agents.DatadogAgent
 
@@ -220,121 +329,21 @@ func (l *ManagerAdapter) prepareTracerDatadogSingleStepAction(stateCheckSignal d
 				})
 				files = l.getActionsFiles(datadogAgent.Configurations)
 				version = datadogAgent.Version
-			}
-
-			action = dto.StateAction{
-				Type:          "datadog",
-				Action:        "install",
-				Mode:          "single_step",
-				Component:     "tracer",
-				Version:       version,
-				HostTags:      stateCheckSignal.HostTags,
-				ComponentEnvs: componetEnvVars,
-				Envs:          envVars,
-				Files:         files,
-			}
-		}
-	}
-	return action
-}
-
-// prepareTracerDatadogLibraryAction execute prepare for tracer datadog tracer library action
-func (l *ManagerAdapter) prepareTracerDatadogLibraryAction(stateCheckSignal dto.StateCheckSignal) dto.StateAction {
-	l.logger.Debug("prepare tracer datadog library action", "trace", "agent-os-instance.manager_adapter.prepareTracerDatadogLibraryAction", "stateCheckSignal", stateCheckSignal)
-	var action dto.StateAction
-	var envVars []dto.StateActionEnvs
-	if stateCheckSignal.TypeSignal == "update" {
-		if len(stateCheckSignal.Agents.DatadogTracerLibrary.Version) > 0 && len(stateCheckSignal.Agents.DatadogTracerSingleStep.DDApmInstrumentationLibraries) == 0 {
-			tracerLibrary := stateCheckSignal.Agents.DatadogTracerLibrary
-			var files []dto.StateActionFiles
-			var componetEnvVars []dto.StateActionEnvs
-
-			componetEnvVars = append(componetEnvVars, dto.StateActionEnvs{
-				Name:  "language",
-				Value: tracerLibrary.Language,
-			})
-			componetEnvVars = append(componetEnvVars, dto.StateActionEnvs{
-				Name:  "path_tracer",
-				Value: tracerLibrary.PathTracer,
-			})
-			componetEnvVars = append(componetEnvVars, dto.StateActionEnvs{
-				Name:  "version",
-				Value: tracerLibrary.Version,
-			})
-
-			if len(stateCheckSignal.Agents.DatadogAgent.Version) > 0 {
-				datadogAgent := stateCheckSignal.Agents.DatadogAgent
-
-				envVars = append(envVars, dto.StateActionEnvs{
-					Name:  "DD_API_KEY",
-					Value: datadogAgent.ApiKey,
-				})
-				envVars = append(envVars, dto.StateActionEnvs{
-					Name:  "DD_APP_KEY",
-					Value: datadogAgent.AppKey,
-				})
-				envVars = append(envVars, dto.StateActionEnvs{
-					Name:  "DD_SITE",
-					Value: l.parseSiteDatadog(datadogAgent.Site),
-				})
-				files = l.getActionsFiles(datadogAgent.Configurations)
-			}
-
-			action = dto.StateAction{
-				Type:          "datadog",
-				Action:        "install",
-				Mode:          "tracing_library",
-				Component:     "tracer",
-				ComponentEnvs: componetEnvVars,
-				HostTags:      stateCheckSignal.HostTags,
-				Envs:          envVars,
-				Files:         files,
+				l.logger.Debug("prepare agent datadog action", "files", files)
+				return dto.StateAction{
+					Type:          "datadog",
+					Action:        "install",
+					Mode:          "",
+					Component:     "agent",
+					ComponentEnvs: componetEnvVars,
+					Envs:          envVars,
+					Files:         files,
+					Version:       version,
+					HostTags:      stateCheckSignal.HostTags,
+				}
 			}
 		}
-	}
-	return action
-}
 
-// prepareAgentDatadogAction execute prepare for agent datadog action
-func (l *ManagerAdapter) prepareAgentDatadogAction(stateCheckSignal dto.StateCheckSignal) dto.StateAction {
-	l.logger.Debug("prepare agent datadog action", "trace", "agent-os-instance.manager_adapter.prepareAgentDatadogAction", "stateCheckSignal", stateCheckSignal)
-	var action dto.StateAction
-	var envVars []dto.StateActionEnvs
-	var componetEnvVars []dto.StateActionEnvs
-	var files []dto.StateActionFiles
-	var version string
-
-	if stateCheckSignal.TypeSignal == "update" {
-		if len(stateCheckSignal.Agents.DatadogAgent.Version) > 0 {
-			datadogAgent := stateCheckSignal.Agents.DatadogAgent
-
-			envVars = append(envVars, dto.StateActionEnvs{
-				Name:  "DD_API_KEY",
-				Value: datadogAgent.ApiKey,
-			})
-			envVars = append(envVars, dto.StateActionEnvs{
-				Name:  "DD_APP_KEY",
-				Value: datadogAgent.AppKey,
-			})
-			envVars = append(envVars, dto.StateActionEnvs{
-				Name:  "DD_SITE",
-				Value: l.parseSiteDatadog(datadogAgent.Site),
-			})
-			files = l.getActionsFiles(datadogAgent.Configurations)
-			version = datadogAgent.Version
-			l.logger.Debug("prepare agent datadog action", "files", files)
-			return dto.StateAction{
-				Type:          "datadog",
-				Action:        "install",
-				Mode:          "",
-				Component:     "agent",
-				ComponentEnvs: componetEnvVars,
-				Envs:          envVars,
-				Files:         files,
-				Version:       version,
-				HostTags:      stateCheckSignal.HostTags,
-			}
-		}
 	} else if stateCheckSignal.TypeSignal == "uninstall" {
 		if len(stateCheckSignal.RemoveOtherVendors) > 0 {
 			for _, vendor := range stateCheckSignal.RemoveOtherVendors {
@@ -361,24 +370,27 @@ func (l *ManagerAdapter) prepareAgentDatadogUpdateAction(stateCheckSignal dto.St
 	var files []dto.StateActionFiles
 
 	if stateCheckSignal.TypeSignal == "update" {
-		if len(stateCheckSignal.Agents.DatadogAgent.Version) > 0 {
-			datadogAgent := stateCheckSignal.Agents.DatadogAgent
+		if stateCheckSignal.Agents.DatadogAgent.Enabled {
+			if len(stateCheckSignal.Agents.DatadogAgent.Version) > 0 {
+				datadogAgent := stateCheckSignal.Agents.DatadogAgent
 
-			files = l.getActionsFiles(datadogAgent.Configurations)
-			l.logger.Debug("prepare agent datadog update action", "files", files)
-			act := dto.StateAction{
-				Type:          "datadog",
-				Action:        "update",
-				Mode:          "",
-				Component:     "agent",
-				ComponentEnvs: componetEnvVars,
-				Envs:          envVars,
-				Files:         files,
-				Version:       datadogAgent.Version,
-				HostTags:      stateCheckSignal.HostTags,
+				files = l.getActionsFiles(datadogAgent.Configurations)
+				l.logger.Debug("prepare agent datadog update action", "files", files)
+				act := dto.StateAction{
+					Type:          "datadog",
+					Action:        "update",
+					Mode:          "",
+					Component:     "agent",
+					ComponentEnvs: componetEnvVars,
+					Envs:          envVars,
+					Files:         files,
+					Version:       datadogAgent.Version,
+					HostTags:      stateCheckSignal.HostTags,
+				}
+				action = act
 			}
-			action = act
 		}
+
 	}
 	return action
 }
