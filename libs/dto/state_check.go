@@ -35,7 +35,7 @@ type StateCheckOryaAgent struct {
 type StateCheckDatadogAgent struct {
 	Version        string                          `json:"version"`
 	AutoUpdate     bool                            `json:"auto_update"`
-	Enabled        *bool                           `json:"enabled,omitempty"`
+	Enabled        bool                            `json:"enabled"`
 	ApiKey         string                          `json:"api-key"`
 	AppKey         string                          `json:"app-key"`
 	Site           string                          `json:"site"`
