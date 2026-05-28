@@ -16,6 +16,11 @@ var (
 	ErrContextExpired                = errors.New("context expired")
 	ErrFailedCheckUsageLimit         = errors.New("failed check usage limit")
 
+	ErrApiKeyInvalid      = errors.New("invalid api key or wrong orya site")
+	ErrNetworkError       = errors.New("network error")
+	ErrBackendError       = errors.New("orya backend error")
+	ErrUsageLimitExceeded = errors.New("usage limit exceeded")
+
 	// transactions events
 	TransactionEventOpen   = "open"
 	TransactionEventUpdate = "update"
