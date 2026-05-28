@@ -157,3 +157,23 @@ func ErrDatadogVersionInvalidFormat() error {
 func ErrFailedCheckUsageLimit() error {
 	return pkg.ErrFailedCheckUsageLimit
 }
+
+// ErrApiKeyInvalid return error for invalid API Key or wrong Orya Site
+func ErrApiKeyInvalid() error {
+	return pkg.ErrApiKeyInvalid
+}
+
+// ErrNetworkError return error for network failure
+func ErrNetworkError() error {
+	return pkg.ErrNetworkError
+}
+
+// ErrBackendError return error for backend server error
+func ErrBackendError() error {
+	return pkg.ErrBackendError
+}
+
+// ErrUsageLimitExceeded return error for exceeded usage limit
+func ErrUsageLimitExceeded() error {
+	return pkg.ErrUsageLimitExceeded
+}
