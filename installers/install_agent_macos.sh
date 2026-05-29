@@ -36,6 +36,7 @@ fi
 
 #verify is architecture and get binary
 function verify_architecture(){
+printf "Checking system architecture...\n"
 if [[ "$ARCHITECTURE" == "arm64" ]]; then
   get_binary_arch64
 fi
@@ -52,6 +53,7 @@ function setup(){
 
 # Corrige a função resolve_version para extrair corretamente o campo "latest" do JSON
 function resolve_version() {
+  printf "Resolving version...\n"
   local version="$1"
   if [[ "$version" == "latest" ]]; then
     version=$(curl -s "$FILE_INDEX_URL" | sed -n 's/.*"latest"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
@@ -65,16 +67,19 @@ function resolve_version() {
 
 #get binary arm64
 function get_binary_arch64(){
+  printf "Downloading binary for arm64 architecture...\n"
   sudo curl -s -L -o $ORYA_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-macos-arm64"
   sudo chmod +x $ORYA_FILES_PATH/bin/releases/$VERSION/agent
 }
 #get binary amd64
 function get_binary_amd64(){
+  printf "Downloading binary for amd64 architecture...\n"
   sudo curl -s -L -o $ORYA_FILES_PATH/bin/releases/$VERSION/agent "$BINARY_URL/$VERSION/agent-macos-amd64"
   sudo chmod +x $ORYA_FILES_PATH/bin/releases/$VERSION/agent
 }
 #set content service
 function set_content_service() {
+  printf "Creating launchd plist file...\n"
   printf '
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -112,6 +117,7 @@ function set_content_service() {
 
 #prepare launchd
 function prepare_launchd() {
+  printf "Loading and Running launchd service...\n"
   launchctl load ~/Library/LaunchAgents/tech.orya.agent.plist
   launchctl start gui/$(id -u)/tech.orya.agent
 }
@@ -121,3 +127,4 @@ setup
 verify_architecture
 set_content_service
 prepare_launchd
+printf "\033[32mAgent installed successfully\033[0m\n"
