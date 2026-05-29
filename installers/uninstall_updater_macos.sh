@@ -17,13 +17,15 @@ fi
 
 #stop and disable launchd
 function stop_and_disable() {
-  launchctl bootout gui/$(id -u)/com.orya.updater 
-  launchctl unload ~/Library/LaunchAgents/com.orya.updater.plist
+  printf "Stopping and disabling updater...\n"
+  launchctl bootout gui/$(id -u)/tech.orya.updater 
+  launchctl unload ~/Library/LaunchAgents/tech.orya.updater.plist
 }
 
 #remove file service
 function remove_file_service(){
-  $sudo_cmd rm ~/Library/LaunchAgents/com.orya.updater.plist
+  printf "Removing updater service file...\n"
+  $sudo_cmd rm ~/Library/LaunchAgents/tech.orya.updater.plist
 }
 
 
@@ -39,13 +41,13 @@ function setup(){
   verify_kernel
 }
 
-# uninstaller the manager
+# uninstaller the updater
 function _uninstaller(){
   stop_and_disable
   remove_file_service
 }
 
-#uninstall manager
+#uninstall updater
 function uninstall(){
   setup
  _uninstaller 
