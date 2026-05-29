@@ -164,6 +164,7 @@ func main() {
 	fmt.Println("Usage limit OK.")
 
 	// Step 3: Resolve version
+	fmt.Println("Resolving version... ")
 	if version == "latest" {
 		fmt.Println("Fetching latest agent version...")
 		agentVersions, err := utilityService.FetchAgentVersions()
@@ -174,6 +175,7 @@ func main() {
 	}
 
 	// Step 4: Download binary
+	fmt.Println("Preparing download...")
 	url := prepareUrl(baseUrl, version, fileName)
 	actualDirectory, err := os.Getwd()
 	if err != nil {
