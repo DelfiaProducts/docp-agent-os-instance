@@ -19,12 +19,12 @@ import (
 
 // parseParams parse params
 func parseParams(apiKey, tags, version, noGroupAssociation, oryaSite, vmName *string) {
-	flag.StringVar(apiKey, "API_KEY", "", "orya api key")
-	flag.StringVar(tags, "TAGS", "", "orya tags")
-	flag.StringVar(version, "VERSION", "latest", "orya version")
-	flag.StringVar(noGroupAssociation, "NO_GROUP_ASSOCIATION", "false", "no group association")
-	flag.StringVar(oryaSite, "ORYA_SITE", "", "orya site for services")
-	flag.StringVar(vmName, "VM_NAME", "", "vm name")
+	flag.StringVar(apiKey, "api_key", "", "orya api key")
+	flag.StringVar(tags, "tags", "", "orya tags")
+	flag.StringVar(version, "version", "latest", "orya version")
+	flag.StringVar(noGroupAssociation, "no_group_association", "false", "no group association")
+	flag.StringVar(oryaSite, "orya_site", "", "orya site for services")
+	flag.StringVar(vmName, "vm_name", "", "vm name")
 	flag.Parse()
 }
 
