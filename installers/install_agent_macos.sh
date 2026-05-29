@@ -86,7 +86,7 @@ function set_content_service() {
             <false/>
         </dict>
         <key>Label</key>
-        <string>com.orya.agent</string>
+        <string>tech.orya.agent</string>
         <key>EnvironmentVariables</key>
         <dict>
             <key>ORYA_AGENT_PORT</key>
@@ -107,13 +107,13 @@ function set_content_service() {
         <key>ExitTimeOut</key>
         <integer>10</integer>
     </dict>
-    </plist>' | sudo tee ~/Library/LaunchAgents/com.orya.agent.plist > /dev/null
+    </plist>' | sudo tee ~/Library/LaunchAgents/tech.orya.agent.plist > /dev/null
 }
 
 #prepare launchd
 function prepare_launchd() {
-  launchctl load ~/Library/LaunchAgents/com.orya.agent.plist
-  launchctl start gui/$(id -u)/com.orya.agent
+  launchctl load ~/Library/LaunchAgents/tech.orya.agent.plist
+  launchctl start gui/$(id -u)/tech.orya.agent
 }
 #actions
 VERSION=$(resolve_version "$VERSION")
