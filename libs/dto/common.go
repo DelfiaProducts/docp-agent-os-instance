@@ -32,9 +32,9 @@ type ConfigAgent struct {
 	NoGroupAssociation bool     `yaml:"no_group_association,omitempty"`
 	VMName             string   `yaml:"vm_name,omitempty"`
 	Agent              Agent    `yaml:"agent"`
-	AccessToken        string   `json:"access_token"`
-	ComputeId          string   `json:"compute_id"`
-	OryaOrgId          int      `json:"docp_org_id"`
+	AccessToken        string   `json:"access_token" yaml:"access_token"`
+	ComputeId          string   `json:"compute_id" yaml:"compute_id"`
+	OryaOrgId          int      `json:"docp_org_id" yaml:"orya_org_id"`
 }
 
 // Agent is struct for config file agent
