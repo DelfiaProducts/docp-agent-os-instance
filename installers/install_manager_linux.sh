@@ -26,7 +26,7 @@ noGroupAssociation="false"
 oryaSite="https://msapi.orya.tech"
 #usage show default usage mode 
 function usage() {
-    echo "USAGE: $0 --apiKey <apikey> --tags <tag:1,tag:2>"
+    echo "USAGE: $0 --api_key <apikey> --tags <tag:1,tag:2>"
     echo "Exemplo: $0 --apiKey \"xpto\" --tags \"grupo:app,maquina:dev\" "
     exit 1
 }
@@ -186,6 +186,7 @@ function verify_usage_limit(){
 
 #verify is architecture and get binary
 function verify_architecture(){
+printf "Checking system architecture...\n"
 if [[ "$ARCHITECTURE" == "aarch64" ]]; then
   get_binary_arch64
 fi
@@ -238,6 +239,7 @@ function setup(){
 
 #create directories for orya agent
 function create_workdir(){
+  printf "Creating necessary directories and files...\n"
   [[ ! -d $ORYA_FILES_PATH ]] && $sudo_cmd mkdir $ORYA_FILES_PATH 
   [[ ! -d $ORYA_FILES_PATH/bin ]] && $sudo_cmd mkdir $ORYA_FILES_PATH/bin 
   [[ ! -d $ORYA_FILES_PATH/bin/current ]] && $sudo_cmd mkdir $ORYA_FILES_PATH/bin/current 
@@ -252,6 +254,7 @@ function create_workdir(){
 
 #save environments in directory
 function save_environments(){
+  printf "Saving environment variables...\n"
   api_key=$1
   tgs=$2
   orya_site=$3
@@ -260,6 +263,7 @@ function save_environments(){
 
 # Resolve version, extracting the "latest" field from JSON
 function resolve_version() {
+  printf "Resolving version...\n"
   local version="$1"
   if [[ "$version" == "latest" ]]; then
     version=$(curl -s "$FILE_INDEX_URL" | sed -n 's/.*"latest"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
@@ -305,16 +309,19 @@ function get_binary_amd64(){
 
 # create symbolic link
 function create_link_simbolic(){
+  printf "Creating symbolic link...\n"
   sudo ln -sfn $ORYA_FILES_PATH/bin/releases/$VERSION/manager $ORYA_FILES_PATH/bin/current/manager
 }
 
 #set content service
 function set_content_service() {
+  printf "Setting up systemd service...\n"
   printf "[Unit]\nDescription=Orya Manager\nAfter=network.target\n\n[Service]\nType=simple\nPIDFile=/opt/orya-agent/run/manager.pid\nUser=orya-agent\nRestart=on-failure\nEnvironmentFile=-/opt/orya-agent/environments\nRuntimeDirectory=orya\nExecStart=/opt/orya-agent/bin/current/manager run -p /opt/orya-agent/run/manager.pid\nStartLimitInterval=10\nStartLimitBurst=5\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target\n" | sudo tee /etc/systemd/system/orya-manager.service > /dev/null
 }
 
 #prepare systemd (scenario 5 - OS errors)
 function prepare_systemd() {
+  printf "Configuring and running service...\n"
   sudo systemctl daemon-reload || {
     printf "\033[31mLocal system error: failed to reload systemctl.\n"
     printf "Check if systemd is available and try again.\033[0m\n"
@@ -333,6 +340,7 @@ function prepare_systemd() {
 
 #create config yml
 function create_config_yml(){
+  printf "Creating config.yml file...\n"
   $sudo_cmd touch $ORYA_FILES_PATH/config.yml
 }
 
@@ -358,6 +366,7 @@ function process_tags() {
 
 #add content config yml
 function add_content_config_yml(){
+  printf "Adding content to config.yml...\n"
   api_key="$1"
   tags=$(process_tags "$2")
   version="$3"
@@ -394,3 +403,4 @@ add_content_config_yml $apiKey $tags $VERSION $noGroupAssociation $vmName
 add_perm_work_dir
 set_content_service
 prepare_systemd
+printf "\033[32mInstallation completed successfully.\033[0m\n"
