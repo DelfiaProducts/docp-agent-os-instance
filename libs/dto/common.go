@@ -39,7 +39,7 @@ type ConfigAgent struct {
 
 // Agent is struct for config file agent
 type Agent struct {
-	ApiKey string                 `yaml:"apiKey"`
+	ApiKey string                 `yaml:"api_key"`
 	Tags   map[string]interface{} `yaml:"tags"`
 }
 
