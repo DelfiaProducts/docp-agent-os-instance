@@ -17,17 +17,20 @@ fi
 
 #stop and disable launchd
 function stop_and_disable() {
-  launchctl bootout gui/$(id -u)/com.orya.manager 
-  launchctl unload ~/Library/LaunchAgents/com.orya.manager.plist
+  printf "Stopping and disabling manager service...\n"
+  launchctl bootout gui/$(id -u)/tech.orya.manager 
+  launchctl unload ~/Library/LaunchAgents/tech.orya.manager.plist
 }
 
 #remove file service
 function remove_file_service(){
-  $sudo_cmd rm ~/Library/LaunchAgents/com.orya.manager.plist
+  printf "Removing manager service file...\n"
+  $sudo_cmd rm ~/Library/LaunchAgents/tech.orya.manager.plist
 }
 
 #remove work dir
 function remove_work_dir() {
+  printf "Removing manager files...\n"
   $sudo_cmd rm -rf $ORYA_FILES_PATH 
 }
 

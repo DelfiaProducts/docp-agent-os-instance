@@ -16,16 +16,19 @@ fi
 
 #stop and disable systemd
 function stop_and_disable() {
+  printf "Stopping and disabling orya-updater service...\n"
   $sudo_cmd systemctl stop orya-updater
   $sudo_cmd systemctl disable orya-updater
 }
 
 #remove file service
 function remove_file_service(){
+  printf "Removing orya-updater service file...\n"
   $sudo_cmd rm /etc/systemd/system/orya-updater.service
 }
 # reload daemon
 function reload_daemon(){
+ printf "Reloading systemd daemon...\n"
  $sudo_cmd systemctl daemon-reload 
 }
 

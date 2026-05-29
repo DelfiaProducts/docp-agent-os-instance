@@ -27,15 +27,15 @@ noGroupAssociation="false"
 oryaSite="https://msapi.orya.tech"
 #usage show default usage mode 
 function usage() {
-    echo "USAGE: $0 --apiKey <apikey> --tags <tag:1,tag:2>"
-    echo "Exemplo: $0 --apiKey \"xpto\" --tags \"grupo:app,maquina:dev\" "
+    echo "USAGE: $0 --api_key <apikey> --tags <tag:1,tag:2>"
+    echo "Exemplo: $0 --api_key \"xpto\" --tags \"grupo:app,maquina:dev\" "
     exit 1
 }
 
 #analize options
 while [[ $# -gt 0 ]]; do
     key="$1"
-    case $key in --apiKey)
+    case $key in --api_key)
         apiKey="$2"
         shift 
         shift 
@@ -50,17 +50,17 @@ while [[ $# -gt 0 ]]; do
         shift
         shift
         ;;
-      --orya-site)
+      --orya_site)
         oryaSite="$2"
         shift
         shift
         ;;
-      --vm-name)
+      --vm_name)
         vmName="$2"
         shift
         shift
         ;;
-      --no-group-association)
+      --no_group_association)
         noGroupAssociation="true"
         shift
         shift
@@ -112,7 +112,7 @@ function verify_orya_site() {
 
     if [[ $exit_code -eq 6 ]]; then
         printf "\033[31mError: Domain not found - %s\n" "$oryaSite"
-        printf "Check if the --orya-site URL is correct.\033[0m\n"
+        printf "Check if the --orya_site URL is correct.\033[0m\n"
         exit 1
     elif [[ $exit_code -eq 7 ]]; then
         printf "\033[31mError: Connection refused by %s\n" "$oryaSite"
@@ -219,6 +219,7 @@ function get_binary_amd64(){
 
 #verify is architecture and get binary
 function verify_architecture(){
+printf "Checking system architecture...\n"
 if [[ "$ARCHITECTURE" == "arm64" ]]; then
   get_binary_arch64
 fi
@@ -236,6 +237,7 @@ function setup(){
 
 #create directories for orya agent
 function create_workdir(){
+  printf "Creating necessary directories and files...\n"
   [[ ! -d $ORYA_FILES_PATH ]] && $sudo_cmd mkdir $ORYA_FILES_PATH 
   [[ ! -d $ORYA_FILES_PATH/bin ]] && $sudo_cmd mkdir $ORYA_FILES_PATH/bin 
   [[ ! -d $ORYA_FILES_PATH/logs ]] && $sudo_cmd mkdir $ORYA_FILES_PATH/logs 
@@ -245,15 +247,18 @@ function create_workdir(){
   [[ ! -f $ORYA_FILES_PATH/state/received ]] && $sudo_cmd touch $ORYA_FILES_PATH/state/received 
 }
 
-#save apiKey and tags in directory
-function save_api_key_and_tags(){
+#save_environments in directory
+function save_environments(){
+  printf "Saving environment variables...\n"
   api_key=$1
   tgs=$2
-  printf "ORYA_API_KEY=$api_key\nORYA_TAGS=$tgs\nORYA_REGISTER_URL=https://msapi.orya.tech/agents\nORYA_STATE_CHECK_URL=https://msapi.orya.tech/agents\nORYA_AGENT_PORT=12012\n" | sudo tee $ORYA_FILES_PATH/environments > /dev/null
+  orya_site=$3
+  printf "ORYA_API_KEY=$api_key\nORYA_TAGS=$tgs\nORYA_DOMAIN=$orya_site\nORYA_AGENT_PORT=12012\n" | sudo tee $ORYA_FILES_PATH/environments > /dev/null
 }
 
 # Resolve version, extracting the "latest" field from JSON
 function resolve_version() {
+  printf "Resolving version...\n"
   local version="$1"
   if [[ "$version" == "latest" ]]; then
     version=$(curl -s "$FILE_INDEX_URL" | sed -n 's/.*"latest"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
@@ -267,6 +272,7 @@ function resolve_version() {
 
 #set content service
 function set_content_service() {
+  printf "Setting up launchd service...\n"
   printf '
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -278,7 +284,7 @@ function set_content_service() {
             <false/>
         </dict>
         <key>Label</key>
-        <string>com.orya.manager</string>
+        <string>tech.orya.manager</string>
         <key>EnvironmentVariables</key>
         <dict>
             <key>ORYA_AGENT_PORT</key>
@@ -299,19 +305,20 @@ function set_content_service() {
         <key>ExitTimeOut</key>
         <integer>10</integer>
     </dict>
-    </plist>' | sudo tee ~/Library/LaunchAgents/com.orya.manager.plist > /dev/null
+    </plist>' | sudo tee ~/Library/LaunchAgents/tech.orya.manager.plist > /dev/null
 }
 
 #prepare launchd (scenario 5 - OS errors)
 function prepare_launchd() {
-  launchctl load ~/Library/LaunchAgents/com.orya.manager.plist || {
+  printf "Configuring and running service...\n"
+  launchctl load ~/Library/LaunchAgents/tech.orya.manager.plist || {
     printf "\033[31mLocal system error: failed to load launchctl.\n"
     printf "Check if launchd is available and try again.\033[0m\n"
     exit 1
   }
-  launchctl start gui/$(id -u)/com.orya.manager || {
+  launchctl start gui/$(id -u)/tech.orya.manager || {
     printf "\033[31mLocal system error: failed to start orya-manager service.\n"
-    printf "Check ~/Library/LaunchAgents/com.orya.manager.plist for details.\033[0m\n"
+    printf "Check ~/Library/LaunchAgents/tech.orya.manager.plist for details.\033[0m\n"
     exit 1
   }
 }
@@ -343,6 +350,7 @@ function process_tags() {
 
 #add content config yml
 function add_content_config_yml(){
+  printf "Adding content to config.yml...\n"
   api_key="$1"
   tags=$(process_tags "$2")
   version="$3"
@@ -355,7 +363,7 @@ no_group_association: $noGroupAssociation
 version: $version 
 
 agent:
-  apiKey: $api_key 
+  api_key: $api_key 
   tags: 
     $(echo $tags | sed 's/,/\n    /g')
 EOF
@@ -370,7 +378,9 @@ verify_usage_limit
 setup
 create_workdir
 create_config_yml
-save_api_key_and_tags $apiKey $tags
+save_environments $apiKey $tags $oryaSite
 add_content_config_yml $apiKey $tags $VERSION $noGroupAssociation
 set_content_service
 prepare_launchd
+printf "\033[32mInstallation completed successfully.\033[0m\n"
+

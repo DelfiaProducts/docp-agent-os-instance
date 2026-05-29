@@ -19,12 +19,12 @@ import (
 
 // parseParams parse params
 func parseParams(apiKey, tags, version, noGroupAssociation, oryaSite, vmName *string) {
-	flag.StringVar(apiKey, "API_KEY", "", "orya api key")
-	flag.StringVar(tags, "TAGS", "", "orya tags")
-	flag.StringVar(version, "VERSION", "latest", "orya version")
-	flag.StringVar(noGroupAssociation, "NO_GROUP_ASSOCIATION", "false", "no group association")
-	flag.StringVar(oryaSite, "ORYA_SITE", "", "orya site for services")
-	flag.StringVar(vmName, "VM_NAME", "", "vm name")
+	flag.StringVar(apiKey, "api_key", "", "orya api key")
+	flag.StringVar(tags, "tags", "", "orya tags")
+	flag.StringVar(version, "version", "latest", "orya version")
+	flag.StringVar(noGroupAssociation, "no_group_association", "false", "no group association")
+	flag.StringVar(oryaSite, "orya_site", "", "orya site for services")
+	flag.StringVar(vmName, "vm_name", "", "vm name")
 	flag.Parse()
 }
 
@@ -164,6 +164,7 @@ func main() {
 	fmt.Println("Usage limit OK.")
 
 	// Step 3: Resolve version
+	fmt.Println("Resolving version... ")
 	if version == "latest" {
 		fmt.Println("Fetching latest agent version...")
 		agentVersions, err := utilityService.FetchAgentVersions()
@@ -174,6 +175,7 @@ func main() {
 	}
 
 	// Step 4: Download binary
+	fmt.Println("Preparing download...")
 	url := prepareUrl(baseUrl, version, fileName)
 	actualDirectory, err := os.Getwd()
 	if err != nil {
