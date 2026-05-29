@@ -27,7 +27,7 @@ noGroupAssociation="false"
 oryaSite="https://msapi.orya.tech"
 #usage show default usage mode 
 function usage() {
-    echo "USAGE: $0 --apiKey <apikey> --tags <tag:1,tag:2>"
+    echo "USAGE: $0 --api_key <apikey> --tags <tag:1,tag:2>"
     echo "Exemplo: $0 --apiKey \"xpto\" --tags \"grupo:app,maquina:dev\" "
     exit 1
 }
@@ -219,6 +219,7 @@ function get_binary_amd64(){
 
 #verify is architecture and get binary
 function verify_architecture(){
+printf "Checking system architecture...\n"
 if [[ "$ARCHITECTURE" == "arm64" ]]; then
   get_binary_arch64
 fi
@@ -236,6 +237,7 @@ function setup(){
 
 #create directories for orya agent
 function create_workdir(){
+  printf "Creating necessary directories and files...\n"
   [[ ! -d $ORYA_FILES_PATH ]] && $sudo_cmd mkdir $ORYA_FILES_PATH 
   [[ ! -d $ORYA_FILES_PATH/bin ]] && $sudo_cmd mkdir $ORYA_FILES_PATH/bin 
   [[ ! -d $ORYA_FILES_PATH/logs ]] && $sudo_cmd mkdir $ORYA_FILES_PATH/logs 
@@ -245,8 +247,7 @@ function create_workdir(){
   [[ ! -f $ORYA_FILES_PATH/state/received ]] && $sudo_cmd touch $ORYA_FILES_PATH/state/received 
 }
 
-#save apiKey and tags in directory
-function save_api_key_and_tags(){
+  printf "Saving environment variables...\n"
   api_key=$1
   tgs=$2
   printf "ORYA_API_KEY=$api_key\nORYA_TAGS=$tgs\nORYA_REGISTER_URL=https://msapi.orya.tech/agents\nORYA_STATE_CHECK_URL=https://msapi.orya.tech/agents\nORYA_AGENT_PORT=12012\n" | sudo tee $ORYA_FILES_PATH/environments > /dev/null
@@ -254,6 +255,7 @@ function save_api_key_and_tags(){
 
 # Resolve version, extracting the "latest" field from JSON
 function resolve_version() {
+  printf "Resolving version...\n"
   local version="$1"
   if [[ "$version" == "latest" ]]; then
     version=$(curl -s "$FILE_INDEX_URL" | sed -n 's/.*"latest"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
@@ -267,6 +269,7 @@ function resolve_version() {
 
 #set content service
 function set_content_service() {
+  printf "Setting up launchd service...\n"
   printf '
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -304,7 +307,7 @@ function set_content_service() {
 
 #prepare launchd (scenario 5 - OS errors)
 function prepare_launchd() {
-  launchctl load ~/Library/LaunchAgents/com.orya.manager.plist || {
+  printf "Configuring and running service...\n"
     printf "\033[31mLocal system error: failed to load launchctl.\n"
     printf "Check if launchd is available and try again.\033[0m\n"
     exit 1
@@ -343,6 +346,7 @@ function process_tags() {
 
 #add content config yml
 function add_content_config_yml(){
+  printf "Adding content to config.yml...\n"
   api_key="$1"
   tags=$(process_tags "$2")
   version="$3"
@@ -374,3 +378,5 @@ save_api_key_and_tags $apiKey $tags
 add_content_config_yml $apiKey $tags $VERSION $noGroupAssociation
 set_content_service
 prepare_launchd
+printf "\033[32mInstallation completed successfully.\033[0m\n"
+
