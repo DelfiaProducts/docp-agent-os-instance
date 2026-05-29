@@ -27,14 +27,14 @@ oryaSite="https://msapi.orya.tech"
 #usage show default usage mode 
 function usage() {
     echo "USAGE: $0 --api_key <apikey> --tags <tag:1,tag:2>"
-    echo "Exemplo: $0 --apiKey \"xpto\" --tags \"grupo:app,maquina:dev\" "
+    echo "Exemplo: $0 --api_key \"xpto\" --tags \"grupo:app,maquina:dev\" "
     exit 1
 }
 
 #analize options
 while [[ $# -gt 0 ]]; do
     key="$1"
-    case $key in --apiKey)
+    case $key in --api_key)
         apiKey="$2"
         shift 
         shift 
@@ -49,17 +49,17 @@ while [[ $# -gt 0 ]]; do
         shift
         shift
         ;;
-      --orya-site)
+      --orya_site)
         oryaSite="$2"
         shift
         shift
         ;;
-      --vm-name)
+      --vm_name)
         vmName="$2"
         shift
         shift
         ;;
-      --no-group-association)
+      --no_group_association)
         noGroupAssociation="true"
         shift
         shift
@@ -111,7 +111,7 @@ function verify_orya_site() {
 
     if [[ $exit_code -eq 6 ]]; then
         printf "\033[31mError: Domain not found - %s\n" "$oryaSite"
-        printf "Check if the --orya-site URL is correct.\033[0m\n"
+        printf "Check if the --orya_site URL is correct.\033[0m\n"
         exit 1
     elif [[ $exit_code -eq 7 ]]; then
         printf "\033[31mError: Connection refused by %s\n" "$oryaSite"
@@ -195,14 +195,18 @@ if [[ "$ARCHITECTURE" == "x86_64" ]]; then
 fi
 }
 
-#create group 
+#create group if not exists
 function create_group(){
-  $sudo_cmd groupadd $USER_GROUP_NAME > /dev/null 2>&1
+  if ! getent group "$USER_GROUP_NAME" > /dev/null 2>&1; then
+    $sudo_cmd groupadd "$USER_GROUP_NAME" > /dev/null 2>&1
+  fi
 }
 
-#add user to group 
+#add user to group if not exists
 function add_user_to_group(){
-  $sudo_cmd useradd -m -g $USER_GROUP_NAME -s /bin/bash $USER_GROUP_NAME > /dev/null 2>&1
+  if ! id "$USER_GROUP_NAME" > /dev/null 2>&1; then
+    $sudo_cmd useradd -m -g "$USER_GROUP_NAME" -s /bin/bash "$USER_GROUP_NAME" > /dev/null 2>&1
+  fi
 }
 
 # add perm sudoers file
@@ -381,7 +385,7 @@ version: $version
 
 vm_name: $vmName
 agent:
-  apiKey: $api_key 
+  api_key: $api_key 
   tags: 
     $(echo $tags | sed 's/,/\n    /g')
 EOF
