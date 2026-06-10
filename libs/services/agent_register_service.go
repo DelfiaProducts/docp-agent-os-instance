@@ -107,6 +107,12 @@ func (ag *AgentRegisterService) InjectClientInfo(configFileContent []byte, linux
 		vmName = metadata.ComputeInfo.Computename
 	}
 
+	oryaId, err := utils.GetOrCreateOryaID()
+	if err != nil {
+		ag.logger.Error("error getting orya_id", "trace", "agent-os-instance.agent_register_service.InjectClientInfo", "error", err.Error())
+	}
+	metadata.ComputeInfo.OryaId = oryaId
+
 	agentRegisterDataCreateOrUpdate = dto.AgentRegisterDataCreateOrUpdate{
 		Tags:     slcTags,
 		Metadata: metadata,
