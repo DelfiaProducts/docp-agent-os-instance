@@ -757,7 +757,17 @@ func (l *ManagerOperator) upsertAgentDatadogHostTags(tags []string) {
 		l.chanErrors <- dto.CommonChanErrors{From: "upsertAgentDatadogHostTags", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
-	return
+
+	// Trigger a metadata update so the register service immediately sees the
+	// new hostname (and populated vendors_info). Wait a few seconds for the
+	// agent to finish restarting before collecting.
+	l.wg.Add(1)
+	go func() {
+		defer l.wg.Done()
+		time.Sleep(10 * time.Second)
+		l.wg.Add(1)
+		l.sendMetadataWithHostnameUpdate()
+	}()
 }
 
 // autoUninstallWithOtherVendors execute auto uninstall with vendors
