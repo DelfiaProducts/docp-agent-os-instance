@@ -64,13 +64,12 @@ function setup(){
 
 # Corrige a função resolve_version para extrair corretamente o campo "latest" do JSON
 function resolve_version() {
-  printf "Resolving version...\n"
   local version="$1"
   if [[ "$version" == "latest" ]]; then
     version=$(curl -s "$FILE_INDEX_URL" | sed -n 's/.*"latest"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
     if [[ -z "$version" ]]; then
       echo "Failed to fetch latest version." >&2
-      exit 1
+      return 1
     fi
   fi
   echo "$version"
@@ -114,7 +113,8 @@ function prepare_systemd() {
   $sudo_cmd systemctl enable orya-agent.service
 }
 #actions
-VERSION=$(resolve_version "$VERSION")
+printf "Resolving version...\n"
+VERSION=$(resolve_version "$VERSION") || exit 1
 setup
 verify_architecture
 create_link_simbolic
