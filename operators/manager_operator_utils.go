@@ -862,6 +862,16 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 			return
 		}
 		l.logger.Debug("consumer actions datadog", "trace", "agent-os-instance.manager_operator.consumerActionsDatadog", "action", act)
+
+		// If the signal carries a hostname, persist it in config.yml
+		// so it takes priority over the OS hostname for vm_name.
+		if act.Hostname != "" {
+			l.logger.Debug("saving hostname from signal to config", "trace", "agent-os-instance.manager_operator.consumerActionsDatadog", "hostname", act.Hostname)
+			if err := l.adapter.SaveVMName(act.Hostname); err != nil {
+				l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+			}
+		}
+
 		// action update configurations datadog
 		if act.Action == "update" {
 			for _, fls := range act.Files {
