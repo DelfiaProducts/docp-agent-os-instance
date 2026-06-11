@@ -103,8 +103,19 @@ func (ag *AgentRegisterService) InjectClientInfo(configFileContent []byte, linux
 	var vmName string
 	if configAgentDto.VMName != "" {
 		vmName = configAgentDto.VMName
+		// vm_name from config is authoritative — override compute_name
+		// so both fields reflect the configured name on first registration.
+		metadata.ComputeInfo.Computename = configAgentDto.VMName
 	} else {
 		vmName = metadata.ComputeInfo.Computename
+		// Persist the collected compute_name as vm_name in config.yml so
+		// all three (config, VMName payload, compute_name) stay aligned.
+		configAgentDto.VMName = vmName
+		if configBytes, err := ag.ymlClient.Marshall(&configAgentDto); err != nil {
+			ag.logger.Error("error marshalling config to save vm_name", "trace", "agent-os-instance.agent_register_service.InjectClientInfo", "error", err.Error())
+		} else if err := ag.fileSystem.WriteFileContent(ag.configFilePath, configBytes); err != nil {
+			ag.logger.Error("error writing vm_name to config file", "trace", "agent-os-instance.agent_register_service.InjectClientInfo", "error", err.Error())
+		}
 	}
 
 	oryaId, err := utils.GetOrCreateOryaID()
