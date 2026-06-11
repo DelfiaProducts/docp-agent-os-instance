@@ -680,6 +680,25 @@ func (l *ManagerOperator) upsertAgentDatadogHostTags(tags []string) {
 		hostname = configAgent.VMName
 	}
 
+	// Inject orya_id as a Datadog host tag so all metrics are tagged
+	// with the persistent host identity. If the tag already exists
+	// (e.g. from a previous upsert), replace it in-place instead of
+	// duplicating it.
+	if oryaId, err := libutils.GetOrCreateOryaID(); err == nil && oryaId != "" {
+		oryaTag := "orya_id:" + oryaId
+		found := false
+		for i, t := range tags {
+			if strings.HasPrefix(t, "orya_id:") {
+				tags[i] = oryaTag
+				found = true
+				break
+			}
+		}
+		if !found {
+			tags = append(tags, oryaTag)
+		}
+	}
+
 	config := dto.DatadogConfigDTO{
 		HostTags: tags,
 		Hostname: hostname,
