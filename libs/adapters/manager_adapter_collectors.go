@@ -9,6 +9,66 @@ import (
 	"github.com/OryaHub/agent-os-instance/libs/utils"
 )
 
+// GetMetadataSnapshot collects a fresh snapshot of host metadata and
+// returns it as marshalled JSON bytes. Unlike Collect() (which streams),
+// this is a one-shot synchronous call.
+func (l *ManagerAdapter) GetMetadataSnapshot() ([]byte, error) {
+	l.logger.Debug("get metadata snapshot", "trace", "agent-os-instance.manager_adapter.GetMetadataSnapshot")
+
+	computeInfo, err := l.hostStats.ComputeInfo()
+	if err != nil {
+		l.logger.Error("error getting compute info", "trace", "agent-os-instance.manager_adapter.GetMetadataSnapshot", "error", err.Error())
+	}
+	cpuInfo, err := l.hostStats.CPUInfo()
+	if err != nil {
+		l.logger.Error("error getting cpu info", "trace", "agent-os-instance.manager_adapter.GetMetadataSnapshot", "error", err.Error())
+	}
+	memoryInfo, err := l.hostStats.MemoryInfo()
+	if err != nil {
+		l.logger.Error("error getting memory info", "trace", "agent-os-instance.manager_adapter.GetMetadataSnapshot", "error", err.Error())
+	}
+	diskInfo, err := l.hostStats.DiskInfo()
+	if err != nil {
+		l.logger.Error("error getting disk info", "trace", "agent-os-instance.manager_adapter.GetMetadataSnapshot", "error", err.Error())
+	}
+	processInfo, err := l.hostStats.ProcessInfo()
+	if err != nil {
+		l.logger.Error("error getting process info", "trace", "agent-os-instance.manager_adapter.GetMetadataSnapshot", "error", err.Error())
+	}
+
+	metadata := dto.Metadata{
+		ComputeInfo:  computeInfo,
+		CPUInfo:      cpuInfo,
+		MemoryInfo:   memoryInfo,
+		DiskInfo:     diskInfo,
+		ProcessInfos: processInfo,
+	}
+
+	datadogStatus, err := l.osOperation.Status("datadog")
+	if err != nil {
+		l.logger.Error("error getting datadog status", "trace", "agent-os-instance.manager_adapter.GetMetadataSnapshot", "error", err.Error())
+	}
+	if datadogStatus == "active" {
+		infosBytes, err := l.vendorOperation.GetInfos()
+		if err != nil {
+			l.logger.Error("error getting datadog infos", "trace", "agent-os-instance.manager_adapter.GetMetadataSnapshot", "error", err.Error())
+		} else {
+			var datadogInfos dto.DatadogInfos
+			if err := l.json.Unmarshall(infosBytes, &datadogInfos); err != nil {
+				l.logger.Error("error unmarshalling datadog infos", "trace", "agent-os-instance.manager_adapter.GetMetadataSnapshot", "error", err.Error())
+			} else {
+				metadata.VendorsInfo.Datadog = datadogInfos
+			}
+		}
+	}
+
+	metadataBytes, err := l.json.Marshall(metadata)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal metadata snapshot: %w", err)
+	}
+	return metadataBytes, nil
+}
+
 // Collect execute collect the metrics the host
 func (l *ManagerAdapter) Collect() <-chan []byte {
 	l.logger.Info("collect metadata", "timestamp", time.Now().UTC())
