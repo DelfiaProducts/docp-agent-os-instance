@@ -53,4 +53,5 @@ type DatadogInfos struct {
 
 type DatadogConfigDTO struct {
 	HostTags []string `json:"host_tags"`
+	Hostname string   `json:"hostname,omitempty"`
 }
