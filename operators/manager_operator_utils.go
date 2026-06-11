@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/OryaHub/agent-os-instance/libs/dto"
@@ -915,6 +916,8 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 
 		// action update configurations datadog
 		if act.Action == "update" {
+			var fileWg sync.WaitGroup
+
 			for _, fls := range act.Files {
 				flsBytes, err := l.json.Marshall(&fls)
 				if err != nil {
@@ -924,8 +927,12 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 
 				// if agent already installed execute update configurations
 				if datadogAlreadyInstalled {
+					fileWg.Add(1)
 					l.wg.Add(1)
-					go l.updateAgentDatadog(flsBytes)
+					go func(fb []byte) {
+						defer fileWg.Done()
+						l.updateAgentDatadog(fb)
+					}(flsBytes)
 					//validate if version is latest and auto_update is enabled
 					if act.AutoUpdate {
 						if act.Version == "latest" {
@@ -944,6 +951,12 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 					}
 				}
 			}
+
+			// Wait for all file configuration updates to complete before applying
+			// host tags, so that tags are always the last thing written to
+			// datadog.yaml and are never overwritten by a concurrent file update.
+			fileWg.Wait()
+
 			//update host tags if exist and agent already installed
 			if datadogAlreadyInstalled && len(act.HostTags) > 0 {
 				l.wg.Add(1)
@@ -1010,6 +1023,11 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 						go l.installAgentDatadog(ddApiKey, ddSite, version)
 						go l.handlerUpdateAgentDatadogHostTagsAfterInstall(act.HostTags)
 					}
+				} else if len(act.HostTags) > 0 {
+					// Already installed — re-apply host tags on restart,
+					// since the signal may still be of type "install".
+					l.wg.Add(1)
+					go l.upsertAgentDatadogHostTags(act.HostTags)
 				}
 			}
 
