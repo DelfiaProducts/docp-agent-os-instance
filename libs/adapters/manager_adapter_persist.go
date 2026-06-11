@@ -68,6 +68,31 @@ func (l *ManagerAdapter) SaveAgentRollbackVersion(version string) error {
 	return nil
 }
 
+// SaveVMName save vm_name in config file
+func (l *ManagerAdapter) SaveVMName(vmName string) error {
+	l.logger.Debug("save vm name", "trace", "agent-os-instance.manager_adapter.SaveVMName", "vmName", vmName)
+	var configAgent dto.ConfigAgent
+	pathConfigFile := filepath.Join(l.agentWorkDir, "config.yml")
+	contentConfigAgent, err := l.fileSystem.GetFileContent(pathConfigFile)
+	if err != nil {
+		return err
+	}
+	if err := l.ymlClient.Unmarshall(contentConfigAgent, &configAgent); err != nil {
+		return err
+	}
+
+	configAgent.VMName = vmName
+
+	newConfigAgentBytes, err := l.ymlClient.Marshall(&configAgent)
+	if err != nil {
+		return err
+	}
+	if err := l.fileSystem.WriteFileContent(pathConfigFile, newConfigAgentBytes); err != nil {
+		return err
+	}
+	return nil
+}
+
 // SaveStateReceived execute save the state received
 func (l *ManagerAdapter) SaveStateReceived(stateData []byte) error {
 	l.logger.Debug("save state received", "trace", "agent-os-instance.manager_adapter.SaveStateReceived", "stateData", string(stateData))
