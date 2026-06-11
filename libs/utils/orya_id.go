@@ -33,26 +33,45 @@ func loadOrCreateOryaID() (string, error) {
 	filePath := getOryaIDFilePath()
 
 	// Try to read existing orya_id from file
-	data, err := os.ReadFile(filePath)
-	if err == nil && len(data) > 0 {
-		return strings.TrimSpace(string(data)), nil
+	id, err := readIDFromFile(filePath)
+	if err == nil {
+		return id, nil
 	}
 
 	// Generate a new ULID and normalize to lowercase
-	id := strings.ToLower(ulid.Make().String())
+	id = strings.ToLower(ulid.Make().String())
 
-	// Ensure parent directory exists (important for Windows %ProgramData%)
-	dir := filepath.Dir(filePath)
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return id, fmt.Errorf("failed to create orya_id directory %s: %w", dir, err)
-	}
-
-	// Write the ID to the file
-	if err := os.WriteFile(filePath, []byte(id+"\n"), 0644); err != nil {
-		return id, fmt.Errorf("failed to write orya_id to %s: %w", filePath, err)
+	// Ensure parent directory exists, then write the ID
+	if err := writeIDToFile(filePath, id); err != nil {
+		return id, fmt.Errorf("failed to persist orya_id: %w", err)
 	}
 
 	return id, nil
+}
+
+// readIDFromFile reads a trimmed non-empty ID from the given file path.
+func readIDFromFile(path string) (string, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	trimmed := strings.TrimSpace(string(data))
+	if trimmed == "" {
+		return "", fmt.Errorf("empty orya_id file: %s", path)
+	}
+	return trimmed, nil
+}
+
+// writeIDToFile ensures the parent directory exists and writes the ID to the file.
+func writeIDToFile(path, id string) error {
+	dir := filepath.Dir(path)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("failed to create directory %s: %w", dir, err)
+	}
+	if err := os.WriteFile(path, []byte(id+"\n"), 0644); err != nil {
+		return fmt.Errorf("failed to write to %s: %w", path, err)
+	}
+	return nil
 }
 
 func getOryaIDFilePath() string {
