@@ -183,6 +183,39 @@ func MergeTagsByKeyPriority(existing, incoming []string) []string {
 	return merged
 }
 
+// hostnameRe matches a hostname line in datadog.yaml:
+//
+//	hostname: my-host              (active)
+//	# hostname: my-host            (commented)
+//	#hostname: my-host             (no space after #)
+var hostnameRe = regexp.MustCompile(`^(#?)\s*hostname:\s*(.*)$`)
+
+// ApplyHostnameInDatadogConfig sets or updates the hostname field in a
+// datadog.yaml content string. Rules:
+//   - If the hostname line is commented out, it is uncommented and updated.
+//   - If the hostname line is active, it is overwritten with the new value.
+//   - If no hostname line exists, one is appended at the end.
+//   - The rest of the file is preserved byte-for-byte.
+func ApplyHostnameInDatadogConfig(content string, hostname string) string {
+	if hostname == "" {
+		return content
+	}
+
+	lines := strings.Split(content, "\n")
+	for i, line := range lines {
+		if hostnameRe.MatchString(line) {
+			lines[i] = fmt.Sprintf("hostname: %s", hostname)
+			return strings.Join(lines, "\n")
+		}
+	}
+
+	// Not found — append at the end.
+	if content != "" && !strings.HasSuffix(content, "\n") {
+		content += "\n"
+	}
+	return content + fmt.Sprintf("hostname: %s\n", hostname)
+}
+
 // ExtractTagKey returns the key portion of a "key:value" Datadog tag.
 // For tags that do not contain ":", the whole tag string is treated as the key.
 func ExtractTagKey(tag string) string {
