@@ -223,11 +223,18 @@ func (d *DatadogLinuxOperation) UpdateConfigFileDatadog(filePath string) error {
 //
 // Supported fields:
 //   - HostTags: merged with the existing tags in the file (existing tags win on key conflict).
+//   - Hostname: set as the hostname field in the file.
 func (d *DatadogLinuxOperation) UpdateConfigFileDatadogContent(filePath string, config dto.DatadogConfigDTO) error {
 	d.logger.Debug("update config file datadog content", "trace", "agent-os-instance.datadog_linux_operations.UpdateConfigFileDatadogContent", "filePath", filePath)
 
 	if len(config.HostTags) > 0 {
 		if _, err := d.applyHostTags(filePath, config.HostTags); err != nil {
+			return err
+		}
+	}
+
+	if config.Hostname != "" {
+		if _, err := d.applyHostname(filePath, config.Hostname); err != nil {
 			return err
 		}
 	}
