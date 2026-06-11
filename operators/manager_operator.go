@@ -465,6 +465,16 @@ func (l *ManagerOperator) Run() error {
 	go l.periodicAutoUpdate()
 	go l.periodicTasks()
 	go l.getMetadata()
+
+	// On restart, the Datadog agent may not yet be active when the initial
+	// metadata is collected, leaving vendors_info.datadog empty. Wait for it
+	// to become active and then trigger a metadata update so the register
+	// service receives the vendor info (version, host ID, etc.).
+	if installed, err := l.adapter.AlreadyInstalled("datadog"); err == nil && installed {
+		l.wg.Add(1)
+		go l.waitAgentAndSendMetadata()
+	}
+
 	l.wg.Wait()
 	return nil
 }
