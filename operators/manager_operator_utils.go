@@ -613,6 +613,24 @@ func (l *ManagerOperator) uninstallAgentDatadog() {
 	return
 }
 
+// sendMetadataWithHostnameUpdate collects fresh metadata and sends it to the
+// register service, so the updated vm_name (just saved from a Datadog signal)
+// is reflected immediately rather than waiting for the next periodic cycle.
+func (l *ManagerOperator) sendMetadataWithHostnameUpdate() {
+	l.logger.Debug("send metadata with hostname update", "trace", "agent-os-instance.manager_operator.sendMetadataWithHostnameUpdate")
+	defer l.wg.Done()
+
+	metadataBytes, err := l.adapter.GetMetadataSnapshot()
+	if err != nil {
+		l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataWithHostnameUpdate", Priority: dto.ErrLevelMedium, Err: err}
+		return
+	}
+
+	// sendMetadataUpdate is already listening on chanMetadata — it will pick
+	// this up and InjectClientInfo will read the updated vm_name from config.yml.
+	l.chanMetadata <- metadataBytes
+}
+
 // updateAgentDatadog execute call to api orya agent
 // to update datadog agent
 func (l *ManagerOperator) updateAgentDatadog(content []byte) {
@@ -870,6 +888,10 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 			if err := l.adapter.SaveVMName(act.Hostname); err != nil {
 				l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
 			}
+			// Trigger an immediate metadata update so the register
+			// service receives the new hostname right away.
+			l.wg.Add(1)
+			go l.sendMetadataWithHostnameUpdate()
 		}
 
 		// action update configurations datadog
