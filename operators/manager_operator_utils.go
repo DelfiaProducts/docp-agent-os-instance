@@ -98,6 +98,10 @@ func (l *ManagerOperator) retryHandlerMetadata() error {
 func (l *ManagerOperator) handleMetadata() {
 	l.logger.Debug("execute handle metadata", "trace", "agent-os-instance.linux_manager_operator.handleMetadata")
 	defer l.wg.Done()
+
+	// Ensure vm_name is persisted in config.yml
+	l.ensureVMName()
+
 	isAlreadyCreated, err := l.adapter.IsAlreadyCreated()
 	if err != nil {
 		l.chanErrors <- dto.CommonChanErrors{From: "handleMetadata", Priority: dto.ErrLevelMedium, Err: err}
@@ -112,6 +116,31 @@ func (l *ManagerOperator) handleMetadata() {
 		go l.sendMetadataCreate()
 		return
 	}
+}
+
+// ensureVMName ensures the vm_name is set in config.yml.
+// If already set, returns it. Otherwise, gets the OS hostname,
+// persists it in config.yml, and returns it.
+func (l *ManagerOperator) ensureVMName() string {
+	l.logger.Debug("ensure vm name", "trace", "agent-os-instance.manager_operator.ensureVMName")
+	configAgent, err := l.adapter.GetConfigAgent()
+	if err != nil {
+		l.logger.Error("error getting config agent for vm_name", "trace", "agent-os-instance.manager_operator.ensureVMName", "error", err.Error())
+		hostname, _ := os.Hostname()
+		return hostname
+	}
+	if configAgent.VMName != "" {
+		return configAgent.VMName
+	}
+	hostname, err := os.Hostname()
+	if err != nil {
+		l.logger.Error("error getting OS hostname", "trace", "agent-os-instance.manager_operator.ensureVMName", "error", err.Error())
+		return ""
+	}
+	if err := l.adapter.SaveVMName(hostname); err != nil {
+		l.logger.Error("error saving vm_name to config", "trace", "agent-os-instance.manager_operator.ensureVMName", "error", err.Error())
+	}
+	return hostname
 }
 
 // sendMetadataCreate execute send initial metadata to register
@@ -621,13 +650,21 @@ func (l *ManagerOperator) updateAgentDatadog(content []byte) {
 }
 
 // upsertAgentDatadogHostTags execute call to api orya agent
-// to upsert datadog agent host tags
+// to upsert datadog agent host tags and hostname
 func (l *ManagerOperator) upsertAgentDatadogHostTags(tags []string) {
 	l.logger.Debug("upsert datadog agent host tags", "trace", "agent-os-instance.manager_operator.upsertAgentDatadogHostTags", "tags", tags)
 	defer l.wg.Done()
 
+	// Read vm_name from config to set as hostname in Datadog
+	hostname := ""
+	configAgent, err := l.adapter.GetConfigAgent()
+	if err == nil && configAgent.VMName != "" {
+		hostname = configAgent.VMName
+	}
+
 	config := dto.DatadogConfigDTO{
 		HostTags: tags,
+		Hostname: hostname,
 	}
 	result, err := l.adapter.OryaAgentApiUpdateConfigDatadog(config)
 	if err != nil {
