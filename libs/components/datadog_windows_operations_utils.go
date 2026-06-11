@@ -53,3 +53,20 @@ func (d *DatadogWindowsOperation) applyHostTags(filePath string, newTags []strin
 
 	return newContent, nil
 }
+
+// applyHostname reads the current content of filePath, sets the hostname field,
+// and writes the result back. It does NOT restart the service.
+func (d *DatadogWindowsOperation) applyHostname(filePath string, hostname string) (string, error) {
+	raw, err := os.ReadFile(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read datadog config file %s: %w", filePath, err)
+	}
+
+	newContent := utils.ApplyHostnameInDatadogConfig(string(raw), hostname)
+
+	if err := os.WriteFile(filePath, []byte(newContent), 0o644); err != nil {
+		return "", fmt.Errorf("failed to write datadog config file %s: %w", filePath, err)
+	}
+
+	return newContent, nil
+}
