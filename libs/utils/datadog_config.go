@@ -216,6 +216,25 @@ func ApplyHostnameInDatadogConfig(content string, hostname string) string {
 	return content + fmt.Sprintf("hostname: %s\n", hostname)
 }
 
+// ExtractHostnameFromDatadogConfig parses a datadog.yaml content string and
+// returns the value of the hostname field, or empty string if not found.
+func ExtractHostnameFromDatadogConfig(content string) string {
+	lines := strings.Split(content, "\n")
+	for _, line := range lines {
+		matches := hostnameRe.FindStringSubmatch(line)
+		if matches != nil && len(matches) >= 3 {
+			// matches[1] is the comment marker (#), matches[2] is the value
+			value := strings.TrimSpace(matches[2])
+			if value != "" {
+				// Strip surrounding quotes if present
+				value = strings.Trim(value, `"'`)
+				return value
+			}
+		}
+	}
+	return ""
+}
+
 // ExtractTagKey returns the key portion of a "key:value" Datadog tag.
 // For tags that do not contain ":", the whole tag string is treated as the key.
 func ExtractTagKey(tag string) string {
