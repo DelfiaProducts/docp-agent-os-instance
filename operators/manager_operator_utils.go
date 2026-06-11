@@ -632,6 +632,45 @@ func (l *ManagerOperator) sendMetadataWithHostnameUpdate() {
 	l.chanMetadata <- metadataBytes
 }
 
+// waitAgentAndSendMetadata waits for the Datadog agent to become active after
+// a fresh install and then triggers a metadata update so that vendors_info
+// (agent version, host info, etc.) is populated in the registration payload.
+// Without this, the metadata collected at startup — before the install signal
+// arrives — has an empty vendors_info.datadog, and the periodic handler only
+// runs every 12 hours and ignores VendorsInfo changes.
+func (l *ManagerOperator) waitAgentAndSendMetadata() {
+	l.logger.Debug("wait agent and send metadata", "trace", "agent-os-instance.manager_operator.waitAgentAndSendMetadata")
+	defer l.wg.Done()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	ticker := time.NewTicker(20 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			l.logger.Error("timeout waiting for datadog agent to become active for metadata update")
+			return
+		case <-ticker.C:
+			datadogActive, err := l.adapter.Status("datadog")
+			if err != nil {
+				l.logger.Error("failed to check datadog status for metadata", "error", err)
+				continue
+			}
+			if datadogActive == "active" {
+				l.logger.Debug("datadog agent is active, triggering metadata update")
+				// Give the agent a moment to fully initialise after becoming active.
+				time.Sleep(15 * time.Second)
+				l.wg.Add(1)
+				l.sendMetadataWithHostnameUpdate()
+				return
+			}
+		}
+	}
+}
+
 // updateAgentDatadog execute call to api orya agent
 // to update datadog agent
 func (l *ManagerOperator) updateAgentDatadog(content []byte) {
@@ -1013,15 +1052,16 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 			} else if act.Component == "agent" {
 				if !datadogAlreadyInstalled {
 					if len(act.Files) > 0 {
-						l.wg.Add(3)
+						l.wg.Add(4)
 						go l.installAgentDatadog(ddApiKey, ddSite, version)
 						go l.handlerUpdateAgentDatadogAfterInstall(act.Files)
 						go l.handlerUpdateAgentDatadogHostTagsAfterInstall(act.HostTags)
-
+						go l.waitAgentAndSendMetadata()
 					} else {
-						l.wg.Add(2)
+						l.wg.Add(3)
 						go l.installAgentDatadog(ddApiKey, ddSite, version)
 						go l.handlerUpdateAgentDatadogHostTagsAfterInstall(act.HostTags)
+						go l.waitAgentAndSendMetadata()
 					}
 				} else if len(act.HostTags) > 0 {
 					// Already installed — re-apply host tags on restart,
