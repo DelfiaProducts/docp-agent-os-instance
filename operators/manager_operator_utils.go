@@ -306,6 +306,17 @@ func (l *ManagerOperator) extractDDApiKeyAndDDSiteFromEnvs(envs []dto.StateActio
 	return ddApiKey, ddSite, nil
 }
 
+// extractDDAppKeyFromEnvs extracts DD_APP_KEY from the signal envs.
+// Returns empty string if not present — app_key is optional.
+func (l *ManagerOperator) extractDDAppKeyFromEnvs(envs []dto.StateActionEnvs) string {
+	for _, env := range envs {
+		if env.Name == "DD_APP_KEY" {
+			return env.Value
+		}
+	}
+	return ""
+}
+
 // extractDDApiKeyAndDDSiteFromEnvs return envs for install datadog agent
 func (l *ManagerOperator) extractApmSingleStepEnvs(envs []dto.StateActionEnvs) (string, error) {
 	l.logger.Debug("extract envs the datadog", "trace", "agent-os-instance.manager_operator.extractDDApiKeyAndDDSiteFromEnvs", "envs", envs)
@@ -739,9 +750,18 @@ func (l *ManagerOperator) upsertAgentDatadogHostTags(tags []string) {
 		}
 	}
 
+	// Read persisted Datadog credentials from the store so they are always
+	// re-applied to datadog.yaml whenever tags or hostname are updated.
+	apiKey, _ := l.adapter.GetStore("datadog.api_key").(string)
+	site, _ := l.adapter.GetStore("datadog.site").(string)
+	appKey, _ := l.adapter.GetStore("datadog.app_key").(string)
+
 	config := dto.DatadogConfigDTO{
 		HostTags: tags,
 		Hostname: hostname,
+		ApiKey:   apiKey,
+		AppKey:   appKey,
+		Site:     site,
 	}
 	result, err := l.adapter.OryaAgentApiUpdateConfigDatadog(config)
 	if err != nil {
@@ -1023,6 +1043,22 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 			if err != nil {
 				l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
 				return
+			}
+			ddAppKey := l.extractDDAppKeyFromEnvs(act.Envs)
+
+			// Persist Datadog credentials so they can be re-applied to datadog.yaml
+			// whenever tags or hostname are updated (e.g. after a config file
+			// overwrite from the signal).
+			if err := l.adapter.SetStore("datadog.api_key", ddApiKey); err != nil {
+				l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+			}
+			if err := l.adapter.SetStore("datadog.site", ddSite); err != nil {
+				l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+			}
+			if ddAppKey != "" {
+				if err := l.adapter.SetStore("datadog.app_key", ddAppKey); err != nil {
+					l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+				}
 			}
 			if act.Component == "tracer" {
 				if act.Mode == "single_step" {
