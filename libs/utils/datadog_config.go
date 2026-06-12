@@ -243,3 +243,91 @@ func ExtractTagKey(tag string) string {
 	}
 	return tag
 }
+
+// simpleKeyRe builds a regex that matches an active or commented line like:
+//
+//	api_key: "xxx"       (active)
+//	# api_key: "xxx"     (commented)
+//	#api_key: "xxx"      (no space after #)
+func simpleKeyRe(key string) *regexp.Regexp {
+	return regexp.MustCompile(fmt.Sprintf(`^(#?)\s*%s:\s*(.*)$`, regexp.QuoteMeta(key)))
+}
+
+// applySimpleConfigField is a generic helper that sets or updates a simple
+// key: value field in a YAML content string. Rules:
+//   - If the line is commented out, it is uncommented and updated.
+//   - If the line is active, it is overwritten with the new value.
+//   - If no such line exists, one is appended at the end.
+//   - The rest of the file is preserved byte-for-byte.
+func applySimpleConfigField(content, key, value string) string {
+	if value == "" {
+		return content
+	}
+	re := simpleKeyRe(key)
+	lines := strings.Split(content, "\n")
+	for i, line := range lines {
+		if re.MatchString(line) {
+			lines[i] = fmt.Sprintf("%s: %s", key, value)
+			return strings.Join(lines, "\n")
+		}
+	}
+	// Not found — append at the end.
+	if content != "" && !strings.HasSuffix(content, "\n") {
+		content += "\n"
+	}
+	return content + fmt.Sprintf("%s: %s\n", key, value)
+}
+
+// extractSimpleConfigField extracts the value of a simple key: value field
+// from a YAML content string. Returns empty string if not found.
+func extractSimpleConfigField(content, key string) string {
+	re := simpleKeyRe(key)
+	lines := strings.Split(content, "\n")
+	for _, line := range lines {
+		matches := re.FindStringSubmatch(line)
+		if matches != nil && len(matches) >= 3 {
+			value := strings.TrimSpace(matches[2])
+			if value != "" {
+				value = strings.Trim(value, `"'`)
+				return value
+			}
+		}
+	}
+	return ""
+}
+
+// ApplyApiKeyInDatadogConfig sets or updates the api_key field in a
+// datadog.yaml content string.
+func ApplyApiKeyInDatadogConfig(content, apiKey string) string {
+	return applySimpleConfigField(content, "api_key", apiKey)
+}
+
+// ApplyAppKeyInDatadogConfig sets or updates the app_key field in a
+// datadog.yaml content string.
+func ApplyAppKeyInDatadogConfig(content, appKey string) string {
+	return applySimpleConfigField(content, "app_key", appKey)
+}
+
+// ApplySiteInDatadogConfig sets or updates the site field in a
+// datadog.yaml content string.
+func ApplySiteInDatadogConfig(content, site string) string {
+	return applySimpleConfigField(content, "site", site)
+}
+
+// ExtractApiKeyFromDatadogConfig extracts the api_key value from a
+// datadog.yaml content string.
+func ExtractApiKeyFromDatadogConfig(content string) string {
+	return extractSimpleConfigField(content, "api_key")
+}
+
+// ExtractAppKeyFromDatadogConfig extracts the app_key value from a
+// datadog.yaml content string.
+func ExtractAppKeyFromDatadogConfig(content string) string {
+	return extractSimpleConfigField(content, "app_key")
+}
+
+// ExtractSiteFromDatadogConfig extracts the site value from a
+// datadog.yaml content string.
+func ExtractSiteFromDatadogConfig(content string) string {
+	return extractSimpleConfigField(content, "site")
+}
