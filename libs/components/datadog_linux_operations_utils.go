@@ -90,6 +90,50 @@ func (d *DatadogLinuxOperation) applyHostname(filePath string, hostname string) 
 	return newContent, nil
 }
 
+// applyConfigField is a generic helper that reads the datadog.yaml content,
+// applies a transformation function (e.g. setting api_key, app_key, site),
+// and writes the result back. It does NOT restart the service.
+func (d *DatadogLinuxOperation) applyConfigField(filePath string, transform func(content, value string) string, value, tmpPrefix string) (string, error) {
+	if value == "" {
+		return "", nil
+	}
+
+	currentContent, err := d.program.ExecuteWithOutput("sudo", []string{}, "-u", "dd-agent", "cat", filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read datadog config file %s: %w", filePath, err)
+	}
+
+	newContent := transform(currentContent, value)
+	if newContent == currentContent {
+		return newContent, nil
+	}
+
+	tmpFile, err := os.CreateTemp("", tmpPrefix+"-*.yaml")
+	if err != nil {
+		return "", fmt.Errorf("failed to create temp config file: %w", err)
+	}
+	tmpFilePath := tmpFile.Name()
+	defer os.Remove(tmpFilePath)
+
+	if _, err := tmpFile.WriteString(newContent); err != nil {
+		tmpFile.Close()
+		return "", fmt.Errorf("failed to write temp config file: %w", err)
+	}
+	if err := tmpFile.Close(); err != nil {
+		return "", fmt.Errorf("failed to close temp config file: %w", err)
+	}
+	if err := os.Chmod(tmpFilePath, 0644); err != nil {
+		return "", fmt.Errorf("failed to chmod temp config file: %w", err)
+	}
+
+	if err := d.program.Execute("sudo", []string{}, "-u", "dd-agent", "bash", "-c",
+		fmt.Sprintf("cat %s | tee %s > /dev/null", tmpFilePath, filePath)); err != nil {
+		return "", fmt.Errorf("failed to write datadog config file %s: %w", filePath, err)
+	}
+
+	return newContent, nil
+}
+
 // prepareEnvs return envs the datadog
 func (d *DatadogLinuxOperation) prepareEnvs(ddSite, ddApiKey string) []string {
 	var envs []string

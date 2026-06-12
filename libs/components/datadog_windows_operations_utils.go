@@ -70,3 +70,28 @@ func (d *DatadogWindowsOperation) applyHostname(filePath string, hostname string
 
 	return newContent, nil
 }
+
+// applyConfigField is a generic helper that reads datadog.yaml, applies a
+// transformation function (e.g. setting api_key, app_key, site), and writes
+// the result back. It does NOT restart the service.
+func (d *DatadogWindowsOperation) applyConfigField(filePath string, transform func(content, value string) string, value string) (string, error) {
+	if value == "" {
+		return "", nil
+	}
+
+	raw, err := os.ReadFile(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read datadog config file %s: %w", filePath, err)
+	}
+
+	newContent := transform(string(raw), value)
+	if newContent == string(raw) {
+		return newContent, nil
+	}
+
+	if err := os.WriteFile(filePath, []byte(newContent), 0o644); err != nil {
+		return "", fmt.Errorf("failed to write datadog config file %s: %w", filePath, err)
+	}
+
+	return newContent, nil
+}

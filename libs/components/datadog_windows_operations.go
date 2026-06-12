@@ -256,6 +256,24 @@ func (d *DatadogWindowsOperation) UpdateConfigFileDatadogContent(filePath string
 		}
 	}
 
+	if config.ApiKey != "" {
+		if _, err := d.applyConfigField(filePath, utils.ApplyApiKeyInDatadogConfig, config.ApiKey); err != nil {
+			return err
+		}
+	}
+
+	if config.AppKey != "" {
+		if _, err := d.applyConfigField(filePath, utils.ApplyAppKeyInDatadogConfig, config.AppKey); err != nil {
+			return err
+		}
+	}
+
+	if config.Site != "" {
+		if _, err := d.applyConfigField(filePath, utils.ApplySiteInDatadogConfig, config.Site); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 

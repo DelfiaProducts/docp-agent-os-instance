@@ -239,6 +239,24 @@ func (d *DatadogLinuxOperation) UpdateConfigFileDatadogContent(filePath string, 
 		}
 	}
 
+	if config.ApiKey != "" {
+		if _, err := d.applyConfigField(filePath, utils.ApplyApiKeyInDatadogConfig, config.ApiKey, "orya-dd-apikey"); err != nil {
+			return err
+		}
+	}
+
+	if config.AppKey != "" {
+		if _, err := d.applyConfigField(filePath, utils.ApplyAppKeyInDatadogConfig, config.AppKey, "orya-dd-appkey"); err != nil {
+			return err
+		}
+	}
+
+	if config.Site != "" {
+		if _, err := d.applyConfigField(filePath, utils.ApplySiteInDatadogConfig, config.Site, "orya-dd-site"); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
