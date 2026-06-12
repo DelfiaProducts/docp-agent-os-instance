@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/OryaHub/agent-os-instance/libs/dto"
@@ -98,6 +99,10 @@ func (l *ManagerOperator) retryHandlerMetadata() error {
 func (l *ManagerOperator) handleMetadata() {
 	l.logger.Debug("execute handle metadata", "trace", "agent-os-instance.linux_manager_operator.handleMetadata")
 	defer l.wg.Done()
+
+	// Ensure vm_name is persisted in config.yml
+	l.ensureVMName()
+
 	isAlreadyCreated, err := l.adapter.IsAlreadyCreated()
 	if err != nil {
 		l.chanErrors <- dto.CommonChanErrors{From: "handleMetadata", Priority: dto.ErrLevelMedium, Err: err}
@@ -112,6 +117,31 @@ func (l *ManagerOperator) handleMetadata() {
 		go l.sendMetadataCreate()
 		return
 	}
+}
+
+// ensureVMName ensures the vm_name is set in config.yml.
+// If already set, returns it. Otherwise, gets the OS hostname,
+// persists it in config.yml, and returns it.
+func (l *ManagerOperator) ensureVMName() string {
+	l.logger.Debug("ensure vm name", "trace", "agent-os-instance.manager_operator.ensureVMName")
+	configAgent, err := l.adapter.GetConfigAgent()
+	if err != nil {
+		l.logger.Error("error getting config agent for vm_name", "trace", "agent-os-instance.manager_operator.ensureVMName", "error", err.Error())
+		hostname, _ := os.Hostname()
+		return hostname
+	}
+	if configAgent.VMName != "" {
+		return configAgent.VMName
+	}
+	hostname, err := os.Hostname()
+	if err != nil {
+		l.logger.Error("error getting OS hostname", "trace", "agent-os-instance.manager_operator.ensureVMName", "error", err.Error())
+		return ""
+	}
+	if err := l.adapter.SaveVMName(hostname); err != nil {
+		l.logger.Error("error saving vm_name to config", "trace", "agent-os-instance.manager_operator.ensureVMName", "error", err.Error())
+	}
+	return hostname
 }
 
 // sendMetadataCreate execute send initial metadata to register
@@ -274,6 +304,17 @@ func (l *ManagerOperator) extractDDApiKeyAndDDSiteFromEnvs(envs []dto.StateActio
 		}
 	}
 	return ddApiKey, ddSite, nil
+}
+
+// extractDDAppKeyFromEnvs extracts DD_APP_KEY from the signal envs.
+// Returns empty string if not present — app_key is optional.
+func (l *ManagerOperator) extractDDAppKeyFromEnvs(envs []dto.StateActionEnvs) string {
+	for _, env := range envs {
+		if env.Name == "DD_APP_KEY" {
+			return env.Value
+		}
+	}
+	return ""
 }
 
 // extractDDApiKeyAndDDSiteFromEnvs return envs for install datadog agent
@@ -584,6 +625,63 @@ func (l *ManagerOperator) uninstallAgentDatadog() {
 	return
 }
 
+// sendMetadataWithHostnameUpdate collects fresh metadata and sends it to the
+// register service, so the updated vm_name (just saved from a Datadog signal)
+// is reflected immediately rather than waiting for the next periodic cycle.
+func (l *ManagerOperator) sendMetadataWithHostnameUpdate() {
+	l.logger.Debug("send metadata with hostname update", "trace", "agent-os-instance.manager_operator.sendMetadataWithHostnameUpdate")
+	defer l.wg.Done()
+
+	metadataBytes, err := l.adapter.GetMetadataSnapshot()
+	if err != nil {
+		l.chanErrors <- dto.CommonChanErrors{From: "sendMetadataWithHostnameUpdate", Priority: dto.ErrLevelMedium, Err: err}
+		return
+	}
+
+	// sendMetadataUpdate is already listening on chanMetadata — it will pick
+	// this up and InjectClientInfo will read the updated vm_name from config.yml.
+	l.chanMetadata <- metadataBytes
+}
+
+// waitAgentAndSendMetadata waits for the Datadog agent to become active after
+// a fresh install and then triggers a metadata update so that vendors_info
+// (agent version, host info, etc.) is populated in the registration payload.
+// Without this, the metadata collected at startup — before the install signal
+// arrives — has an empty vendors_info.datadog, and the periodic handler only
+// runs every 12 hours and ignores VendorsInfo changes.
+func (l *ManagerOperator) waitAgentAndSendMetadata() {
+	l.logger.Debug("wait agent and send metadata", "trace", "agent-os-instance.manager_operator.waitAgentAndSendMetadata")
+	defer l.wg.Done()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
+	defer cancel()
+
+	ticker := time.NewTicker(20 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			l.logger.Error("timeout waiting for datadog agent to become active for metadata update")
+			return
+		case <-ticker.C:
+			datadogActive, err := l.adapter.Status("datadog")
+			if err != nil {
+				l.logger.Error("failed to check datadog status for metadata", "error", err)
+				continue
+			}
+			if datadogActive == "active" {
+				l.logger.Debug("datadog agent is active, triggering metadata update")
+				// Give the agent a moment to fully initialise after becoming active.
+				time.Sleep(15 * time.Second)
+				l.wg.Add(1)
+				l.sendMetadataWithHostnameUpdate()
+				return
+			}
+		}
+	}
+}
+
 // updateAgentDatadog execute call to api orya agent
 // to update datadog agent
 func (l *ManagerOperator) updateAgentDatadog(content []byte) {
@@ -621,13 +719,49 @@ func (l *ManagerOperator) updateAgentDatadog(content []byte) {
 }
 
 // upsertAgentDatadogHostTags execute call to api orya agent
-// to upsert datadog agent host tags
+// to upsert datadog agent host tags and hostname
 func (l *ManagerOperator) upsertAgentDatadogHostTags(tags []string) {
 	l.logger.Debug("upsert datadog agent host tags", "trace", "agent-os-instance.manager_operator.upsertAgentDatadogHostTags", "tags", tags)
 	defer l.wg.Done()
 
+	// Read vm_name from config to set as hostname in Datadog
+	hostname := ""
+	configAgent, err := l.adapter.GetConfigAgent()
+	if err == nil && configAgent.VMName != "" {
+		hostname = configAgent.VMName
+	}
+
+	// Inject orya_id as a Datadog host tag so all metrics are tagged
+	// with the persistent host identity. If the tag already exists
+	// (e.g. from a previous upsert), replace it in-place instead of
+	// duplicating it.
+	if oryaId, err := libutils.GetOrCreateOryaID(); err == nil && oryaId != "" {
+		oryaTag := "orya_id:" + oryaId
+		found := false
+		for i, t := range tags {
+			if strings.HasPrefix(t, "orya_id:") {
+				tags[i] = oryaTag
+				found = true
+				break
+			}
+		}
+		if !found {
+			tags = append(tags, oryaTag)
+		}
+	}
+
+	// Read persisted Datadog credentials from the store so they are always
+	// re-applied to datadog.yaml whenever tags or hostname are updated.
+	apiKey, _ := l.adapter.GetStore("datadog.api_key").(string)
+	site, _ := l.adapter.GetStore("datadog.site").(string)
+	appKey, _ := l.adapter.GetStore("datadog.app_key").(string)
+
 	config := dto.DatadogConfigDTO{
 		HostTags: tags,
+		Hostname: hostname,
+		ApiKey:   apiKey,
+		AppKey:   appKey,
+		Site:     site,
 	}
 	result, err := l.adapter.OryaAgentApiUpdateConfigDatadog(config)
 	if err != nil {
@@ -643,7 +777,17 @@ func (l *ManagerOperator) upsertAgentDatadogHostTags(tags []string) {
 		l.chanErrors <- dto.CommonChanErrors{From: "upsertAgentDatadogHostTags", Priority: dto.ErrLevelMedium, Err: err}
 		return
 	}
-	return
+
+	// Trigger a metadata update so the register service immediately sees the
+	// new hostname (and populated vendors_info). Wait a few seconds for the
+	// agent to finish restarting before collecting.
+	l.wg.Add(1)
+	go func() {
+		defer l.wg.Done()
+		time.Sleep(10 * time.Second)
+		l.wg.Add(1)
+		l.sendMetadataWithHostnameUpdate()
+	}()
 }
 
 // autoUninstallWithOtherVendors execute auto uninstall with vendors
@@ -825,8 +969,24 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 			return
 		}
 		l.logger.Debug("consumer actions datadog", "trace", "agent-os-instance.manager_operator.consumerActionsDatadog", "action", act)
+
+		// If the signal carries a hostname, persist it in config.yml
+		// so it takes priority over the OS hostname for vm_name.
+		if act.Hostname != "" {
+			l.logger.Debug("saving hostname from signal to config", "trace", "agent-os-instance.manager_operator.consumerActionsDatadog", "hostname", act.Hostname)
+			if err := l.adapter.SaveVMName(act.Hostname); err != nil {
+				l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+			}
+			// Trigger an immediate metadata update so the register
+			// service receives the new hostname right away.
+			l.wg.Add(1)
+			go l.sendMetadataWithHostnameUpdate()
+		}
+
 		// action update configurations datadog
 		if act.Action == "update" {
+			var fileWg sync.WaitGroup
+
 			for _, fls := range act.Files {
 				flsBytes, err := l.json.Marshall(&fls)
 				if err != nil {
@@ -836,8 +996,12 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 
 				// if agent already installed execute update configurations
 				if datadogAlreadyInstalled {
+					fileWg.Add(1)
 					l.wg.Add(1)
-					go l.updateAgentDatadog(flsBytes)
+					go func(fb []byte) {
+						defer fileWg.Done()
+						l.updateAgentDatadog(fb)
+					}(flsBytes)
 					//validate if version is latest and auto_update is enabled
 					if act.AutoUpdate {
 						if act.Version == "latest" {
@@ -856,6 +1020,12 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 					}
 				}
 			}
+
+			// Wait for all file configuration updates to complete before applying
+			// host tags, so that tags are always the last thing written to
+			// datadog.yaml and are never overwritten by a concurrent file update.
+			fileWg.Wait()
+
 			//update host tags if exist and agent already installed
 			if datadogAlreadyInstalled && len(act.HostTags) > 0 {
 				l.wg.Add(1)
@@ -873,6 +1043,22 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 			if err != nil {
 				l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
 				return
+			}
+			ddAppKey := l.extractDDAppKeyFromEnvs(act.Envs)
+
+			// Persist Datadog credentials so they can be re-applied to datadog.yaml
+			// whenever tags or hostname are updated (e.g. after a config file
+			// overwrite from the signal).
+			if err := l.adapter.SetStore("datadog.api_key", ddApiKey); err != nil {
+				l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+			}
+			if err := l.adapter.SetStore("datadog.site", ddSite); err != nil {
+				l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+			}
+			if ddAppKey != "" {
+				if err := l.adapter.SetStore("datadog.app_key", ddAppKey); err != nil {
+					l.chanErrors <- dto.CommonChanErrors{From: "consumerActionsDatadog", Priority: dto.ErrLevelMedium, Err: err}
+				}
 			}
 			if act.Component == "tracer" {
 				if act.Mode == "single_step" {
@@ -912,16 +1098,22 @@ func (l *ManagerOperator) consumerActionsDatadog() {
 			} else if act.Component == "agent" {
 				if !datadogAlreadyInstalled {
 					if len(act.Files) > 0 {
-						l.wg.Add(3)
+						l.wg.Add(4)
 						go l.installAgentDatadog(ddApiKey, ddSite, version)
 						go l.handlerUpdateAgentDatadogAfterInstall(act.Files)
 						go l.handlerUpdateAgentDatadogHostTagsAfterInstall(act.HostTags)
-
+						go l.waitAgentAndSendMetadata()
 					} else {
-						l.wg.Add(2)
+						l.wg.Add(3)
 						go l.installAgentDatadog(ddApiKey, ddSite, version)
 						go l.handlerUpdateAgentDatadogHostTagsAfterInstall(act.HostTags)
+						go l.waitAgentAndSendMetadata()
 					}
+				} else if len(act.HostTags) > 0 {
+					// Already installed — re-apply host tags on restart,
+					// since the signal may still be of type "install".
+					l.wg.Add(1)
+					go l.upsertAgentDatadogHostTags(act.HostTags)
 				}
 			}
 

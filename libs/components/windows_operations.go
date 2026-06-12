@@ -164,12 +164,7 @@ func (l *WindowsOperations) RestartService(serviceName string) error {
 				break
 			}
 		}
-		out, err := l.program.ExecuteWithOutput("taskkill", []string{}, "/f", "/im", fmt.Sprintf("%s.exe", serviceName))
-		if err != nil {
-			l.logger.Error("error in taskkill process", "error", err)
-			return err
-		}
-		l.logger.Debug("output taskkill process", "output", out)
+		l.terminateServiceProcesses(name)
 	}
 
 	if err := s.Start(); err != nil {
@@ -212,14 +207,24 @@ func (l *WindowsOperations) StopService(serviceName string) error {
 				break
 			}
 		}
-		out, err := l.program.ExecuteWithOutput("taskkill", []string{}, "/f", "/im", fmt.Sprintf("%s.exe", serviceName))
-		if err != nil {
-			l.logger.Error("error in taskkill process", "error", err)
-			return err
-		}
-		l.logger.Debug("output taskkill process", "output", out)
+		l.terminateServiceProcesses(name)
 	}
 	return nil
+}
+
+// terminateServiceProcesses attempts to kill any remaining processes belonging
+// to the given SCM service name. This is a best-effort cleanup for processes
+// (especially child processes) that may survive a service stop. Errors are
+// logged but not returned, so the caller's service start is never blocked.
+func (l *WindowsOperations) terminateServiceProcesses(scmName string) {
+	out, err := l.program.ExecuteWithOutput("taskkill", []string{}, "/f", "/fi", fmt.Sprintf("SERVICES eq %s", scmName), "/t")
+	if err != nil {
+		// taskkill exits with code 128 when no process matches the filter,
+		// which is expected when the service stopped cleanly. Log and move on.
+		l.logger.Debug("taskkill for service processes (may be already stopped)", "service", scmName, "output", out)
+	} else {
+		l.logger.Debug("taskkill for service processes completed", "service", scmName, "output", out)
+	}
 }
 
 // InstallAgent execute install the agent orya

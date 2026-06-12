@@ -170,6 +170,22 @@ func (l *ManagerAdapter) getActionsFiles(configurations dto.StateCheckDatadogCon
 	return arrFiles
 }
 
+// extractHostnameFromFiles looks through the files slice for one whose
+// FilePath references a datadog.yaml, then extracts the hostname value
+// from its YAML content. Returns empty string if not found.
+func (l *ManagerAdapter) extractHostnameFromFiles(files []dto.StateActionFiles) string {
+	for _, f := range files {
+		if strings.HasSuffix(f.FilePath, "datadog.yaml") || strings.HasSuffix(f.FilePath, "datadog.yml") {
+			hostname := utils.ExtractHostnameFromDatadogConfig(f.Content)
+			if hostname != "" {
+				l.logger.Debug("extracted hostname from datadog config file", "trace", "agent-os-instance.manager_adapter.extractHostnameFromFiles", "hostname", hostname)
+				return hostname
+			}
+		}
+	}
+	return ""
+}
+
 // parseSiteDatadog execute parse the site datadog
 func (l *ManagerAdapter) parseSiteDatadog(site string) string {
 	l.logger.Debug("parse site datadog", "trace", "agent-os-instance.manager_adapter.parseSiteDatadog", "site", site)
@@ -340,6 +356,7 @@ func (l *ManagerAdapter) prepareAgentDatadogAction(stateCheckSignal dto.StateChe
 					Files:         files,
 					Version:       version,
 					HostTags:      stateCheckSignal.HostTags,
+					Hostname:      l.extractHostnameFromFiles(files),
 				}
 			}
 		}
@@ -386,6 +403,7 @@ func (l *ManagerAdapter) prepareAgentDatadogUpdateAction(stateCheckSignal dto.St
 					Files:         files,
 					Version:       datadogAgent.Version,
 					HostTags:      stateCheckSignal.HostTags,
+					Hostname:      l.extractHostnameFromFiles(files),
 				}
 				action = act
 			}

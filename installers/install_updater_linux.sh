@@ -59,7 +59,7 @@ function resolve_version() {
     version=$(curl -s "$FILE_INDEX_URL" | sed -n 's/.*"latest"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
     if [[ -z "$version" ]]; then
       echo "Failed to fetch latest version." >&2
-      exit 1
+      return 1
     fi
   fi
   echo "$version"
@@ -97,7 +97,7 @@ function prepare_systemd() {
   $sudo_cmd systemctl enable orya-updater.service
 }
 #actions
-VERSION=$(resolve_version "$VERSION")
+VERSION=$(resolve_version "$VERSION") || exit 1
 setup
 verify_architecture
 create_link_simbolic

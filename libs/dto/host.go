@@ -19,6 +19,7 @@ type ComputeInfo struct {
 	Platform        string `json:"platform"`
 	PlatformVersion string `json:"platform_version"`
 	PlatformArch    string `json:"platform_arch"`
+	OryaId          string `json:"orya_id"`
 }
 
 // MetricsInfo is struct for metrics the host
