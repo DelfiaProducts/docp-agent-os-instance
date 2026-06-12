@@ -51,7 +51,12 @@ type DatadogInfos struct {
 	InstallMethodToolVersion      string `yaml:"install_method_tool_version" json:"install_method_tool_version"`
 }
 
+// DatadogConfigDTO is the payload sent to /datadog/config for merging
+// host tags, hostname, and credentials into the existing datadog.yaml.
 type DatadogConfigDTO struct {
 	HostTags []string `json:"host_tags"`
 	Hostname string   `json:"hostname,omitempty"`
+	ApiKey   string   `json:"api_key,omitempty"`
+	AppKey   string   `json:"app_key,omitempty"`
+	Site     string   `json:"site,omitempty"`
 }
